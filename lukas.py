@@ -16,3 +16,4 @@ async def hi():
     await bot.say(random.choice(quotes))
     
 token = os.environ.get('TOKEN')
+bot.run(token)
