@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-bot = commands.Bot(command_prefix=['!'], description='Hello.')
+bot = commands.Bot(command_prefix='!', description='Hello.')
 
 @bot.event
 async def on_ready():
@@ -16,4 +16,5 @@ async def hi():
     await bot.say(random.choice(quotes))
     
 token = os.environ.get('TOKEN')
+print(token)
 bot.run(token)
