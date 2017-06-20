@@ -1,1 +1,1 @@
-worker: python feubot.py
+worker: python lukas.py
