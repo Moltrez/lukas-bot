@@ -1,4 +1,4 @@
-import discord, os, random
+import discord, os, random, re
 from PIL import Image
 from discord.ext import commands
 
@@ -11,6 +11,15 @@ async def on_ready():
     print(bot.user.id)
     print('------')
     await bot.change_presence(game=discord.Game(name="Fire Emblem Echoes: Shadows of Valentia"))
+
+@bot.event
+async def on_message(message):
+    # we do not want the bot to reply to itself
+    if message.author == bot.user:
+        return
+    pattern = re.compile('.*gotta.*love.*luke', re.I)
+    if pattern.match(message.content):
+        await bot.send_message(message.channel, '<:upsetlukas:326630615065559041>')
 
 @bot.command()
 async def hi():
