@@ -3,7 +3,7 @@ from PIL import Image
 from discord.ext import commands
 from image_process import resize_and_crop
 
-bot = commands.Bot(command_prefix=['!', 'lukas '], description='Hello.')
+bot = commands.Bot(command_prefix=['!', 'lukas '], description='I am here to serve. I will try to respond to messages that start with `!` or `lukas `.')
 
 @bot.event
 async def on_ready():
@@ -15,25 +15,53 @@ async def on_ready():
 
 @bot.command()
 async def hi():
+    """Allow me to tell you a bit about myself."""
     quotes = ["I like to lose myself in the books when I can. It should be no surprise. Even I like a good escape.", "I am of a noble family... at least in the world where I am from. Our home is near the border, so I joined the Deliverance when crisis erupted in our lands."]
     await bot.say(random.choice(quotes))
 
+background_path = './selfie/backgrounds/'
+
 @bot.command()
-async def selfie():
-    background_path = './selfie/backgrounds/'
+async def selfie(*args):
+    """Please type `!help selfie` for more information.
+    I have travelled to many places and have many photos to share with you. Ask me for a random one or specify a location I've been to.
+    Usage: selfie (\"location\")"""
     selfie_path = './selfie/made/'
 
-    selfie_size = 500, 500
+    requested = args
+    background_files = []
+    if (len(requested) == 0):
+        background_files = [random.choice(os.listdir(background_path))]
+    else:
+        for request in requested:
+            file_extension_or_not_pattern = re.compile('(\.[a-z]+)?$', re.I | re.M)
+            found = False
+            for extension in ['.png', '.jpg']:
+                request_file = file_extension_or_not_pattern.sub(extension, request)
+                if os.path.exists(background_path + request_file):
+                    background_files.append(request_file)
+                    found = True
+            if not found:
+                await bot.say('I have not been to ' + request + '.')
+                await bot.say('If the location is multiple words, try grouping it within quotes, such as `"mountain trail"`.')
+                await bot.say('Please keep in mind I am case-sensitive.')
 
-    background_file = random.choice(os.listdir(background_path))
-    await bot.say("Ah yes, here I am at the " + background_file[:-3])
-    if not os.path.exists(selfie_path + background_file):
-        background = resize_and_crop(background_path+background_file, selfie_size)
-        # background = Image.open(background_path + background_file)
-        foreground = Image.open('./selfie/lukas.png')
-        background.paste(foreground, (0,0), foreground)
-        background.save(selfie_path + background_file, "PNG")
-    await bot.upload(selfie_path + background_file)
+
+    for background_file in background_files:
+        await bot.say("Ah yes, here I am at the " + background_file[:-3])
+        if not os.path.exists(selfie_path + background_file):
+            background = resize_and_crop(background_path + background_file, (500, 500))
+            foreground = Image.open('./selfie/lukas.png')
+            background.paste(foreground, (0,0), foreground)
+            background.save(selfie_path + background_file, "PNG")
+        await bot.upload(selfie_path + background_file)
+
+@bot.command()
+async def where():
+    """I will tell you where I have been."""
+    file_extension_pattern = re.compile('\.[a-z]+$', re.I | re.M)
+    locations = file_extension_pattern.sub('', "\n".join(map(str, os.listdir(background_path))))
+    await bot.say("I have taken selfies at these locations:\n" + "```" + locations + "```")
 
 @bot.event
 async def on_message(message):
