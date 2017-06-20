@@ -35,9 +35,12 @@ async def on_message(message):
     # we do not want the bot to reply to itself
     if message.author == bot.user:
         return
-    pattern = re.compile('.*gotta.*love.*luke', re.I)
-    if pattern.match(message.content):
+    luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
+    if luke_pattern.match(message.content):
         await bot.send_message(message.channel, '<:upsetlukas:326630615065559041>')
+    lukas_pattern = re.compile('.*love.*lukas', re.I)
+    if lukas_pattern.match(message.content):
+        await bot.send_message(message.channel, '<:lukas:316202740495679488>')
     await bot.process_commands(message)
 
 token = os.environ.get('TOKEN', default=None)
