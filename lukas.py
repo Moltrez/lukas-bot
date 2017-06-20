@@ -25,4 +25,4 @@ async def on_ready():
 #     await bot.say(random.choice(quotes))
     
 # token = os.environ.get('TOKEN')
-bot.run('MzI2NTgxNTcwNjkxMzk5Njgy.DCpDDw.p_9HWAr9QuMBK27etrKiayzOva4')
+bot.run("MzI2NTgxNTcwNjkxMzk5Njgy.DCpGcg.GxCyyiXhWVMUWLtF6uvf-3mR0RU")
