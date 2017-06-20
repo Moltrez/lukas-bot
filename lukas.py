@@ -17,6 +17,7 @@ async def on_ready():
 async def hi():
     """Allow me to tell you a bit about myself."""
     quotes = ["I like to lose myself in the books when I can. It should be no surprise. Even I like a good escape.",
+              "Some may find this surprising, but I am a fan of sweets. When I have a sweet cookie or a spoonful of honey, it's like all my fatigue is blown away!",
               "I am of a noble family... at least in the world where I am from. Our home is near the border, so I joined the Deliverance when crisis erupted in our lands."]
     await bot.say(random.choice(quotes))
 
