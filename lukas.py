@@ -12,15 +12,6 @@ async def on_ready():
     print('------')
     await bot.change_presence(game=discord.Game(name="Fire Emblem Echoes: Shadows of Valentia"))
 
-@bot.event
-async def on_message(message):
-    # we do not want the bot to reply to itself
-    if message.author == bot.user:
-        return
-    pattern = re.compile('.*gotta.*love.*luke', re.I)
-    if pattern.match(message.content):
-        await bot.send_message(message.channel, '<:upsetlukas:326630615065559041>')
-
 @bot.command()
 async def hi():
     quotes = ["I like to lose myself in the books when I can. It should be no surprise. Even I like a good escape.", "I am of a noble family... at least in the world where I am from. Our home is near the border, so I joined the Deliverance when crisis erupted in our lands."]
@@ -38,6 +29,17 @@ async def selfie():
         background.paste(foreground, (0,0), foreground)
         background.save(selfie_path + background_file, "PNG")
     await bot.upload(selfie_path + background_file)
+
+@bot.event
+async def on_message(message):
+    # we do not want the bot to reply to itself
+    if message.author == bot.user:
+        return
+    pattern = re.compile('.*gotta.*love.*luke', re.I)
+    if pattern.match(message.content):
+        await bot.send_message(message.channel, '<:upsetlukas:326630615065559041>')
+        return
+    await bot.process_commands(message)
 
 token = os.environ.get('TOKEN', default=None)
 if token is None:
