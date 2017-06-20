@@ -38,7 +38,6 @@ async def on_message(message):
     pattern = re.compile('.*gotta.*love.*luke', re.I)
     if pattern.match(message.content):
         await bot.send_message(message.channel, '<:upsetlukas:326630615065559041>')
-        return
     await bot.process_commands(message)
 
 token = os.environ.get('TOKEN', default=None)
