@@ -1,6 +1,7 @@
 import discord, os, random, re
 from PIL import Image
 from discord.ext import commands
+from image_process import resize_and_crop
 
 bot = commands.Bot(command_prefix=['!', 'lukas '], description='Hello.')
 
@@ -21,10 +22,14 @@ async def hi():
 async def selfie():
     background_path = './selfie/backgrounds/'
     selfie_path = './selfie/made/'
+
+    selfie_size = 500, 500
+
     background_file = random.choice(os.listdir(background_path))
     await bot.say("Ah yes, here I am at the " + background_file[:-3])
     if not os.path.exists(selfie_path + background_file):
-        background = Image.open(background_path + background_file)
+        background = resize_and_crop(background_path+background_file, selfie_size)
+        # background = Image.open(background_path + background_file)
         foreground = Image.open('./selfie/lukas.png')
         background.paste(foreground, (0,0), foreground)
         background.save(selfie_path + background_file, "PNG")
