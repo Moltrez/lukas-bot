@@ -12,7 +12,8 @@ async def on_ready():
 
 @bot.command
 async def hi():
-    await bot.say("I like to lose myself in the books here when I can. It should be no surprise. Even I like a good escape.")
+    quotes = ["I like to lose myself in the books here when I can. It should be no surprise. Even I like a good escape.", "I am of a noble family...at least in the world where I am from.Our home is near the border, so I joined the Deliverance when crisis erupted in our lands."]
+    await bot.say(random.choice(quotes))
     
 #token = os.environ.get('TOKEN')
 bot.run('MzI2NTgxNTcwNjkxMzk5Njgy.DCo9SQ.Ezm4TJi0wDIx1kNz7Pv91TT5bqU')
