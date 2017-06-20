@@ -20,5 +20,4 @@ async def on_ready():
     await bot.change_presence(game=discord.Game(name="Fire Emblem Echoes: Shadows of Valentia"))
 
 token = os.environ.get('TOKEN', default=None)
-print(token)
 bot.run(token)
