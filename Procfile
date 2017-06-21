@@ -1,1 +1,1 @@
-worker: python lukas.py
+worker: python lukas_bot.py
