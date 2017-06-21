@@ -87,12 +87,14 @@ async def on_message(message):
     # testing lukas quest
     if message.channel.name == 'bot-test':
         if message.content.startswith('status'):
-            await bot.send_message(message.channel, """This is my current status.```Fatigue: """ + str(lukas.fatigue) + """
-        Happiness: """ + str(lukas.happiness) + """
-        Steps Taken: """ + str(lukas.steps_taken) + '```')
+            await bot.send_message(message.channel, lukas.get_status())
         else:
             num_steps = 1
-            if message.content.startswith('step'):
+            if message.content.startswith('levelup'):
+                old_stats = str(lukas.stats)
+                if lukas.stats.give_exp(100):
+                    await bot.send_message(message.channel, "It appears I've levelled up!" + old_stats + str(lukas.stats))
+            elif message.content.startswith('step'):
                 num_steps = int(message.content.split()[1].rstrip())
             if lukas.fatigue > 0:
                 if not lukas.take_step(num_steps):
