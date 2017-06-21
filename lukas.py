@@ -1,4 +1,4 @@
-import os, pickle, re, random
+import os, pickle, re, random, numpy
 
 class Lukas(object):
     def __init__(self, statfile):
@@ -9,6 +9,7 @@ class Lukas(object):
         self.happiness = 0
         self.steps_taken = 0
         self.inventory = Inventory()
+        self.save_stats()
 
     def new_lukas(self):
         """resets lukas"""
@@ -19,20 +20,67 @@ class Lukas(object):
         self.steps_taken = 0
         self.save_stats()
 
+    def add_item(self, item):
+        """adds an item to the inventory"""
+        self.inventory.add_item(item)
+        self.save_stats()
+
     def feed(self, item):
         """feeds specified item, returns false if item is insufficient or not found"""
-        if self.inventory.consume(item):
-            switch = {
+        def dislike():
+            self.stamina += 20
+            self.affect_happiness(-20)
+            self.modify_hp(5)
+            return "I find this hard to palate..."
 
-            }
-            switch[item]()
-            if (self.stamina > 500):
-                self.stamina = 500
-            self.save_stats()
-            return True
-        return False
+        def neutral():
+            self.stamina += 30
+            self.modify_hp(10)
+            return "That was refreshing."
+
+        def like():
+            self.stamina += 50
+            self.affect_happiness(20)
+            self.modify_hp(15)
+            return "Mmm, a fine meal."
+
+        def love():
+            self.stamina += 100
+            self.affect_happiness(50)
+            self.modify_hp(20)
+            return "O-oh, now this is a treat!"
+        switch = {
+            'Sweet Cookie': love,
+            'Blue Cheese': like,
+            'Ham': neutral,
+            'Flour': dislike
+        }
+
+
+        if self.stamina == 500:
+            return "Thank you, but I am full."
+        if item in self.inventory.items:
+            if not item in switch:
+                return "I don't think I can eat that!"
+            elif self.inventory.consume(item):
+                result = switch[item]()
+                if (self.stamina > 500):
+                    self.stamina = 500
+                self.save_stats()
+                return result
+        return "I'm afraid we don't have any " + item + "."
+
+    def modify_hp(self, hp):
+        self.stats.current_hp += hp
+        if self.stats.current_hp <= 0:
+            self.new_lukas()
+            return "i ded nao restart boop boop"
+        if self.stats.current_hp > self.stats.hp_stat:
+            self.stats.current_hp = self.stats.hp_stat
+        return "Current HP: %2d/%2d" % (self.stats.current_hp, self.stats.hp_stat)
 
     def give_exp(self, exp):
+        """awards exp, returns true if level up occurred"""
         result = self.stats.give_exp(exp)
         self.save_stats()
         return result
@@ -53,19 +101,23 @@ class Lukas(object):
         self.happiness += happiness
         if (self.happiness > 500):
             self.happiness = 500
+        if (self.happiness < 0):
+            self.happiness = 0
         self.save_stats()
 
     def save_stats(self):
         print("A boy is saved.")
         with open(self.statfile, 'wb+') as save_to:
             pickle.dump(self, save_to, pickle.HIGHEST_PROTOCOL)
-            self.print_status()
 
     def get_status(self):
         status_message = "This is my current status.\n"
         status_message += str(self.stats)
         status_message += '```' + format_status(vars(self)) + '```'
         return status_message
+
+    def get_stats_array(self):
+        return self.stats.array()
 
     def print_status(self):
         print(vars(self))
@@ -81,15 +133,19 @@ def format_status(dict):
 
 class Inventory(object):
     def __init__(self):
-        self.items = dict()
+        self.items = {'Sweet Cookie': 1, 'Ham': 3}
 
-    def check_item(self, item):
-        return item in self.items
+    def add_item(self, item):
+        if item in self.items:
+            self.items[item] += 1
+        else:
+            self.items[item] = 1
 
     def consume(self, item):
-        if self.check_item(item):
-            self.items[item] -= 1
-            return True
+        if item in self.items:
+            if self.items[item] > 0:
+                self.items[item] -= 1
+                return True
         return False
 
     def __str__(self):
@@ -100,6 +156,7 @@ class Stats(object):
         self.unit_class = Class('Soldier', ['Knight'], 5, 5, 0, -10, -5, -5, 0)
         self.level = 1
         self.exp = 0
+        self.current_hp = 22
 
         self.hp_stat = 22
         self.atk_stat = 10
@@ -173,11 +230,14 @@ class Stats(object):
                 return True
         return False
 
+    def array(self):
+        return numpy.array([self.hp_stat, self.atk_stat, self.skl_stat, self.spd_stat, self.lck_stat, self.def_stat, self.res_stat])
 
     def __str__(self):
         return '```Class: ' + str(self.unit_class) + '    Lvl: ' + str(self.level) + '    Exp: ' + str(self.exp) + """
-HP/ATK/SKL/SPD/LCK/DEF/RES
-""" + "%2d/%3d/%3d/%3d/%3d/%3d/%3d```" % (self.hp_stat, self.atk_stat, self.skl_stat, self.spd_stat, self.lck_stat, self.def_stat, self.res_stat)
+ HP: %2d/%2d
+ HP|ATK|SKL|SPD|LCK|DEF|RES
+%3d|%3d|%3d|%3d|%3d|%3d|%3d```""" % (self.current_hp, self.hp_stat, self.hp_stat, self.atk_stat, self.skl_stat, self.spd_stat, self.lck_stat, self.def_stat, self.res_stat)
 
 class Class(object):
     def __init__(self, name, promotes_to, hp, atk, skl, spd, lck, df, res):

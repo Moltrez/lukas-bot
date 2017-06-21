@@ -1,11 +1,10 @@
-import discord, os, random, re, pickle
+import discord, os, random, re, pickle, numpy
 from PIL import Image
 from discord.ext import commands
 from image_process import resize_and_crop
 from lukas import Lukas
 
 bot = commands.Bot(command_prefix=['!', 'lukas '], description='I am here to serve. I will try to respond to messages that start with `!` or `lukas `.')
-
 
 def load_lukas():
     if os.path.exists('./lukas_stats'):
@@ -14,7 +13,68 @@ def load_lukas():
             return pickle.load(to_load)
     return Lukas('./lukas_stats')
 
+foods = ['Sweet Cookie', 'Blue Cheese', 'Ham', 'Flour']
+foods_dist = [0.2, 0.2, 0.2, 0.4]
+
+def process_steps(num_steps):
+    ret_strings = []
+
+    def give_random_item():
+        item = numpy.random.choice(foods, 1, foods_dist)[0]
+        print(item)
+        lukas.add_item(item)
+        print("Gave " + item)
+        return ["It appears I've found some " + item + '.']
+    def give_exp():
+        exp = numpy.random.choice([10, 15, 25, 50, 100], 1, [0.5, 0.25, 0.125, 0.1, 0.025])[0]
+        result = process_exp(exp)
+        print("Gave " + str(exp) + " EXP")
+        return ["It appears I've gained " + str(exp) + ' experience.', result]
+
+    events = {
+        "item" : give_random_item,
+        "exp" : give_exp
+    }
+
+    while num_steps > 0:
+        if lukas.stamina > 0:
+            if lukas.take_step(1):
+                if lukas.steps_taken % 20 == 0 or lukas.steps_taken % 30 == 0:
+                    #pick and perform event
+                    event = numpy.random.choice(['item', 'exp'])
+                    ret_strings += events[event]()
+                num_steps -= 1
+            else:
+                ret_strings.append("I'm afraid... I can walk no further...")
+                break
+        else:
+            break
+    return ret_strings
+
+def process_exp(exp):
+    old_stats = lukas.get_stats_array()
+    if lukas.give_exp(exp):
+        levelupmessage = 'My mind must be playing tricks on me...'
+        new_stats = lukas.get_stats_array()
+        diff = new_stats - old_stats
+        if (numpy.sum(diff)) > 1:
+            if diff[1] or diff[5]:
+                levelupmessage = 'Hmm... A palpable improvement.'
+            elif diff[2] or diff[3]:
+                levelupmessage = 'My senses feel sharp today.'
+            else:
+                levelupmessage = 'Luck appears to be on my side.'
+        levelupstring = ''
+        for i in diff:
+            if i:
+                levelupstring += '  ^|'
+            else:
+                levelupstring += '   |'
+        return levelupmessage + str(lukas.stats)[:-3] + '\n' + levelupstring[:-1] + '```'
+    return ''
+
 lukas = load_lukas()
+debug_lukas_quest = False
 
 @bot.event
 async def on_ready():
@@ -77,31 +137,84 @@ async def where():
     locations = file_extension_pattern.sub('', "\n".join(map(str, os.listdir(background_path))))
     await bot.say("I have taken selfies at these locations:\n" + "```" + locations + "```")
 
+@bot.command()
+async def lukas_quest():
+    """Please type '!help lukas_quest' for the manual.
+    Lukas Quest is a background game that will let Lukas grow as we chat in #lukas-general. He will level up and eventually promote, just like the real games!
+    Every time we send a message, Lukas takes a step using stamina. Without stamina, Lukas will not move. For every couple of steps, Lukas will encounter one of 3 random events:
+        * Obtaining a random item.
+        * Gaining experience.
+        * Encountering an enemy (unimplemented).
+    As with regular commands, you can interact with questing Lukas with the following commands, preceded by '!' or 'lukas ':
+        status            shows us the current status of Lukas
+        feed [item]       tell Lukas to eat a food item in his inventory (recovers stamina, HP, and can affect happiness)
+    Lukas will not take a step when you use these commands."""
+
 @bot.event
 async def on_message(message):
     # we do not want the bot to reply to itself
     if message.author == bot.user:
         return
 
+    lukas_quest_channel = 'lukas-general'
+
+    if message.author.id == '192820409937297418':
+        if message.content == '!toggle_lukas_quest_debug':
+            global debug_lukas_quest
+            debug_lukas_quest= not debug_lukas_quest
+            if debug_lukas_quest:
+                await bot.send_message(message.channel, "Now debugging Lukas Quest.")
+            else:
+                await bot.send_message(message.channel, "No longer debugging Lukas Quest.")
 
     # testing lukas quest
-    if message.channel.name == 'bot-test':
-        if message.content.startswith('status'):
+    if (message.author.id == '192820409937297418' and debug_lukas_quest) or message.channel == 'bot-stuff':
+        if message.content == '!lukas_quest_complete_reset':
+            os.remove('./lukas_stats')
+            global lukas
+            lukas = Lukas('./lukas_stats')
+            await bot.send_message(message.channel, 'Lukas Quest completely reset.')
+            return
+        elif message.content.startswith('status'):
             await bot.send_message(message.channel, lukas.get_status())
+        elif message.content.startswith('levelup'):
+                await bot.send_message(message.channel, process_exp(100))
+        elif message.content.startswith('!feed') or message.content.startswith('lukas feed'):
+            num_split = 2 if message.content.startswith('lukas feed') else 1
+            args = message.content.split(' ', num_split)
+            print(args)
+            if len(args) < num_split:
+                await bot.send_message(message.channel, "Please specify a food item.")
+            else:
+                food = args[num_split]
+                await bot.send_message(message.channel, lukas.feed(food.lower().title()))
+        elif message.content.startswith('give'):
+            item = message.content.split(' ', 1)[1]
+            lukas.inventory.add_item(item)
         else:
             num_steps = 1
-            if message.content.startswith('levelup'):
-                old_stats = str(lukas.stats)
-                if lukas.give_exp(100):
-                    await bot.send_message(message.channel, "It appears I've levelled up!" + old_stats + str(lukas.stats))
-            elif message.content.startswith('step'):
+            if message.content.startswith('step'):
                 num_steps = int(message.content.split()[1].rstrip())
-            if lukas.stamina > 0:
-                if not lukas.take_step(num_steps):
-                    await bot.send_message(message.channel, "I'm sorry everyone, you're going too fast... Could you spare any provisions?")
+
+            for event in process_steps(num_steps):
+                if event:
+                    await bot.send_message(message.channel, event)
         lukas.print_status()
         return
-
+    elif message.channel.name == lukas_quest_channel:
+        if message.content.startswith('!status') or message.content.startswith('lukas status'):
+            await bot.send_message(message.channel, lukas.get_status())
+            return
+        elif message.content.startswith('!feed') or message.content.startswith('lukas feed'):
+            num_split = 3 if message.content.startswith('lukas feed') else 4
+            food = message.content.split(num=num_split)[num_split-1]
+            print(food)
+            await bot.send_message(message.channel, lukas.feed(food))
+            return
+        else:
+            for event in process_steps(1):
+                if event:
+                    await bot.send_message(message.channel, event)
 
     luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
     if luke_pattern.match(message.content):
