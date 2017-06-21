@@ -82,11 +82,32 @@ async def on_message(message):
     # we do not want the bot to reply to itself
     if message.author == bot.user:
         return
+
+
+    # testing lukas quest
+    if message.channel.name == 'bot-test':
+        if message.content.startswith('status'):
+            await bot.send_message(message.channel, """This is my current status.```Fatigue: """ + str(lukas.fatigue) + """
+        Happiness: """ + str(lukas.happiness) + """
+        Steps Taken: """ + str(lukas.steps_taken) + '```')
+        else:
+            num_steps = 1
+            if message.content.startswith('step'):
+                num_steps = int(message.content.split()[1].rstrip())
+            if lukas.fatigue > 0:
+                if not lukas.take_step(num_steps):
+                    await bot.send_message(message.channel, "I'm sorry everyone, you're going too fast... Could you spare any provisions?")
+        lukas.print_status()
+        return
+
+
     luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
     if luke_pattern.match(message.content):
+        lukas.affect_happiness(-20)
         await bot.send_message(message.channel, '<:upsetlukas:326630615065559041>')
     lukas_pattern = re.compile('.*love.*lukas', re.I)
     if lukas_pattern.match(message.content):
+        lukas.affect_happiness(20)
         await bot.send_message(message.channel, '<:lukas:316202740495679488>')
     await bot.process_commands(message)
 
