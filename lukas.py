@@ -38,7 +38,7 @@ async def selfie(*args):
         for request in requested:
             file_extension_or_not_pattern = re.compile('(\.[a-z]+)?$', re.I | re.M)
             found = False
-            for extension in ['.png', '.jpg']:
+            for extension in ['.png', '.jpg', '.JPG']:
                 request_file = file_extension_or_not_pattern.sub(extension, request)
                 if os.path.exists(background_path + request_file):
                     background_files.append(request_file)
