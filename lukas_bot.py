@@ -92,11 +92,11 @@ async def on_message(message):
             num_steps = 1
             if message.content.startswith('levelup'):
                 old_stats = str(lukas.stats)
-                if lukas.stats.give_exp(100):
+                if lukas.give_exp(100):
                     await bot.send_message(message.channel, "It appears I've levelled up!" + old_stats + str(lukas.stats))
             elif message.content.startswith('step'):
                 num_steps = int(message.content.split()[1].rstrip())
-            if lukas.fatigue > 0:
+            if lukas.stamina > 0:
                 if not lukas.take_step(num_steps):
                     await bot.send_message(message.channel, "I'm sorry everyone, you're going too fast... Could you spare any provisions?")
         lukas.print_status()

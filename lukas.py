@@ -5,29 +5,54 @@ class Lukas(object):
         print("A new boy is born.")
         self.statfile = statfile
         self.stats = Stats()
-        self.fatigue = 500
+        self.stamina = 500
         self.happiness = 0
         self.steps_taken = 0
         self.inventory = Inventory()
 
     def new_lukas(self):
+        """resets lukas"""
         print("A new boy is born.")
         self.stats = Stats()
-        self.fatigue = 500
+        self.stamina = 500
         self.happiness = 0
         self.steps_taken = 0
         self.save_stats()
 
-    def take_step(self, steps=1):
-        self.steps_taken += steps
-        self.fatigue -= steps
+    def feed(self, item):
+        """feeds specified item, returns false if item is insufficient or not found"""
+        if self.inventory.consume(item):
+            switch = {
+
+            }
+            switch[item]()
+            if (self.stamina > 500):
+                self.stamina = 500
+            self.save_stats()
+            return True
+        return False
+
+    def give_exp(self, exp):
+        result = self.stats.give_exp(exp)
         self.save_stats()
-        if self.fatigue <= 0:
+        return result
+
+    def take_step(self, steps=1):
+        """takes a step forward and consumes stamina, returns false if stamina is now 0"""
+        self.steps_taken += steps
+        self.stamina -= steps
+        self.save_stats()
+        if self.stamina <= 0:
+            self.stamina = 0
+            self.save_stats()
             return False
         return True
 
     def affect_happiness(self, happiness):
+        """happiness setter"""
         self.happiness += happiness
+        if (self.happiness > 500):
+            self.happiness = 500
         self.save_stats()
 
     def save_stats(self):
@@ -64,6 +89,8 @@ class Inventory(object):
     def consume(self, item):
         if self.check_item(item):
             self.items[item] -= 1
+            return True
+        return False
 
     def __str__(self):
         return "\n" + str(self.items)
