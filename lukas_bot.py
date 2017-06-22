@@ -1,80 +1,15 @@
-import discord, os, random, re, pickle, numpy
+import discord, os, random, re
 from PIL import Image
 from discord.ext import commands
 from image_process import resize_and_crop
 from lukas import Lukas
+from lukas_quest import *
 
 bot = commands.Bot(command_prefix=['!', 'lukas '], description='I am here to serve. I will try to respond to messages that start with `!` or `lukas `.')
 
-def load_lukas():
-    if os.path.exists('./lukas_stats'):
-        print("A boy is loaded.")
-        with open('./lukas_stats', 'rb') as to_load:
-            return pickle.load(to_load)
-    return Lukas('./lukas_stats')
-
-foods = ['Sweet Cookie', 'Blue Cheese', 'Ham', 'Flour']
-foods_dist = [0.2, 0.2, 0.2, 0.4]
-
-def process_steps(num_steps):
-    ret_strings = []
-
-    def give_random_item():
-        item = numpy.random.choice(foods, 1, foods_dist)[0]
-        print(item)
-        lukas.add_item(item)
-        print("Gave " + item)
-        return ["It appears I've found some " + item + '.']
-    def give_exp():
-        exp = numpy.random.choice([10, 15, 25, 50, 100], 1, [0.5, 0.25, 0.125, 0.1, 0.025])[0]
-        result = process_exp(exp)
-        print("Gave " + str(exp) + " EXP")
-        return ["It appears I've gained " + str(exp) + ' experience.', result]
-
-    events = {
-        "item" : give_random_item,
-        "exp" : give_exp
-    }
-
-    while num_steps > 0:
-        if lukas.stamina > 0:
-            if lukas.take_step(1):
-                if lukas.steps_taken % 20 == 0 or lukas.steps_taken % 30 == 0:
-                    #pick and perform event
-                    event = numpy.random.choice(['item', 'exp'])
-                    ret_strings += events[event]()
-                num_steps -= 1
-            else:
-                ret_strings.append("I'm afraid... I can walk no further...")
-                break
-        else:
-            break
-    return ret_strings
-
-def process_exp(exp):
-    old_stats = lukas.get_stats_array()
-    if lukas.give_exp(exp):
-        levelupmessage = 'My mind must be playing tricks on me...'
-        new_stats = lukas.get_stats_array()
-        diff = new_stats - old_stats
-        if (numpy.sum(diff)) > 1:
-            if diff[1] or diff[5]:
-                levelupmessage = 'Hmm... A palpable improvement.'
-            elif diff[2] or diff[3]:
-                levelupmessage = 'My senses feel sharp today.'
-            else:
-                levelupmessage = 'Luck appears to be on my side.'
-        levelupstring = ''
-        for i in diff:
-            if i:
-                levelupstring += '  ^|'
-            else:
-                levelupstring += '   |'
-        return levelupmessage + str(lukas.stats)[:-3] + '\n' + levelupstring[:-1] + '```'
-    return ''
-
-lukas = load_lukas()
+lukas = Lukas('./lukas_stats.json')
 debug = False
+
 
 @bot.event
 async def on_ready():
@@ -85,6 +20,7 @@ async def on_ready():
     lukas.print_status()
     await bot.change_presence(game=discord.Game(name="Fire Emblem Echoes: Shadows of Valentia"))
 
+
 @bot.command()
 async def hi():
     """Allow me to tell you a bit about myself."""
@@ -94,6 +30,15 @@ async def hi():
     await bot.say(random.choice(quotes))
 
 background_path = './selfie/backgrounds/'
+
+
+@bot.command()
+async def where():
+    """I will tell you where I have been."""
+    file_extension_pattern = re.compile('\.[a-z]+$', re.I | re.M)
+    locations = file_extension_pattern.sub('', "\n".join(map(str, os.listdir(background_path))))
+    await bot.say("I have taken selfies at these locations:\n" + "```" + locations + "```")
+
 
 @bot.command()
 async def selfie(*args):
@@ -130,12 +75,6 @@ async def selfie(*args):
             background.save(selfie_path + background_file, "PNG")
         await bot.upload(selfie_path + background_file)
 
-@bot.command()
-async def where():
-    """I will tell you where I have been."""
-    file_extension_pattern = re.compile('\.[a-z]+$', re.I | re.M)
-    locations = file_extension_pattern.sub('', "\n".join(map(str, os.listdir(background_path))))
-    await bot.say("I have taken selfies at these locations:\n" + "```" + locations + "```")
 
 @bot.command()
 async def lukas_quest():
@@ -149,6 +88,7 @@ async def lukas_quest():
         status            shows us the current status of Lukas
         feed [item]       tell Lukas to eat a food item in his inventory (recovers stamina, HP, and can affect happiness)
     Lukas will not take a step when you use these commands."""
+
 
 @bot.event
 async def on_message(message):
@@ -168,11 +108,10 @@ async def on_message(message):
                 await bot.send_message(message.channel, "No longer debugging Lukas Quest.")
 
     # testing lukas quest
-    if (message.author.id == '192820409937297418' and debug) or message.channel == 'bot-stuff':
+    if message.author.id == '192820409937297418' and (debug or message.channel == 'bot-stuff'):
         if message.content == '!lukas_quest_complete_reset':
-            os.remove('./lukas_stats')
             global lukas
-            lukas = Lukas('./lukas_stats')
+            lukas = lukas.delete_status()
             await bot.send_message(message.channel, 'Lukas Quest completely reset.')
             return
         elif message.content.startswith('ls'):
@@ -181,7 +120,7 @@ async def on_message(message):
         elif message.content.startswith('status'):
             await bot.send_message(message.channel, lukas.get_status())
         elif message.content.startswith('levelup'):
-            await bot.send_message(message.channel, process_exp(100))
+            await bot.send_message(message.channel, process_exp(lukas, 100))
         elif message.content.startswith('!feed') or message.content.startswith('lukas feed'):
             num_split = 2 if message.content.startswith('lukas feed') else 1
             args = message.content.split(' ', num_split)
@@ -199,7 +138,7 @@ async def on_message(message):
             if message.content.startswith('step'):
                 num_steps = int(message.content.split()[1].rstrip())
 
-            for event in process_steps(num_steps):
+            for event in process_steps(lukas, num_steps):
                 if event:
                     await bot.send_message(message.channel, event)
         lukas.print_status()
@@ -215,7 +154,7 @@ async def on_message(message):
             await bot.send_message(message.channel, lukas.feed(food))
             return
         else:
-            for event in process_steps(1):
+            for event in process_steps(lukas, 1):
                 if event:
                     await bot.send_message(message.channel, event)
 

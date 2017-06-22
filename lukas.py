@@ -1,15 +1,53 @@
-import os, pickle, re, random, numpy
+import os, jsonpickle, json, re, random, numpy, cloudinary, cloudinary.uploader, cloudinary.api, urllib.request, urllib3
 
 class Lukas(object):
     def __init__(self, statfile):
-        print("A new boy is born.")
-        self.statfile = statfile
-        self.stats = Stats()
-        self.stamina = 500
-        self.happiness = 0
-        self.steps_taken = 0
-        self.inventory = Inventory()
-        self.save_stats()
+        urllib3.disable_warnings()
+        cloudinary.config()
+        try:
+            web_lukas = cloudinary.api.resource(statfile[2:], resource_type='raw')['url']
+            print(web_lukas)
+            response = urllib.request.urlopen(web_lukas)
+            if response.getcode() == 200:
+                print("A boy is loaded from the internet")
+                loaded = jsonpickle.decode(json.load(response))
+                self.copy(loaded)
+        except:
+            if os.path.exists(statfile):
+                print("A boy is loaded.")
+                with open(statfile, 'r') as to_load:
+                    loaded = jsonpickle.decode(json.load(to_load))
+                    to_load.close()
+                    self.copy(loaded)
+            else:
+                print("A new boy is born.")
+                self.statfile = statfile
+                self.stats = Stats()
+                self.stamina = 500
+                self.happiness = 0
+                self.steps_taken = 0
+                self.inventory = Inventory()
+                self.save_stats()
+
+    def save_stats(self):
+        with open(self.statfile, 'w+') as save_to:
+            json.dump(jsonpickle.encode(self), save_to)
+            save_to.close()
+            result = cloudinary.uploader.upload(self.statfile, resource_type='raw', public_id=self.statfile[2:])
+
+    def copy(self, other):
+        self.statfile = other.statfile
+        self.stats = other.stats
+        self.stamina = other.stamina
+        self.happiness = other.happiness
+        self.steps_taken = other.steps_taken
+        self.inventory = other.inventory
+
+    def delete_status(self):
+        """deletes all instances of a save file"""
+        os.remove(self.statfile)
+        cloudinary.api.delete_resources(self.statfile[2:], resource_type='raw')
+        return Lukas()
 
     def new_lukas(self):
         """resets lukas"""
@@ -55,7 +93,6 @@ class Lukas(object):
             'Ham': neutral,
             'Flour': dislike
         }
-
 
         if self.stamina == 500:
             return "Thank you, but I am full."
@@ -104,11 +141,6 @@ class Lukas(object):
         if (self.happiness < 0):
             self.happiness = 0
         self.save_stats()
-
-    def save_stats(self):
-        print("A boy is saved.")
-        with open(self.statfile, 'wb+') as save_to:
-            pickle.dump(self, save_to, pickle.HIGHEST_PROTOCOL)
 
     def get_status(self):
         status_message = "This is my current status.\n"

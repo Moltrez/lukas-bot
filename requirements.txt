@@ -4,3 +4,6 @@ websockets
 chardet
 Pillow
 numpy
+Django==1.9
+cloudinary
+jsonpickle
