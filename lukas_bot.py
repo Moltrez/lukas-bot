@@ -35,8 +35,7 @@ background_path = './selfie/backgrounds/'
 @bot.command()
 async def where():
     """I will tell you where I have been."""
-    file_extension_pattern = re.compile('\.[a-z]+$', re.I | re.M)
-    locations = file_extension_pattern.sub('', "\n".join(map(str, os.listdir(background_path))))
+    locations = "\n".join(map(str, [a[:-3] for a in os.listdir(background_path)]))
     await bot.say("I have taken selfies at these locations:\n" + "```" + locations + "```")
 
 
