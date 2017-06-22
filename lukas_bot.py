@@ -74,7 +74,7 @@ def process_exp(exp):
     return ''
 
 lukas = load_lukas()
-debug_lukas_quest = False
+debug = False
 
 @bot.event
 async def on_ready():
@@ -159,26 +159,29 @@ async def on_message(message):
     lukas_quest_channel = 'lukas-general'
 
     if message.author.id == '192820409937297418':
-        if message.content == '!toggle_lukas_quest_debug':
-            global debug_lukas_quest
-            debug_lukas_quest= not debug_lukas_quest
-            if debug_lukas_quest:
+        if message.content == '!toggle_debug':
+            global debug
+            debug = not debug
+            if debug:
                 await bot.send_message(message.channel, "Now debugging Lukas Quest.")
             else:
                 await bot.send_message(message.channel, "No longer debugging Lukas Quest.")
 
     # testing lukas quest
-    if (message.author.id == '192820409937297418' and debug_lukas_quest) or message.channel == 'bot-stuff':
+    if (message.author.id == '192820409937297418' and debug) or message.channel == 'bot-stuff':
         if message.content == '!lukas_quest_complete_reset':
             os.remove('./lukas_stats')
             global lukas
             lukas = Lukas('./lukas_stats')
             await bot.send_message(message.channel, 'Lukas Quest completely reset.')
             return
+        elif message.content.startswith('ls'):
+            dir = message.content.split(' ', 1)[1].rstrip()
+            await bot.send_message(message.channel, str(os.listdir(dir)))
         elif message.content.startswith('status'):
             await bot.send_message(message.channel, lukas.get_status())
         elif message.content.startswith('levelup'):
-                await bot.send_message(message.channel, process_exp(100))
+            await bot.send_message(message.channel, process_exp(100))
         elif message.content.startswith('!feed') or message.content.startswith('lukas feed'):
             num_split = 2 if message.content.startswith('lukas feed') else 1
             args = message.content.split(' ', num_split)
@@ -189,7 +192,7 @@ async def on_message(message):
                 food = args[num_split]
                 await bot.send_message(message.channel, lukas.feed(food.lower().title()))
         elif message.content.startswith('give'):
-            item = message.content.split(' ', 1)[1]
+            item = message.content.split(' ', 1)[1].rstrip()
             lukas.inventory.add_item(item)
         else:
             num_steps = 1
