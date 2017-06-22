@@ -1,39 +1,40 @@
 import os, jsonpickle, json, re, random, numpy, cloudinary, cloudinary.uploader, cloudinary.api, urllib.request, urllib3
 
 class Lukas(object):
-    def __init__(self, statfile):
-        urllib3.disable_warnings()
-        cloudinary.config()
-        try:
-            web_lukas = cloudinary.api.resource(statfile[2:], resource_type='raw')['url']
-            print(web_lukas)
-            response = urllib.request.urlopen(web_lukas)
-            if response.getcode() == 200:
+    def __init__(self, statfile, force_new_boy=False):
+        if not force_new_boy:
+            urllib3.disable_warnings()
+            cloudinary.config()
+            try:
+                web_lukas = cloudinary.api.resource(statfile[2:], resource_type='raw')['url']
+                print(web_lukas)
+                response = urllib.request.urlopen(web_lukas)
                 print("A boy is loaded from the internet")
                 loaded = jsonpickle.decode(json.load(response))
                 self.copy(loaded)
-        except:
-            if os.path.exists(statfile):
-                print("A boy is loaded.")
-                with open(statfile, 'r') as to_load:
-                    loaded = jsonpickle.decode(json.load(to_load))
-                    to_load.close()
-                    self.copy(loaded)
-            else:
-                print("A new boy is born.")
-                self.statfile = statfile
-                self.stats = Stats()
-                self.stamina = 500
-                self.happiness = 0
-                self.steps_taken = 0
-                self.inventory = Inventory()
-                self.save_stats()
+                return
+            except Exception as ex:
+                if os.path.exists(statfile):
+                    print("A boy is loaded.")
+                    with open(statfile, 'r') as to_load:
+                        loaded = jsonpickle.decode(json.load(to_load))
+                        to_load.close()
+                        self.copy(loaded)
+                        return
+        print("A new boy is born.")
+        self.statfile = statfile
+        self.stats = Stats()
+        self.stamina = 500
+        self.happiness = 0
+        self.steps_taken = 0
+        self.inventory = Inventory()
+        self.save_stats()
 
     def save_stats(self):
         with open(self.statfile, 'w+') as save_to:
             json.dump(jsonpickle.encode(self), save_to)
             save_to.close()
-            result = cloudinary.uploader.upload(self.statfile, resource_type='raw', public_id=self.statfile[2:])
+            result = cloudinary.uploader.upload(self.statfile, resource_type='raw', public_id=self.statfile[2:], invalidate=True)
 
     def copy(self, other):
         self.statfile = other.statfile
@@ -47,7 +48,7 @@ class Lukas(object):
         """deletes all instances of a save file"""
         os.remove(self.statfile)
         cloudinary.api.delete_resources(self.statfile[2:], resource_type='raw')
-        return Lukas()
+        return Lukas(self.statfile, True)
 
     def new_lukas(self):
         """resets lukas"""
