@@ -49,22 +49,21 @@ async def selfie(*args):
 
     requested = args
     background_files = []
-    if (len(requested) == 0):
-        background_files = [random.choice(os.listdir(background_path))]
+    backgrounds = {a.lower() : a for a in os.listdir(background_path)}
+    if len(requested) == 0:
+        background_files = [random.choice([a for a in backgrounds.values()])]
     else:
         for request in requested:
             file_extension_or_not_pattern = re.compile('(\.[a-z]+)?$', re.I | re.M)
             found = False
-            for extension in ['.png', '.jpg', '.JPG']:
-                request_file = file_extension_or_not_pattern.sub(extension, request)
-                if os.path.exists(background_path + request_file):
-                    background_files.append(request_file)
+            for extension in ['.png', '.jpg']:
+                request_file = file_extension_or_not_pattern.sub(extension, request).lower()
+                if request_file in backgrounds:
+                    background_files.append(backgrounds[request_file])
                     found = True
             if not found:
                 await bot.say('I have not been to ' + request + '.')
-                await bot.say('If the location is multiple words, try grouping it within quotes, such as `"mountain trail"`.')
-                await bot.say('Please keep in mind I am case-sensitive.')
-
+                await bot.say('If the location is multiple words, please group it within quotes, such as `"mountain trail"`.')
 
     for background_file in background_files:
         await bot.say("Ah yes, here I am at the " + background_file[:-3])
