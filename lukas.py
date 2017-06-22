@@ -14,6 +14,7 @@ class Lukas(object):
                 self.copy(loaded)
                 return
             except Exception as ex:
+                print(ex)
                 if os.path.exists(statfile):
                     print("A boy is loaded.")
                     with open(statfile, 'r') as to_load:
