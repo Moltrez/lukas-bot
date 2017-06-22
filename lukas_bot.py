@@ -18,7 +18,7 @@ async def on_ready():
     print(bot.user.id)
     print('------')
     lukas.print_status()
-    await bot.change_presence(game=discord.Game(name="Fire Emblem Echoes: Shadows of Valentia"))
+    await bot.change_presence(game=discord.Game(name="Steps Taken: " + str(lukas.steps_taken)))
 
 
 @bot.command()
@@ -163,6 +163,8 @@ async def on_message(message):
     if lukas_pattern.match(message.content):
         lukas.affect_happiness(20)
         await bot.send_message(message.channel, '<:lukas:316202740495679488>')
+
+    await bot.change_presence(game=discord.Game(name="Steps Taken: " + str(lukas.steps_taken)))
     await bot.process_commands(message)
 
 token = os.environ.get('TOKEN', default=None)
