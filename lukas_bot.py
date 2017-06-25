@@ -145,10 +145,14 @@ async def on_message(message):
             await bot.send_message(message.channel, lukas.get_status())
             return
         elif message.content.startswith('!feed') or message.content.startswith('lukas feed'):
-            num_split = 3 if message.content.startswith('lukas feed') else 4
-            food = message.content.split(num=num_split)[num_split-1]
-            print(food)
-            await bot.send_message(message.channel, lukas.feed(food))
+            num_split = 2 if message.content.startswith('lukas feed') else 1
+            args = message.content.split(' ', num_split)
+            print(args)
+            if len(args) < num_split:
+                await bot.send_message(message.channel, "Please specify a food item.")
+            else:
+                food = args[num_split]
+                await bot.send_message(message.channel, lukas.feed(food.lower().title()))
             return
         else:
             for event in process_steps(lukas, 1):
