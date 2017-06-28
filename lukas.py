@@ -1,4 +1,6 @@
 import os, jsonpickle, json, re, random, numpy, cloudinary, cloudinary.uploader, cloudinary.api, urllib.request, urllib3
+import jsonpickle.ext.numpy as jsonpickle_numpy
+jsonpickle_numpy.register_handlers()
 
 class Lukas(object):
     def __init__(self, statfile, force_new_boy=False):
