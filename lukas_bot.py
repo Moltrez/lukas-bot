@@ -87,7 +87,7 @@ async def lukas_quest():
         * Encountering an enemy (unimplemented).
     As with regular commands, you can interact with questing Lukas with the following commands, preceded by '!' or 'lukas ':
         status            shows us the current status of Lukas
-        feed [item]       tell Lukas to eat a food item in his inventory (recovers stamina, HP, and can affect happiness)
+        eat [item]       tell Lukas to eat a food item in his inventory (recovers stamina, HP, and can affect happiness)
     Lukas will not take a step when you use these commands."""
 
 
@@ -115,25 +115,10 @@ async def on_message(message):
             lukas = lukas.delete_status()
             await bot.send_message(message.channel, 'Lukas Quest completely reset.')
             return
-        elif message.content.startswith('ls'):
-            dir = message.content.split(' ', 1)[1].rstrip()
-            await bot.send_message(message.channel, str(os.listdir(dir)))
-        elif message.content.startswith('status'):
-            await bot.send_message(message.channel, lukas.get_status())
-        elif message.content.startswith('levelup'):
-            await bot.send_message(message.channel, process_exp(lukas, 100))
-        elif message.content.startswith('!feed') or message.content.startswith('lukas feed'):
-            num_split = 2 if message.content.startswith('lukas feed') else 1
-            args = message.content.split(' ', num_split)
-            print(args)
-            if len(args) < num_split:
-                await bot.send_message(message.channel, "Please specify a food item.")
-            else:
-                food = args[num_split]
-                await bot.send_message(message.channel, lukas.feed(food.lower().title()))
         elif message.content.startswith('give'):
             item = message.content.split(' ', 1)[1].rstrip()
             lukas.inventory.add_item(item)
+            lukas.print_status()
         else:
             num_steps = 1
             if message.content.startswith('step'):
@@ -142,21 +127,21 @@ async def on_message(message):
             for event in process_steps(lukas, num_steps):
                 if event:
                     await bot.send_message(message.channel, event)
-        lukas.print_status()
-        return
+            lukas.print_status()
+            return
     elif message.channel.name == lukas_quest_channel:
         if message.content.startswith('!status') or message.content.startswith('lukas status'):
             await bot.send_message(message.channel, lukas.get_status())
             return
-        elif message.content.startswith('!feed') or message.content.startswith('lukas feed'):
-            num_split = 2 if message.content.startswith('lukas feed') else 1
+        elif message.content.startswith('!eat') or message.content.startswith('lukas eat'):
+            num_split = 2 if message.content.startswith('lukas eat') else 1
             args = message.content.split(' ', num_split)
             print(args)
             if len(args) < num_split:
                 await bot.send_message(message.channel, "Please specify a food item.")
             else:
                 food = args[num_split]
-                await bot.send_message(message.channel, lukas.feed(food.lower().title()))
+                await bot.send_message(message.channel, lukas.eat(food.lower().title()))
             return
         else:
             for event in process_steps(lukas, 1):

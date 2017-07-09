@@ -67,7 +67,7 @@ class Lukas(object):
         self.inventory.add_item(item)
         self.save_stats()
 
-    def feed(self, item):
+    def eat(self, item):
         """feeds specified item, returns false if item is insufficient or not found"""
         def dislike():
             self.stamina += 20
