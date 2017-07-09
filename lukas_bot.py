@@ -31,6 +31,10 @@ async def hi():
 
 background_path = './selfie/backgrounds/'
 
+@bot.command()
+async def lmr():
+    """I will tell you which rod will net you the best Magikarp."""
+    await bot.say(random.choice(['L', 'M', 'R']))
 
 @bot.command()
 async def where():
