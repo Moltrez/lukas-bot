@@ -5,6 +5,8 @@ from image_process import resize_and_crop
 from lukas import Lukas
 from lukas_quest import *
 
+import utilities
+
 bot = commands.Bot(command_prefix=['!', 'lukas '], description='I am here to serve. I will try to respond to messages that start with `!` or `lukas `.')
 
 lukas = Lukas('./lukas_stats.json')
@@ -30,11 +32,6 @@ async def hi():
     await bot.say(random.choice(quotes))
 
 background_path = './selfie/backgrounds/'
-
-@bot.command()
-async def lmr():
-    """I will tell you which rod will net you the best Magikarp."""
-    await bot.say(random.choice(['L', 'M', 'R']))
 
 @bot.command()
 async def where():
@@ -163,4 +160,7 @@ async def on_message(message):
 token = os.environ.get('TOKEN', default=None)
 if token is None:
     token = open('./token').read().replace('\n','')
+
+utilities.setup(bot)
+
 bot.run(token)
