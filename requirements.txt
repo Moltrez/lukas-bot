@@ -7,3 +7,4 @@ numpy
 Django==1.9
 cloudinary
 jsonpickle
+beautifulsoup4

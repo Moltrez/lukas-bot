@@ -1,12 +1,13 @@
 import discord, asyncio, random, urllib.request, urllib3, json
 from discord.ext import commands as bot
+from bs4 import BeautifulSoup as BSoup
 
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
 
 
 def sanitize_url(url):
-    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29')
+    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s')
 
 
 def get_page(url):
@@ -49,11 +50,11 @@ def true_page(arg):
         return INVALID_HERO
     if 'redirects' in info['query']:
         return info['query']['redirects'][0]['to']
-    return arg
+    return arg.replace("'S", "'s")
 
 
 def get_icon(arg, prefix):
-    url = feh_source % "api.php?action=query&titles=File:%s%s.png&prop=imageinfo&iiprop=url&format=json" % (prefix, arg)
+    url = feh_source % "api.php?action=query&titles=File:%s%s.png&prop=imageinfo&iiprop=url&format=json" % (prefix, arg.replace('+', "_Plus"))
     info = get_page(url)
     return info['query']['pages'][next(iter(info['query']['pages']))]['imageinfo'][0]['url']
 
@@ -66,6 +67,12 @@ def get_category(arg):
         return categories[1]['title']
     else:
         return categories[0]['title']
+
+
+def get_text(arg):
+    url = feh_source % "api.php?action=parse&page=%s&format=json" % arg
+    info = get_page(url)
+    return info['parse']['text']['*']
 
 
 class Utilities:
@@ -96,6 +103,36 @@ class Utilities:
             message.set_thumbnail(url=get_icon(arg, "Icon_Portrait_"))
         elif category == 'Category:Weapons':
             message.set_thumbnail(url=get_icon(arg, "Weapon_"))
+            html = BSoup(get_text(arg), "html.parser")
+            table = html.find("div", attrs={"class":"hero-infobox"}).find("table")
+            stats = { a.find("th").get_text().strip() if not a.find("th") == None else None : a.find("td").get_text().strip() if not a.find("td") == None else None for a in table.find_all("tr") }
+            print(stats)
+            message.add_field(
+                name = "Might",
+                value = stats['Might'],
+                inline=True
+            )
+            message.add_field(
+                name = "Range",
+                value = stats['Range'],
+                inline=True
+            )
+            message.add_field(
+                name = "SP Cost",
+                value = stats['SP Cost'],
+                inline=True
+            )
+            message.add_field(
+                name = "Exclusive?",
+                value = stats['Exclusive?'],
+                inline=True
+            )
+            if 'Special Effect' in stats:
+                message.add_field(
+                    name="Special Effect",
+                    value=stats[None],
+                    inline=True
+                )
         await self.bot.say(embed=message)
 
 
