@@ -129,10 +129,17 @@ class Utilities:
             )
             if 'Special Effect' in stats:
                 message.add_field(
-                    name="Special Effect",
-                    value=stats[None],
+                    name = "Special Effect",
+                    value = stats[None],
                     inline=True
                 )
+            learners_table = html.find("table", attrs={"class":"sortable"})
+            learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
+            message.add_field(
+                name = "Heroes with " + arg,
+                value = ', '.join(learners),
+                inline=False
+            )
         await self.bot.say(embed=message)
 
 
