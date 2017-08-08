@@ -97,6 +97,18 @@ def format_stats_table(table):
         stats += '\n`|' + '|'.join(['%8s' % set[key] for key in set]) + '|`'
     return stats
 
+
+def calc_bst(stats_table):
+    # get the 5* stats
+    bst = 0
+    for key in stats_table[-1]:
+        if key == 'Rarity':
+            continue
+        stat_arr = stats_table[-1][key].split('/')
+        print(key, stat_arr)
+        bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
+    return bst
+
 class Utilities:
     """I'll help you any way I can."""
 
@@ -126,10 +138,15 @@ class Utilities:
             message.set_thumbnail(url=get_icon(arg, "Icon_Portrait_"))
             html = BSoup(get_text(arg), "html.parser")
             stats = get_infobox(html)
+            base_stats_table, max_stats_table = [extract_table(a)
+                                                 for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
             message.add_field(
                 name="Rarities",
                 value=', '.join(a+'★' for a in stats['Rarities'] if a.isdigit()),
-                inline=False
+            )
+            message.add_field(
+                name="BST",
+                value=calc_bst(max_stats_table)
             )
             message.add_field(
                 name="Weapon Type",
@@ -139,8 +156,6 @@ class Utilities:
                 name="Move Type",
                 value=stats['Move Type']
             )
-            base_stats_table, max_stats_table = [extract_table(a)
-                                                 for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
             message.add_field(
                 name="Base Stats",
                 value=format_stats_table(base_stats_table),
@@ -154,9 +169,20 @@ class Utilities:
             skill_tables = html.find_all("table", attrs={"class":"skills-table"})
             skills = ''
             for table in skill_tables:
-                for row in table.find_all("tr"):
-                    if row.find("td", attrs={"rowspan":True}):
-                        skills = skills.rstrip(', ') + '\n'
+                headings = [a.get_text().strip() for a in table.find_all("th")]
+                if 'Might' in headings:
+                    # weapons
+                    skills += '**Weapons:** '
+                elif 'Range' in headings:
+                    # assists
+                    skills += '**Assists:** '
+                elif 'Cooldown' in headings:
+                    # specials
+                    skills += '**Specials:** '
+                for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
+                    slot = row.find("td", attrs={"rowspan":True})
+                    if not slot is None:
+                        skills = skills.rstrip(', ') + '\n**' + slot.get_text() + '**: '
                     skills += row.find("td").get_text().strip() + ', '
                 skills = skills.rstrip(', ') + '\n'
             message.add_field(
