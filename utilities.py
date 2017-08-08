@@ -53,8 +53,10 @@ def true_page(arg):
     return arg.replace("'S", "'s")
 
 
-def get_icon(arg, prefix):
-    url = feh_source % "api.php?action=query&titles=File:%s%s.png&prop=imageinfo&iiprop=url&format=json" % (prefix, arg.replace('+', "_Plus"))
+def get_icon(arg, prefix=""):
+    url = feh_source %\
+          "api.php?action=query&titles=File:%s%s.png&prop=imageinfo&iiprop=url&format=json" %\
+          (prefix, arg.replace('+', "_Plus"))
     info = get_page(url)
     return info['query']['pages'][next(iter(info['query']['pages']))]['imageinfo'][0]['url']
 
@@ -105,7 +107,8 @@ class Utilities:
             message.set_thumbnail(url=get_icon(arg, "Weapon_"))
             html = BSoup(get_text(arg), "html.parser")
             table = html.find("div", attrs={"class":"hero-infobox"}).find("table")
-            stats = { a.find("th").get_text().strip() if not a.find("th") == None else None : a.find("td").get_text().strip() if not a.find("td") == None else None for a in table.find_all("tr") }
+            stats = { a.find("th").get_text().strip() if not a.find("th") is None else None : a.find(
+                "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr") }
             print(stats)
             message.add_field(
                 name = "Might",
@@ -135,6 +138,44 @@ class Utilities:
                 )
             learners_table = html.find("table", attrs={"class":"sortable"})
             learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
+            message.add_field(
+                name = "Heroes with " + arg,
+                value = ', '.join(learners),
+                inline=False
+            )
+        elif category == 'Category:Passives' or category == 'Category:Assists' or category == 'Category:Specials':
+            html = BSoup(get_text(arg), "html.parser")
+            stats_table, learners_table = html.find_all("table", attrs={"class": "sortable"})
+            stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
+                    [a.get_text().strip() for a in
+                     stats_table.find_all("tr")[1].find_all("td")[(-2 if category == 'Category:Passives' else -1):]]
+            print(stats)
+            if category == 'Category:Passives':
+                message.set_thumbnail(url=get_icon(stats[1]))
+                message.add_field(
+                    name="Effect",
+                    value=stats[2],
+                    inline=False
+                )
+                message.add_field(
+                    name="SP Cost",
+                    value=stats[3],
+                    inline=True
+                )
+                message.add_field(
+                    name="Slot",
+                    value=stats[-1],
+                    inline=True
+                )
+                message.add_field(
+                    name="Inherit Restrictions",
+                    value=stats[-2],
+                    inline=False
+                )
+            learners = [b[0].find_all("a")[1].get_text() + (" (" + b[-1].get_text() + "\*)"
+                                                            if category == 'Category:Passives' else "")
+                        for b in [a.find_all("td")
+                        for a in learners_table.find_all("tr")[1:]]]
             message.add_field(
                 name = "Heroes with " + arg,
                 value = ', '.join(learners),
