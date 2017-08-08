@@ -12,7 +12,6 @@ def sanitize_url(url):
 
 def get_page(url):
     url = sanitize_url(url)
-    print(url)
     response = urllib.request.urlopen(url)
     return json.load(response)
 
@@ -43,6 +42,7 @@ def true_page(arg):
         else:
             arg[1] = arg[1].title()
     arg = '('.join(arg)
+    arg = arg.replace("'S", "'s").replace(" And ", " and ")
 
     redirect = feh_source % "api.php?action=query&titles=%s&redirects=true&format=json" % arg
     info = get_page(redirect)
@@ -50,7 +50,7 @@ def true_page(arg):
         return INVALID_HERO
     if 'redirects' in info['query']:
         return info['query']['redirects'][0]['to']
-    return arg.replace("'S", "'s")
+    return arg
 
 
 def get_icon(arg, prefix=""):
@@ -149,7 +149,6 @@ class Utilities:
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if category == 'Category:Passives' else -1):]]
-            print(stats)
             message.add_field(
                 name="Effect",
                 value=stats[2],
@@ -195,7 +194,6 @@ class Utilities:
                     data = [a.get_text() for a in learner.find_all("td")]
                     learners.append({headings[a]:data[a] for a in range(0, len(headings))})
                 learners = [a['Name'] for a in learners]
-            print(learners)
             message.add_field(
                 name="Heroes with " + arg,
                 value=', '.join(learners),
