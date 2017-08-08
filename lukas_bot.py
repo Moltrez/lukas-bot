@@ -25,7 +25,8 @@ async def on_message(message):
     lukas_pattern = re.compile('.*love.*lukas', re.I)
     if lukas_pattern.match(message.content):
         await bot.send_file(message.channel, './emotions/happy.png')
-
+    await bot.process_commands(message)
+    
 token = os.environ.get('TOKEN', default=None)
 if token is None:
     token = open('./token').read().replace('\n', '')
