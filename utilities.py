@@ -61,14 +61,11 @@ def get_icon(arg, prefix=""):
     return info['query']['pages'][next(iter(info['query']['pages']))]['imageinfo'][0]['url']
 
 
-def get_category(arg):
+def get_categories(arg):
     url = feh_source % "api.php?action=query&titles=%s&prop=categories&format=json" % arg
     info = get_page(url)
     categories = info['query']['pages'][next(iter(info['query']['pages']))]['categories']
-    if len(categories) > 1:
-        return categories[1]['title']
-    else:
-        return categories[0]['title']
+    return [a['title'].lstrip('Category:') for a in categories]
 
 
 def get_text(arg):
@@ -76,6 +73,29 @@ def get_text(arg):
     info = get_page(url)
     return info['parse']['text']['*']
 
+
+def get_infobox(html):
+    table = html.find("div", attrs={"class": "hero-infobox"}).find("table")
+    return {a.find("th").get_text().strip() if not a.find("th") is None else None: a.find(
+        "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr")}
+
+
+def extract_table(table_html):
+    table = []
+    headings = [a.get_text() for a in table_html.find_all("th")]
+    for learner in table_html.find_all("tr"):
+        if len(learner.find_all("td")) == 0:
+            continue
+        data = [a.get_text() for a in learner.find_all("td")]
+        table.append({headings[a]: data[a] for a in range(0, len(headings))})
+    return table
+
+
+def format_stats_table(table):
+    stats = '`|' + '|'.join(['%8s' % key for key in table[0]]) + '|`'
+    for set in table:
+        stats += '\n`|' + '|'.join(['%8s' % set[key] for key in set]) + '|`'
+    return stats
 
 class Utilities:
     """I'll help you any way I can."""
@@ -96,45 +116,68 @@ class Utilities:
             await self.bot.say("I'm afraid I couldn't find information on that.")
             return
         print(arg)
-        category = get_category(arg)
         message = discord.Embed(
             title=arg,
             url=sanitize_url(feh_source % arg)
         )
-        if category == 'Category:Heroes':
+        categories = get_categories(arg)
+        if 'Heroes' in categories:
             message.set_thumbnail(url=get_icon(arg, "Icon_Portrait_"))
-        elif category == 'Category:Weapons':
+            html = BSoup(get_text(arg), "html.parser")
+            stats = get_infobox(html)
+            print(stats)
+            message.add_field(
+                name="Weapon Type",
+                value=stats['Weapon Type']
+            )
+            message.add_field(
+                name="Move Type",
+                value=stats['Move Type']
+            )
+            message.add_field(
+                name="Rarities",
+                value=stats['Rarities']
+            )
+            base_stats_table, max_stats_table = [extract_table(a)
+                                                 for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
+            print(base_stats_table, max_stats_table)
+            message.add_field(
+                name="Base Stats",
+                value=format_stats_table(base_stats_table),
+                inline=False
+            )
+            message.add_field(
+                name="Max Level Stats",
+                value=format_stats_table(max_stats_table),
+                inline=False
+            )
+
+        elif 'Weapons' in categories:
             message.set_thumbnail(url=get_icon(arg, "Weapon_"))
             html = BSoup(get_text(arg), "html.parser")
-            table = html.find("div", attrs={"class":"hero-infobox"}).find("table")
-            stats = { a.find("th").get_text().strip() if not a.find("th") is None else None : a.find(
-                "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr") }
+            stats = get_infobox(html)
             print(stats)
             message.add_field(
                 name="Might",
-                value=stats['Might'],
-                inline=True
+                value=stats['Might']
             )
             message.add_field(
                 name="Range",
-                value=stats['Range'],
-                inline=True
+                value=stats['Range']
             )
             message.add_field(
                 name="SP Cost",
-                value=stats['SP Cost'],
-                inline=True
+                value=stats['SP Cost']
             )
             message.add_field(
                 name="Exclusive?",
-                value=stats['Exclusive?'],
-                inline=True
+                value=stats['Exclusive?']
             )
             if 'Special Effect' in stats:
                 message.add_field(
                     name="Special Effect",
                     value=stats[None],
-                    inline=True
+                    inline=False
                 )
             learners_table = html.find("table", attrs={"class":"sortable"})
             learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
@@ -143,57 +186,48 @@ class Utilities:
                 value=', '.join(learners),
                 inline=False
             )
-        elif category == 'Category:Passives' or category == 'Category:Assists' or category == 'Category:Specials':
+        elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
             html = BSoup(get_text(arg), "html.parser")
             stats_table, learners_table = html.find_all("table", attrs={"class": "sortable"})
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
                     [a.get_text().strip() for a in
-                     stats_table.find_all("tr")[1].find_all("td")[(-2 if category == 'Category:Passives' else -1):]]
+                     stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
             message.add_field(
                 name="Effect",
                 value=stats[2],
                 inline=False
             )
-            if category == 'Category:Passives':
+            if 'Passives' in categories:
                 message.set_thumbnail(url=get_icon(stats[1]))
                 message.add_field(
                     name="Slot",
-                    value=stats[-1],
-                    inline=True
+                    value=stats[-1]
                 )
-            elif category == 'Category:Specials':
+            elif 'Specials' in categories:
                 message.add_field(
                     name="Cooldown",
-                    value=stats[1],
-                    inline=True
+                    value=stats[1]
                 )
-            elif category == 'Category:Assists':
+            elif 'Assists' in categories:
                 message.add_field(
                     name="Range",
-                    value=stats[1],
-                    inline=True
+                    value=stats[1]
                 )
             message.add_field(
                 name="SP Cost",
-                value=stats[3],
-                inline=True
+                value=stats[3]
             )
             message.add_field(
                 name="Inherit Restrictions",
-                value=stats[-2],
-                inline=False
+                value=stats[-2]
             )
             learners = []
-            if category == 'Category:Passives':
-                learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text() + "\*)"
+            if 'Passives' in categories:
+                learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text() + "★)"
                             for b in
                             [a.find_all("td") for a in learners_table.find_all("tr")[1:]]]
             else:
-                headings = [a.get_text() for a in learners_table.find_all("th")]
-                for learner in learners_table.find_all("tr"):
-                    data = [a.get_text() for a in learner.find_all("td")]
-                    learners.append({headings[a]:data[a] for a in range(0, len(headings))})
-                learners = [a['Name'] for a in learners]
+                learners = [a['Name'] for a in extract_table(learners_table)]
             message.add_field(
                 name="Heroes with " + arg,
                 value=', '.join(learners),
