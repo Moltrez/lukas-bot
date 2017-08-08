@@ -1,4 +1,4 @@
-import discord, asyncio, random, urllib.request, urllib3, json
+import discord, random, urllib.request, json
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
@@ -105,7 +105,6 @@ def calc_bst(stats_table):
         if key == 'Rarity':
             continue
         stat_arr = stats_table[-1][key].split('/')
-        print(key, stat_arr)
         bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
     return bst
 
