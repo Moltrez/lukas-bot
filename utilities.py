@@ -105,7 +105,6 @@ def calc_bst(stats_table):
         if key == 'Rarity':
             continue
         stat_arr = stats_table[-1][key].split('/')
-        print(key, stat_arr)
         bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
     return bst
 
