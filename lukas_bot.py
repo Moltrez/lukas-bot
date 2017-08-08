@@ -91,11 +91,11 @@ async def on_message(message):
     luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
     if luke_pattern.match(message.content):
         lukas.affect_happiness(-20)
-        await bot.send_message(message.channel, '<:upsetlukas:326630615065559041>')
+        await bot.send_file(message.channel, './emotions/upset.png')
     lukas_pattern = re.compile('.*love.*lukas', re.I)
     if lukas_pattern.match(message.content):
         lukas.affect_happiness(20)
-        await bot.send_message(message.channel, '<:lukas:316202740495679488>')
+        await bot.send_file(message.channel, './emotions/happy.png')
 
     await bot.change_presence(game=discord.Game(name="Steps Taken: " + str(lukas.steps_taken)))
     await bot.process_commands(message)
