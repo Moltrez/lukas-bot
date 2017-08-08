@@ -1,7 +1,10 @@
 import numpy
+from discord.ext import commands as bot
+
 
 foods = ['Sweet Cookie', 'Blue Cheese', 'Ham', 'Flour']
 foods_dist = [0.2, 0.2, 0.2, 0.4]
+
 
 def process_steps(lukas, num_steps):
     ret_strings = []
@@ -38,6 +41,7 @@ def process_steps(lukas, num_steps):
             break
     return ret_strings
 
+
 def process_exp(lukas, exp):
     old_stats = lukas.get_stats_array()
     if lukas.give_exp(exp):
@@ -59,3 +63,17 @@ def process_exp(lukas, exp):
                 levelupstring += '   |'
         return levelupmessage + str(lukas.stats)[:-3] + '\n' + levelupstring[:-1] + '```'
     return ''
+
+
+class LukasQuest:
+    """Lukas Quest is a background game that will let Lukas grow as we chat in #lukas-general. He will level up and eventually promote, just like the real games!
+    Every time we send a message, Lukas takes a step using stamina. Without stamina, Lukas will not move. For every couple of steps, Lukas will encounter one of 3 random events:
+        * Obtaining a random item.
+        * Gaining experience.
+        * Encountering an enemy (unimplemented)."""
+    def __init__(self, bot):
+        self.bot = bot
+
+
+def setup(bot):
+    bot.add_cog(LukasQuest(bot))

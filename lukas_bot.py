@@ -1,11 +1,9 @@
-import discord, os, random, re
-from PIL import Image
+import discord, os, re
 from discord.ext import commands
-from image_process import resize_and_crop
 from lukas import Lukas
 from lukas_quest import *
 
-import utilities
+import utilities, chat, lukas_quest
 
 bot = commands.Bot(command_prefix=['!', 'lukas '], description='I am here to serve. I will try to respond to messages that start with `!` or `lukas `.')
 
@@ -24,64 +22,9 @@ async def on_ready():
 
 
 @bot.command()
-async def hi():
-    """Allow me to tell you a bit about myself."""
-    quotes = ["I like to lose myself in the books when I can. It should be no surprise. Even I like a good escape.",
-              "Some may find this surprising, but I am a fan of sweets. When I have a sweet cookie or a spoonful of honey, it's like all my fatigue is blown away!",
-              "I am of a noble family... at least in the world where I am from. Our home is near the border, so I joined the Deliverance when crisis erupted in our lands."]
-    await bot.say(random.choice(quotes))
-
-background_path = './selfie/backgrounds/'
-
-@bot.command()
-async def where():
-    """I will tell you where I have been."""
-    await bot.say("I have taken selfies at these locations:\n" + "```" + "\n".join([a[:-4] for a in os.listdir(background_path)]) + "```")
-
-
-@bot.command()
-async def selfie(*args):
-    """Please type `!help selfie` for more information.
-    I have travelled to many places and have many photos to share with you. Ask me for a random one or specify a location I've been to.
-    Usage: selfie (\"location\")"""
-    selfie_path = './selfie/made/'
-
-    requested = args
-    background_files = []
-    backgrounds = {a.lower() : a for a in os.listdir(background_path)}
-    if len(requested) == 0:
-        background_files = [random.choice([a for a in backgrounds.values()])]
-    else:
-        for request in requested:
-            file_extension_or_not_pattern = re.compile('(\.[a-z]+)?$', re.I | re.M)
-            found = False
-            for extension in ['.png', '.jpg']:
-                request_file = file_extension_or_not_pattern.sub(extension, request).lower()
-                if request_file in backgrounds:
-                    background_files.append(backgrounds[request_file])
-                    found = True
-            if not found:
-                await bot.say('I have not been to ' + request + '.')
-                await bot.say('If the location is multiple words, please group it within quotes, such as `"mountain trail"`.')
-
-    for background_file in background_files:
-        await bot.say("Ah yes, here I am at the " + background_file[:-3])
-        if not os.path.exists(selfie_path + background_file):
-            background = resize_and_crop(background_path + background_file, (500, 500))
-            foreground = Image.open('./selfie/lukas.png')
-            background.paste(foreground, (0,0), foreground)
-            background.save(selfie_path + background_file, "PNG")
-        await bot.upload(selfie_path + background_file)
-
-
-@bot.command()
 async def lukas_quest():
     """Please type '!help lukas_quest' for the manual.
-    Lukas Quest is a background game that will let Lukas grow as we chat in #lukas-general. He will level up and eventually promote, just like the real games!
-    Every time we send a message, Lukas takes a step using stamina. Without stamina, Lukas will not move. For every couple of steps, Lukas will encounter one of 3 random events:
-        * Obtaining a random item.
-        * Gaining experience.
-        * Encountering an enemy (unimplemented).
+
     As with regular commands, you can interact with questing Lukas with the following commands, preceded by '!' or 'lukas ':
         status            shows us the current status of Lukas
         eat [item]       tell Lukas to eat a food item in his inventory (recovers stamina, HP, and can affect happiness)
@@ -162,5 +105,7 @@ if token is None:
     token = open('./token').read().replace('\n','')
 
 utilities.setup(bot)
+chat.setup(bot)
+lukas_quest.setup(bot)
 
 bot.run(token)

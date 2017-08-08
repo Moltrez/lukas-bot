@@ -109,6 +109,7 @@ def calc_bst(stats_table):
         bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
     return bst
 
+
 class Utilities:
     """I'll help you any way I can."""
 
