@@ -111,36 +111,36 @@ class Utilities:
                 "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr") }
             print(stats)
             message.add_field(
-                name = "Might",
-                value = stats['Might'],
+                name="Might",
+                value=stats['Might'],
                 inline=True
             )
             message.add_field(
-                name = "Range",
-                value = stats['Range'],
+                name="Range",
+                value=stats['Range'],
                 inline=True
             )
             message.add_field(
-                name = "SP Cost",
-                value = stats['SP Cost'],
+                name="SP Cost",
+                value=stats['SP Cost'],
                 inline=True
             )
             message.add_field(
-                name = "Exclusive?",
-                value = stats['Exclusive?'],
+                name="Exclusive?",
+                value=stats['Exclusive?'],
                 inline=True
             )
             if 'Special Effect' in stats:
                 message.add_field(
-                    name = "Special Effect",
-                    value = stats[None],
+                    name="Special Effect",
+                    value=stats[None],
                     inline=True
                 )
             learners_table = html.find("table", attrs={"class":"sortable"})
             learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
             message.add_field(
-                name = "Heroes with " + arg,
-                value = ', '.join(learners),
+                name="Heroes with " + arg,
+                value=', '.join(learners),
                 inline=False
             )
         elif category == 'Category:Passives' or category == 'Category:Assists' or category == 'Category:Specials':
@@ -150,35 +150,55 @@ class Utilities:
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if category == 'Category:Passives' else -1):]]
             print(stats)
+            message.add_field(
+                name="Effect",
+                value=stats[2],
+                inline=False
+            )
             if category == 'Category:Passives':
                 message.set_thumbnail(url=get_icon(stats[1]))
-                message.add_field(
-                    name="Effect",
-                    value=stats[2],
-                    inline=False
-                )
-                message.add_field(
-                    name="SP Cost",
-                    value=stats[3],
-                    inline=True
-                )
                 message.add_field(
                     name="Slot",
                     value=stats[-1],
                     inline=True
                 )
+            elif category == 'Category:Specials':
                 message.add_field(
-                    name="Inherit Restrictions",
-                    value=stats[-2],
-                    inline=False
+                    name="Cooldown",
+                    value=stats[1],
+                    inline=True
                 )
-            learners = [b[0].find_all("a")[1].get_text() + (" (" + b[-1].get_text() + "\*)"
-                                                            if category == 'Category:Passives' else "")
-                        for b in [a.find_all("td")
-                        for a in learners_table.find_all("tr")[1:]]]
+            elif category == 'Category:Assists':
+                message.add_field(
+                    name="Range",
+                    value=stats[1],
+                    inline=True
+                )
             message.add_field(
-                name = "Heroes with " + arg,
-                value = ', '.join(learners),
+                name="SP Cost",
+                value=stats[3],
+                inline=True
+            )
+            message.add_field(
+                name="Inherit Restrictions",
+                value=stats[-2],
+                inline=False
+            )
+            learners = []
+            if category == 'Category:Passives':
+                learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text() + "\*)"
+                            for b in
+                            [a.find_all("td") for a in learners_table.find_all("tr")[1:]]]
+            else:
+                headings = [a.get_text() for a in learners_table.find_all("th")]
+                for learner in learners_table.find_all("tr"):
+                    data = [a.get_text() for a in learner.find_all("td")]
+                    learners.append({headings[a]:data[a] for a in range(0, len(headings))})
+                learners = [a['Name'] for a in learners]
+            print(learners)
+            message.add_field(
+                name="Heroes with " + arg,
+                value=', '.join(learners),
                 inline=False
             )
         await self.bot.say(embed=message)
