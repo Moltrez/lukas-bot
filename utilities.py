@@ -1,4 +1,4 @@
-import discord, asyncio, random, urllib.request, urllib3, json
+import discord, random, urllib.request, json
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
