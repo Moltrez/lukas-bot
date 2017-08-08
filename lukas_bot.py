@@ -21,14 +21,14 @@ async def on_ready():
     await bot.change_presence(game=discord.Game(name="Steps Taken: " + str(lukas.steps_taken)))
 
 
-@bot.command()
-async def lukas_quest():
-    """Please type '!help lukas_quest' for the manual.
-
-    As with regular commands, you can interact with questing Lukas with the following commands, preceded by '!' or 'lukas ':
-        status            shows us the current status of Lukas
-        eat [item]       tell Lukas to eat a food item in his inventory (recovers stamina, HP, and can affect happiness)
-    Lukas will not take a step when you use these commands."""
+# @bot.command()
+# async def lukas_quest():
+#     """Please type '!help lukas_quest' for the manual.
+#
+#     As with regular commands, you can interact with questing Lukas with the following commands, preceded by '!' or 'lukas ':
+#         status            shows us the current status of Lukas
+#         eat [item]       tell Lukas to eat a food item in his inventory (recovers stamina, HP, and can affect happiness)
+#     Lukas will not take a step when you use these commands."""
 
 
 @bot.event
