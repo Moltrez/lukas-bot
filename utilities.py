@@ -118,14 +118,19 @@ class Utilities:
         print(arg)
         message = discord.Embed(
             title=arg,
-            url=sanitize_url(feh_source % arg)
+            url=sanitize_url(feh_source % arg),
+            color=0xe74c3c
         )
         categories = get_categories(arg)
         if 'Heroes' in categories:
             message.set_thumbnail(url=get_icon(arg, "Icon_Portrait_"))
             html = BSoup(get_text(arg), "html.parser")
             stats = get_infobox(html)
-            print(stats)
+            message.add_field(
+                name="Rarities",
+                value=', '.join(a+'★' for a in stats['Rarities'] if a.isdigit()),
+                inline=False
+            )
             message.add_field(
                 name="Weapon Type",
                 value=stats['Weapon Type']
@@ -134,13 +139,8 @@ class Utilities:
                 name="Move Type",
                 value=stats['Move Type']
             )
-            message.add_field(
-                name="Rarities",
-                value=stats['Rarities']
-            )
             base_stats_table, max_stats_table = [extract_table(a)
                                                  for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
-            print(base_stats_table, max_stats_table)
             message.add_field(
                 name="Base Stats",
                 value=format_stats_table(base_stats_table),
@@ -151,7 +151,19 @@ class Utilities:
                 value=format_stats_table(max_stats_table),
                 inline=False
             )
-
+            skill_tables = html.find_all("table", attrs={"class":"skills-table"})
+            skills = ''
+            for table in skill_tables:
+                for row in table.find_all("tr"):
+                    if row.find("td", attrs={"rowspan":True}):
+                        skills = skills.rstrip(', ') + '\n'
+                    skills += row.find("td").get_text().strip() + ', '
+                skills = skills.rstrip(', ') + '\n'
+            message.add_field(
+                name="Learnable Skills",
+                value=skills,
+                inline=False
+            )
         elif 'Weapons' in categories:
             message.set_thumbnail(url=get_icon(arg, "Weapon_"))
             html = BSoup(get_text(arg), "html.parser")
