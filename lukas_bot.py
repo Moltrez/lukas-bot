@@ -29,7 +29,7 @@ async def on_message(message):
                                random.choice(
                                    ['Thank you! I quite enjoy your company as well.',
                                     'That just made my day. I hope yours goes well too.',
-                                    'It\'s very nice to be appreciate. You\'re doing great also.']))
+                                    'It\'s very nice to be appreciated. Let\'s do our best!']))
     await bot.process_commands(message)
     
 token = os.environ.get('TOKEN', default=None)
