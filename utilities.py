@@ -12,6 +12,7 @@ def sanitize_url(url):
 
 def get_page(url):
     url = sanitize_url(url)
+    print(url)
     response = urllib.request.urlopen(url)
     return json.load(response)
 
@@ -32,6 +33,8 @@ def true_page(arg):
         return 'Tiki (Adult)'
     if arg.lower() == 'ytiki':
         return 'Tiki (Young)'
+    if arg.lower() == 'doot':
+        return 'Delthea'
 
     # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
     arg = arg.split('(')
@@ -42,7 +45,8 @@ def true_page(arg):
         else:
             arg[1] = arg[1].title()
     arg = '('.join(arg)
-    arg = arg.replace("'S", "'s").replace(" And ", " and ")
+    arg = arg.replace("'S", "'s").replace(" And ", " and ").\
+        replace('Hp', 'HP').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ')
 
     redirect = feh_source % "api.php?action=query&titles=%s&redirects=true&format=json" % arg
     info = get_page(redirect)
@@ -56,8 +60,10 @@ def true_page(arg):
 def get_icon(arg, prefix=""):
     url = feh_source %\
           "api.php?action=query&titles=File:%s%s.png&prop=imageinfo&iiprop=url&format=json" %\
-          (prefix, arg.replace('+', "_Plus"))
+          (prefix, arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else ''))
     info = get_page(url)
+    if '-1' in info['query']['pages']:
+        return None
     return info['query']['pages'][next(iter(info['query']['pages']))]['imageinfo'][0]['url']
 
 
@@ -92,6 +98,9 @@ def extract_table(table_html):
 
 
 def format_stats_table(table):
+    if len(table) == 0:
+        return None
+    print(table)
     stats = '`|' + '|'.join(['%8s' % key for key in table[0]]) + '|`'
     for set in table:
         stats += '\n`|' + '|'.join(['%8s' % set[key] for key in set]) + '|`'
@@ -99,6 +108,8 @@ def format_stats_table(table):
 
 
 def calc_bst(stats_table):
+    if len(stats_table) == 0:
+        return None
     # get the 5* stats
     bst = 0
     for key in stats_table[-1]:
@@ -137,7 +148,9 @@ class Utilities:
         )
         categories = get_categories(arg)
         if 'Heroes' in categories:
-            message.set_thumbnail(url=get_icon(arg, "Icon_Portrait_"))
+            icon = get_icon(arg, "Icon_Portrait_")
+            if not icon is None:
+                message.set_thumbnail(url=icon)
             html = BSoup(get_text(arg), "html.parser")
             stats = get_infobox(html)
             base_stats_table, max_stats_table = [extract_table(a)
@@ -193,7 +206,9 @@ class Utilities:
                 inline=False
             )
         elif 'Weapons' in categories:
-            message.set_thumbnail(url=get_icon(arg, "Weapon_"))
+            icon = get_icon(arg, "Weapon_")
+            if not icon is None:
+                message.set_thumbnail(url=icon)
             html = BSoup(get_text(arg), "html.parser")
             stats = get_infobox(html)
             print(stats)
@@ -221,6 +236,7 @@ class Utilities:
                 )
             learners_table = html.find("table", attrs={"class":"sortable"})
             learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
+            print(learners)
             message.add_field(
                 name="Heroes with " + arg,
                 value=', '.join(learners),
@@ -238,7 +254,9 @@ class Utilities:
                 inline=False
             )
             if 'Passives' in categories:
-                message.set_thumbnail(url=get_icon(stats[1]))
+                icon = get_icon(stats[1])
+                if not icon is None:
+                    message.set_thumbnail(url=icon)
                 message.add_field(
                     name="Slot",
                     value=stats[-1]
