@@ -7,7 +7,7 @@ INVALID_HERO = 'no'
 
 
 def sanitize_url(url):
-    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').replace('ð', '%C3B0').replace('á', '&#225')
+    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').replace('ð', '%C3%B0').replace('á', '&#225')
 
 
 def get_page(url):
