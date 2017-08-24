@@ -152,10 +152,11 @@ class Utilities:
             stats = get_infobox(html)
             base_stats_table, max_stats_table = [extract_table(a)
                                                  for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
-            #message.add_field(
-                #name="Rarities",
-                #value=', '.join(a+'★' for a in stats['Rarities'] if a.isdigit()),
-            #)
+	    print(stats)
+            message.add_field(
+                name="Rarities",
+                value=', '.join(a+'★' for a in stats['Rarities'] if a.isdigit()),
+            )
             message.add_field(
                 name="BST",
                 value=calc_bst(max_stats_table)
