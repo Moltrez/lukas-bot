@@ -7,7 +7,7 @@ INVALID_HERO = 'no'
 
 
 def sanitize_url(url):
-    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s')
+    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').replace('ð', '%C3B0').replace('á', '&#225')
 
 
 def get_page(url):
@@ -38,7 +38,7 @@ def true_page(arg):
     if arg.lower() == 'thorp':
         return 'Tharja'
     if arg.lower() == 'raudrraven':
-        return 'Rau%C3%B0rraven'
+        return 'Rauðrraven'
     if arg.lower() == 'blarraven':
         return 'Blárraven'
 
@@ -52,7 +52,7 @@ def true_page(arg):
             arg[1] = arg[1].title()
     arg = '('.join(arg)
     arg = arg.replace("'S", "'s").replace(" And ", " and ").replace(" Or ", " or ").replace(" Of ", " of ").\
-        replace('Hp ', 'HP').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
+        replace('Hp ', 'HP ').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus')
 
     redirect = feh_source % "api.php?action=query&titles=%s&redirects=true&format=json" % arg
