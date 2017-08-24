@@ -57,7 +57,7 @@ def true_page(arg):
 def get_icon(arg, prefix=""):
     url = feh_source %\
           "api.php?action=query&titles=File:%s%s.png&prop=imageinfo&iiprop=url&format=json" %\
-          (prefix, arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else ''))
+          (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '')))
     info = get_page(url)
     if '-1' in info['query']['pages']:
         return None
