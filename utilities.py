@@ -168,17 +168,18 @@ class Utilities:
                 name="Move Type",
                 value=stats['Move Type']
             )
-            #message.add_field(
-                #name="Base Stats",
-                #value=format_stats_table(base_stats_table),
-                #inline=False
-            #)
-            #message.add_field(
-                #name="Max Level Stats",
-                #value=format_stats_table(max_stats_table),
-                #inline=False
-            #)
+            message.add_field(
+                name="Base Stats",
+                value=format_stats_table(base_stats_table),
+                inline=False
+            )
+            message.add_field(
+                name="Max Level Stats",
+                value=format_stats_table(max_stats_table),
+                inline=False
+            )
             skill_tables = html.find_all("table", attrs={"class":"skills-table"})
+            print(skill_tables)
             skills = ''
             for table in skill_tables:
                 headings = [a.get_text().strip() for a in table.find_all("th")]
