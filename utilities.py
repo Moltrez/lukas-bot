@@ -148,36 +148,36 @@ class Utilities:
             icon = get_icon(arg, "Icon_Portrait_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
-            html = BSoup(get_text(arg), "html.parser")
-            stats = get_infobox(html)
-            base_stats_table, max_stats_table = [extract_table(a)
-                                                 for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
-            message.add_field(
-                name="Rarities",
-                value=', '.join(a+'★' for a in stats['Rarities'] if a.isdigit()),
-            )
-            message.add_field(
-                name="BST",
-                value=calc_bst(max_stats_table)
-            )
-            message.add_field(
-                name="Weapon Type",
-                value=stats['Weapon Type']
-            )
-            message.add_field(
-                name="Move Type",
-                value=stats['Move Type']
-            )
-            message.add_field(
-                name="Base Stats",
-                value=format_stats_table(base_stats_table),
-                inline=False
-            )
-            message.add_field(
-                name="Max Level Stats",
-                value=format_stats_table(max_stats_table),
-                inline=False
-            )
+            #html = BSoup(get_text(arg), "html.parser")
+            #stats = get_infobox(html)
+            #base_stats_table, max_stats_table = [extract_table(a)
+                                                 #for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
+            #message.add_field(
+                #name="Rarities",
+                #value=', '.join(a+'★' for a in stats['Rarities'] if a.isdigit()),
+            #)
+            #message.add_field(
+                #name="BST",
+                #value=calc_bst(max_stats_table)
+            #)
+            #message.add_field(
+                #name="Weapon Type",
+                #value=stats['Weapon Type']
+            #)
+            #message.add_field(
+                #name="Move Type",
+                #value=stats['Move Type']
+            #)
+            #message.add_field(
+                #name="Base Stats",
+                #value=format_stats_table(base_stats_table),
+                #inline=False
+            #)
+            #message.add_field(
+                #name="Max Level Stats",
+                #value=format_stats_table(max_stats_table),
+                #inline=False
+            #)
             #skill_tables = html.find_all("table", attrs={"class":"skills-table"})
             #skills = ''
             #for table in skill_tables:
