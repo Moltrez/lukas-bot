@@ -178,31 +178,30 @@ class Utilities:
                 value=format_stats_table(max_stats_table),
                 inline=False
             )
-            skill_tables = html.find_all("table", attrs={"class":"skills-table"})
-            print(skill_tables)
-            skills = ''
-            for table in skill_tables:
-                headings = [a.get_text().strip() for a in table.find_all("th")]
-                if 'Might' in headings:
-                    # weapons
-                    skills += '**Weapons:** '
-                elif 'Range' in headings:
-                    # assists
-                    skills += '**Assists:** '
-                elif 'Cooldown' in headings:
-                    # specials
-                    skills += '**Specials:** '
-                for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
-                    slot = row.find("td", attrs={"rowspan":True})
-                    if not slot is None:
-                        skills = skills.rstrip(', ') + '\n**' + slot.get_text() + '**: '
-                    skills += row.find("td").get_text().strip() + ', '
-                skills = skills.rstrip(', ') + '\n'
-            message.add_field(
-                name="Learnable Skills",
-                value=skills,
-                inline=False
-            )
+            #skill_tables = html.find_all("table", attrs={"class":"skills-table"})
+            #skills = ''
+            #for table in skill_tables:
+                #headings = [a.get_text().strip() for a in table.find_all("th")]
+                #if 'Might' in headings:
+                    ## weapons
+                    #skills += '**Weapons:** '
+                #elif 'Range' in headings:
+                    ## assists
+                    #skills += '**Assists:** '
+                #elif 'Cooldown' in headings:
+                    ## specials
+                    #skills += '**Specials:** '
+                #for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
+                    #slot = row.find("td", attrs={"rowspan":True})
+                    #if not slot is None:
+                        #skills = skills.rstrip(', ') + '\n**' + slot.get_text() + '**: '
+                    #skills += row.find("td").get_text().strip() + ', '
+                #skills = skills.rstrip(', ') + '\n'
+            #message.add_field(
+                #name="Learnable Skills",
+                #value=skills,
+                #inline=False
+            #)
         elif 'Weapons' in categories:
             icon = get_icon(arg, "Weapon_")
             if not icon is None:
