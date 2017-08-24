@@ -52,7 +52,7 @@ def true_page(arg):
             arg[1] = arg[1].title()
     arg = '('.join(arg)
     arg = arg.replace("'S", "'s").replace(" And ", " and ").replace(" Or ", " or ").replace(" Of ", " of ").\
-        replace('Hp ', 'HP').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus')\
+        replace('Hp ', 'HP').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus')
 
     redirect = feh_source % "api.php?action=query&titles=%s&redirects=true&format=json" % arg
