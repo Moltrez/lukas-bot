@@ -5,17 +5,7 @@ from bs4 import BeautifulSoup as BSoup
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
 
-
-def sanitize_url(url):
-    #return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').\
-    #replace('Á', '%C1').replace('É', '%C9').replace('Í', '%CD').replace('Ó', '%D3').replace('Ú', '%DA').\
-    #replace('á', '%E1').\
-    #replace('ð', '%C3%B0')
-    return urllib.parse.quote(url)
-
-
 def get_page(url):
-    url = sanitize_url(url)
     print(url)
     response = urllib.request.urlopen(url)
     return json.load(response)
@@ -42,11 +32,6 @@ def true_page(arg):
     if arg.lower() == 'thorp':
         return 'Tharja'
 
-    #if arg.lower() in ['raudrraven', 'raudrowl', 'raudrwolf', 'raudrblade']:
-        #return 'Rauðrraven'
-    #if arg.lower() == 'blarraven':
-        #return 'Blárraven'
-
     # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
     arg = arg.split('(')
     arg[0] = arg[0].title()
@@ -60,7 +45,7 @@ def true_page(arg):
         replace('Hp ', 'HP ').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus')
 
-    redirect = feh_source % "api.php?action=query&titles=%s&redirects=true&format=json" % arg
+    redirect = feh_source % "api.php?action=query&titles=%s&redirects=true&format=json" % (urllib.parse.quote(arg))
     info = get_page(redirect)
     if '-1' in info['query']['pages']:
         return INVALID_HERO
@@ -80,14 +65,14 @@ def get_icon(arg, prefix=""):
 
 
 def get_categories(arg):
-    url = feh_source % "api.php?action=query&titles=%s&prop=categories&format=json" % arg
+    url = feh_source % "api.php?action=query&titles=%s&prop=categories&format=json" % (urllib.parse.quote(arg))
     info = get_page(url)
     categories = info['query']['pages'][next(iter(info['query']['pages']))]['categories']
     return [a['title'].lstrip('Category:') for a in categories]
 
 
 def get_text(arg):
-    url = feh_source % "api.php?action=parse&page=%s&format=json" % arg
+    url = feh_source % "api.php?action=parse&page=%s&format=json" % (urllib.parse.quote(arg))
     info = get_page(url)
     return info['parse']['text']['*']
 
@@ -155,7 +140,7 @@ class Utilities:
         print(arg)
         message = discord.Embed(
             title=arg,
-            url=sanitize_url(feh_source % arg),
+            url=feh_source % (urllib.parse.quote(arg)),
             color=0xe74c3c
         )
         categories = get_categories(arg)
