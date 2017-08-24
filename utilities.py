@@ -1,4 +1,4 @@
-import discord, random, urllib.request, json
+import discord, random, urllib.request, urllib.parse, json
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
@@ -7,7 +7,11 @@ INVALID_HERO = 'no'
 
 
 def sanitize_url(url):
-    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').replace('ð', '%C3%B0').replace('á', '%E1')
+    #return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').\
+    #replace('Á', '%C1').replace('É', '%C9').replace('Í', '%CD').replace('Ó', '%D3').replace('Ú', '%DA').\
+    #replace('á', '%E1').\
+    #replace('ð', '%C3%B0')
+    return urllib.parse.quote(url)
 
 
 def get_page(url):
@@ -123,7 +127,7 @@ def calc_bst(stats_table):
     for key in stats_table[-1]:
         if key == 'Rarity':
             continue
-        if '-' in stats_table[-1][key]:
+        if '-' in stats_table[-1][key] or '?' in stats_table[-1][key]:
             return None
         stat_arr = stats_table[-1][key].split('/')
         bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
