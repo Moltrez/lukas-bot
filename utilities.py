@@ -7,7 +7,7 @@ INVALID_HERO = 'no'
 
 
 def sanitize_url(url):
-    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').replace('ð', '%C3%B0').replace('á', '&#225')
+    return url.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace('+', '%2B').replace("'S", '%27s').replace('ð', '%C3%B0').replace('á', '%E1')
 
 
 def get_page(url):
@@ -37,10 +37,11 @@ def true_page(arg):
         return 'Delthea'
     if arg.lower() == 'thorp':
         return 'Tharja'
-    if arg.lower() == 'raudrraven':
-        return 'Rauðrraven'
-    if arg.lower() == 'blarraven':
-        return 'Blárraven'
+
+    #if arg.lower() in ['raudrraven', 'raudrowl', 'raudrwolf', 'raudrblade']:
+        #return 'Rauðrraven'
+    #if arg.lower() == 'blarraven':
+        #return 'Blárraven'
 
     # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
     arg = arg.split('(')
