@@ -31,6 +31,8 @@ def true_page(arg):
         return 'Delthea'
     if arg.lower() == 'thorp':
         return 'Tharja'
+    if arg.lower() == 'gwendy':
+        return 'Gwendolyn'
 
     # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
     arg = arg.split('(')
@@ -148,7 +150,7 @@ class Utilities:
             icon = get_icon(arg, "Icon_Portrait_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
-            html = BSoup(get_text(arg), "html.parser")
+            html = BSoup(get_text(arg), "lxml")
             stats = get_infobox(html)
             base_stats_table, max_stats_table = [extract_table(a)
                                                  for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
@@ -208,7 +210,7 @@ class Utilities:
             icon = get_icon(arg, "Weapon_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
-            html = BSoup(get_text(arg), "html.parser")
+            html = BSoup(get_text(arg), "lxml")
             stats = get_infobox(html)
             print(stats)
             message.add_field(
@@ -242,7 +244,7 @@ class Utilities:
                 inline=False
             )
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
-            html = BSoup(get_text(arg), "html.parser")
+            html = BSoup(get_text(arg), "lxml")
             stats_table, learners_table = html.find_all("table", attrs={"class": "sortable"})
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
                     [a.get_text().strip() for a in
