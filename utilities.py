@@ -254,32 +254,36 @@ class Utilities:
                 value=stats[2],
                 inline=False
             )
-            if 'Passives' in categories:
-                icon = get_icon(stats[1])
-                if not icon is None:
-                    message.set_thumbnail(url=icon)
+            if stats[1] != '':
+                if 'Passives' in categories:
+                    icon = get_icon(stats[1])
+                    if not icon is None:
+                        message.set_thumbnail(url=icon)
+                    if stats[-1] != '':
+                        message.add_field(
+                            name="Slot",
+                            value=stats[-1]
+                        )
+                elif 'Specials' in categories:
+                    message.add_field(
+                        name="Cooldown",
+                        value=stats[1]
+                    )
+                elif 'Assists' in categories:
+                    message.add_field(
+                        name="Range",
+                        value=stats[1]
+                    )
+            if stats[3] != '':
                 message.add_field(
-                    name="Slot",
-                    value=stats[-1]
+                    name="SP Cost",
+                    value=stats[3]
                 )
-            elif 'Specials' in categories:
+            if stats[-2] != '':
                 message.add_field(
-                    name="Cooldown",
-                    value=stats[1]
+                    name="Inherit Restrictions",
+                    value=stats[-2]
                 )
-            elif 'Assists' in categories:
-                message.add_field(
-                    name="Range",
-                    value=stats[1]
-                )
-            message.add_field(
-                name="SP Cost",
-                value=stats[3]
-            )
-            message.add_field(
-                name="Inherit Restrictions",
-                value=stats[-2]
-            )
             learners = []
             if 'Passives' in categories:
                 learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text() + "★)"
