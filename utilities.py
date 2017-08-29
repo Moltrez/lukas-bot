@@ -249,41 +249,38 @@ class Utilities:
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
+            stats = [a if a else 'Unknown' for a in stats]
             message.add_field(
                 name="Effect",
                 value=stats[2],
                 inline=False
             )
-            if stats[1] != '':
-                if 'Passives' in categories:
-                    icon = get_icon(stats[1])
-                    if not icon is None:
-                        message.set_thumbnail(url=icon)
-                    if stats[-1] != '':
-                        message.add_field(
-                            name="Slot",
-                            value=stats[-1]
-                        )
-                elif 'Specials' in categories:
-                    message.add_field(
-                        name="Cooldown",
-                        value=stats[1]
-                    )
-                elif 'Assists' in categories:
-                    message.add_field(
-                        name="Range",
-                        value=stats[1]
-                    )
-            if stats[3] != '':
+            if 'Passives' in categories:
+                icon = get_icon(stats[1])
+                if not icon is None:
+                    message.set_thumbnail(url=icon)
                 message.add_field(
-                    name="SP Cost",
-                    value=stats[3]
+                    name="Slot",
+                    value=stats[-1]
                 )
-            if stats[-2] != '':
+            elif 'Specials' in categories:
                 message.add_field(
-                    name="Inherit Restrictions",
-                    value=stats[-2]
+                    name="Cooldown",
+                    value=stats[1]
                 )
+            elif 'Assists' in categories:
+                message.add_field(
+                    name="Range",
+                    value=stats[1]
+                )
+            message.add_field(
+                name="SP Cost",
+                value=stats[3]
+            )
+            message.add_field(
+                name="Inherit Restrictions",
+                value=stats[-2]
+            )
             learners = []
             if 'Passives' in categories:
                 learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text() + "★)"
