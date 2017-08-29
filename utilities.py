@@ -249,6 +249,7 @@ class Utilities:
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
+            stats = [a if a else 'Unknown' for a in stats]
             message.add_field(
                 name="Effect",
                 value=stats[2],
