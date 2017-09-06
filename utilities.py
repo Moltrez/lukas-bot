@@ -33,6 +33,8 @@ def true_page(arg):
         return 'Tharja'
     if arg.lower() == 'gwendy':
         return 'Gwendolyn'
+    if arg.lower() in ['boy', 'our boy']:
+        return 'Roy (Brave Heroes)'
 
     # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
     arg = arg.split('(')
