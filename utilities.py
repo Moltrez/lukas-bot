@@ -21,18 +21,30 @@ def true_page(arg):
         return 'Robin (M)'
     if arg.lower() == 'mcorrin':
         return 'Corrin (M)'
-    if arg.lower() == 'babe':
-        return 'Lukas'
     if arg.lower() == 'atiki':
         return 'Tiki (Adult)'
     if arg.lower() == 'ytiki':
         return 'Tiki (Young)'
+    # nicknames
+    if arg.lower() == 'lucy':
+        return 'Lucius'
     if arg.lower() == 'doot':
         return 'Delthea'
     if arg.lower() == 'thorp':
         return 'Tharja'
     if arg.lower() == 'gwendy':
         return 'Gwendolyn'
+    if arg.lower() == 'babe':
+        return 'Lukas'
+    # brave aliases
+    if arg.lower() in ['broy', 'boy', 'our boy']:
+        return 'Roy (Brave Heroes)'
+    if arg.lower() in ['blyn', 'byn']:
+        return 'Lyn (Brave Heroes)'
+    if arg.lower() == 'bike':
+        return 'Ike (Brave Heroes)'
+    if arg.lower() in ['blucina', 'lancina']:
+        return 'Lucina (Brave Heroes)'
 
     # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
     arg = arg.split('(')
