@@ -100,7 +100,8 @@ async def on_message(message):
                                random.choice(
                                    ['Thank you! I quite enjoy your company as well.',
                                     'That just made my day. I hope yours goes well too.',
-                                    'It\'s very nice to be appreciated. Let\'s do our best!']))
+                                    'It\'s very nice to be appreciated. Let\'s do our best!',
+                                    'You have placed your faith in me. And so, I place my faith in you.']))
 
     await bot.change_presence(game=discord.Game(name="Steps Taken: " + str(lukas.steps_taken)))
     await bot.process_commands(message)
