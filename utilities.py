@@ -163,10 +163,10 @@ class Utilities:
                 name="Rarities",
                 value= rarity if rarity else 'N/A'
             )
-            #message.add_field(
-                #name="BST",
-                #value=calc_bst(max_stats_table)
-            #)
+            message.add_field(
+                name="BST",
+                value=calc_bst(max_stats_table)
+            )
             message.add_field(
                 name="Weapon Type",
                 value=stats['Weapon Type']
