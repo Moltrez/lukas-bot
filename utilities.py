@@ -112,26 +112,16 @@ def format_stats_table(table):
     if len(table) == 0:
         return None
     print(table)
-    stats = '`|' + '|'.join(['%8s' % key for key in table[0]]) + '|`'
+    stats = '`|' + '|'.join(['%8s' % key for key in table[0][:-1]]) + '|`'
     for set in table:
-        stats += '\n`|' + '|'.join(['%8s' % set[key] for key in set]) + '|`'
+        stats += '\n`|' + '|'.join(['%8s' % set[key] for key in set[:-1]]) + '|`'
     return stats
 
 
-#def calc_bst(stats_table):
-    #if len(stats_table) == 0:
-        #return None
-    ### get the 5* stats
-    ##bst = 0
-    ##for key in stats_table[-1]:
-        ##if key == 'Rarity':
-            ##continue
-        ##if '-' in stats_table[-1][key] or '?' in stats_table[-1][key]:
-            ##return None
-        ##stat_arr = stats_table[-1][key].split('/')
-        ##bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
-    ##return bst
-    #return stats_table[-1][-1]
+def calc_bst(stats_table):
+    if len(stats_table) == 0:
+        return None
+    return stats_table[-1][-1]
 
 
 class Utilities:
