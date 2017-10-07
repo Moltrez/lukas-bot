@@ -118,19 +118,20 @@ def format_stats_table(table):
     return stats
 
 
-def calc_bst(stats_table):
-    if len(stats_table) == 0:
-        return None
-    # get the 5* stats
-    bst = 0
-    for key in stats_table[-1]:
-        if key == 'Rarity':
-            continue
-        if '-' in stats_table[-1][key] or '?' in stats_table[-1][key]:
-            return None
-        stat_arr = stats_table[-1][key].split('/')
-        bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
-    return bst
+#def calc_bst(stats_table):
+    #if len(stats_table) == 0:
+        #return None
+    ### get the 5* stats
+    ##bst = 0
+    ##for key in stats_table[-1]:
+        ##if key == 'Rarity':
+            ##continue
+        ##if '-' in stats_table[-1][key] or '?' in stats_table[-1][key]:
+            ##return None
+        ##stat_arr = stats_table[-1][key].split('/')
+        ##bst += int(stat_arr[1 if len(stat_arr) > 1 else 0])
+    ##return bst
+    #return stats_table[-1][-1]
 
 
 class Utilities:
@@ -172,10 +173,10 @@ class Utilities:
                 name="Rarities",
                 value= rarity if rarity else 'N/A'
             )
-            message.add_field(
-                name="BST",
-                value=calc_bst(max_stats_table)
-            )
+            #message.add_field(
+                #name="BST",
+                #value=calc_bst(max_stats_table)
+            #)
             message.add_field(
                 name="Weapon Type",
                 value=stats['Weapon Type']
