@@ -121,7 +121,7 @@ def format_stats_table(table):
 def calc_bst(stats_table):
     if len(stats_table) == 0:
         return None
-    return stats_table[-1][-1]
+    return stats_table[-1]['Total']
 
 
 class Utilities:
