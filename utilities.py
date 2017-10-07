@@ -112,9 +112,9 @@ def format_stats_table(table):
     if len(table) == 0:
         return None
     print(table)
-    stats = '`|' + '|'.join(['%8s' % key for key in table[0][:-1]]) + '|`'
+    stats = '`|' + '|'.join(['%8s' % key for key in table[0]][:-1]) + '|`'
     for set in table:
-        stats += '\n`|' + '|'.join(['%8s' % set[key] for key in set[:-1]]) + '|`'
+        stats += '\n`|' + '|'.join(['%8s' % set[key] for key in set][:-1]) + '|`'
     return stats
 
 
