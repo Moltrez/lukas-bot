@@ -4,12 +4,13 @@ from bs4 import BeautifulSoup as BSoup
 
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
+GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
+
 
 def get_page(url):
     print(url)
     response = urllib.request.urlopen(url)
     return json.load(response)
-
 
 def true_page(arg):
     # extra cases for common aliases
@@ -124,6 +125,22 @@ def calc_bst(stats_table):
     return stats_table[-1]['Total']
 
 
+def get_gauntlet_scores():
+        newurl = urllib.request.urlopen(GAUNTLET_URL).geturl()
+        toopen = urllib.request.Request(newurl, headers={'Accept-Language':'en-GB'})
+        html = BSoup(urllib.request.urlopen(toopen).read(), "lxml")
+        round = html.find_all('ul')[2]
+        scores = [[m.find('div', attrs={'class':'tournaments-art-left'}), m.find('div', attrs={'class':'tournaments-art-right'})] for m in round.find_all('li')]
+        scores = [[{'Name':s[0].p.text, 'Score':s[0].find_all('p')[-1].text, 'Status':'Same' if 'normal' in s[0]['class'][-1] else 'Weak'},
+                    {'Name':s[1].p.text, 'Score':s[1].find_all('p')[-1].text, 'Status':'Same' if 'normal' in s[1]['class'][-1] else 'Weak'}] for s in scores]
+        for s in scores:
+            if s[0]['Status'] == 'Weak':
+                s[1]['Status'] = 'Strong'
+            elif s[1]['Status'] == 'Weak':
+                s[0]['Status'] = 'Strong'
+        return scores
+
+
 class Utilities:
     """I'll help you any way I can."""
 
@@ -134,7 +151,21 @@ class Utilities:
     async def lmr(self):
         """I will tell you which rod will net you the best Magikarp."""
         await self.bot.say(random.choice(['L', 'M', 'R']))
-
+        
+        
+    @bot.command()
+    async def gauntlet(self):
+        scores = get_gauntlet_scores()
+        longest = max(scores, key=lambda s: len(s[0]['Score']) + len(s[0]['Status']) + 3)
+        longest = len(longest[0]['Score']) + len(longest[0]['Status']) + 3
+        message = '```'
+        for s in scores:
+            message += """{:>{width}} vs {}
+{:>{width}}    {}
+""".format(s[0]['Name'], s[1]['Name'], (s[0]['Score'] + ' (' + s[0]['Status'] + ')'), ('(' + s[1]['Status'] + ') ' +  s[1]['Score']), width = longest)
+        message += '```'
+        await self.bot.say(message)
+        
     @bot.command()
     async def feh(self, *, arg):
         """I will provide some information on a Fire Emblem Heroes topic."""
