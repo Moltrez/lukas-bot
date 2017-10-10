@@ -26,6 +26,10 @@ def true_page(arg):
         return 'Tiki (Adult)'
     if arg.lower() == 'ytiki':
         return 'Tiki (Young)'
+    if arg.lower() == 'qr':
+        return 'Quick Riposte'
+    if arg.lower() in ['ld', 'lnd']:
+        return 'Life and Death'
     # nicknames
     if arg.lower() == 'lucy':
         return 'Lucius'
@@ -37,6 +41,10 @@ def true_page(arg):
         return 'Gwendolyn'
     if arg.lower() == 'babe':
         return 'Lukas'
+    if arg.lower() == 'rein':
+        return 'Reinhardt'
+    if arg.lower() == 'bridelia':
+        return 'Cordelia (Bridal Blessings)'
     # brave aliases
     if arg.lower() in ['broy', 'boy', 'our boy']:
         return 'Roy (Brave Heroes)'
