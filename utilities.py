@@ -94,6 +94,8 @@ def get_icon(arg, prefix=""):
 def get_categories(arg):
     url = feh_source % "api.php?action=query&titles=%s&prop=categories&format=json" % (urllib.parse.quote(arg))
     info = get_page(url)
+    if 'categories' not in info['query']['pages'][next(iter(info['query']['pages']))]:
+        return []
     categories = info['query']['pages'][next(iter(info['query']['pages']))]['categories']
     return [a['title'].lstrip('Category:') for a in categories]
 
