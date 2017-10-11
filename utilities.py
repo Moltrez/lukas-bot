@@ -30,6 +30,10 @@ def true_page(arg):
         return 'Quick Riposte'
     if arg.lower() in ['ld', 'lnd']:
         return 'Life and Death'
+    if arg.lower() == 'qp':
+        return 'Quickened Pulse'
+    if arg.lower() == 'dd':
+        return 'Distant Defense'
     # nicknames
     if arg.lower() == 'lucy':
         return 'Lucius'
