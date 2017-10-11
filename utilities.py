@@ -26,6 +26,14 @@ def true_page(arg):
         return 'Tiki (Adult)'
     if arg.lower() == 'ytiki':
         return 'Tiki (Young)'
+    if arg.lower() == 'qr':
+        return 'Quick Riposte'
+    if arg.lower() in ['ld', 'lnd']:
+        return 'Life and Death'
+    if arg.lower() == 'qp':
+        return 'Quickened Pulse'
+    if arg.lower() == 'dd':
+        return 'Distant Defense'
     # nicknames
     if arg.lower() == 'lucy':
         return 'Lucius'
@@ -37,6 +45,10 @@ def true_page(arg):
         return 'Gwendolyn'
     if arg.lower() == 'babe':
         return 'Lukas'
+    if arg.lower() == 'rein':
+        return 'Reinhardt'
+    if arg.lower() == 'bridelia':
+        return 'Cordelia (Bridal Blessings)'
     # brave aliases
     if arg.lower() in ['broy', 'boy', 'our boy']:
         return 'Roy (Brave Heroes)'
@@ -279,11 +291,11 @@ class Utilities:
             )
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
             html = BSoup(get_text(arg), "lxml")
-            stats_table, learners_table = html.find_all("table", attrs={"class": "sortable"})
+            stats_table = html.find("table", attrs={"class": "sortable"})
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
-            stats = [a if a else 'Unknown' for a in stats]
+            stats = [a if a else 'N/A' for a in stats]
             message.add_field(
                 name="Effect",
                 value=stats[2],
@@ -315,18 +327,20 @@ class Utilities:
                 name="Inherit Restrictions",
                 value=stats[-2]
             )
-            learners = []
-            if 'Passives' in categories:
-                learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text() + "★)"
-                            for b in
-                            [a.find_all("td") for a in learners_table.find_all("tr")[1:]]]
-            else:
-                learners = [a['Name'] for a in extract_table(learners_table)]
-            message.add_field(
-                name="Heroes with " + arg,
-                value=', '.join(learners),
-                inline=False
-            )
+            if 'Seal Exclusive Skills' not in categories:
+                learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
+                learners = []
+                if 'Passives' in categories:
+                    learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text() + "★)"
+                                for b in
+                                [a.find_all("td") for a in learners_table.find_all("tr")[1:]]]
+                else:
+                    learners = [a['Name'] for a in extract_table(learners_table)]
+                message.add_field(
+                    name="Heroes with " + arg,
+                    value=', '.join(learners),
+                    inline=False
+                )
         await self.bot.say(embed=message)
 
 
