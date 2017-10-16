@@ -94,6 +94,8 @@ def get_icon(arg, prefix=""):
 def get_categories(arg):
     url = feh_source % "api.php?action=query&titles=%s&prop=categories&format=json" % (urllib.parse.quote(arg))
     info = get_page(url)
+    if 'categories' not in info['query']['pages'][next(iter(info['query']['pages']))]:
+        return []
     categories = info['query']['pages'][next(iter(info['query']['pages']))]['categories']
     return [a['title'].lstrip('Category:') for a in categories]
 
@@ -133,6 +135,8 @@ def format_stats_table(table):
 
 def calc_bst(stats_table):
     if len(stats_table) == 0:
+        return None
+    if 'Total' not in stats_table[-1]:
         return None
     return stats_table[-1]['Total']
 
@@ -206,10 +210,12 @@ class Utilities:
                 name="Rarities",
                 value= rarity if rarity else 'N/A'
             )
-            message.add_field(
-                name="BST",
-                value=calc_bst(max_stats_table)
-            )
+            bst = calc_bst(max_stats_table)
+            if not bst is None:
+                message.add_field(
+                    name="BST",
+                    value=calc_bst(max_stats_table)
+                )
             message.add_field(
                 name="Weapon Type",
                 value=stats['Weapon Type']
