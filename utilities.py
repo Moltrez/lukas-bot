@@ -211,7 +211,7 @@ class Utilities:
                 value= rarity if rarity else 'N/A'
             )
             bst = calc_bst(max_stats_table)
-            if bst not is None:
+            if not bst is None:
                 message.add_field(
                     name="BST",
                     value=calc_bst(max_stats_table)
