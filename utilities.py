@@ -136,6 +136,8 @@ def format_stats_table(table):
 def calc_bst(stats_table):
     if len(stats_table) == 0:
         return None
+    if 'Total' not in stats_table[-1]:
+        return None
     return stats_table[-1]['Total']
 
 
@@ -208,10 +210,12 @@ class Utilities:
                 name="Rarities",
                 value= rarity if rarity else 'N/A'
             )
-            message.add_field(
-                name="BST",
-                value=calc_bst(max_stats_table)
-            )
+            bst = calc_bst(max_stats_table)
+            if bst not is None:
+                message.add_field(
+                    name="BST",
+                    value=calc_bst(max_stats_table)
+                )
             message.add_field(
                 name="Weapon Type",
                 value=stats['Weapon Type']
