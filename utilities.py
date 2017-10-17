@@ -1,4 +1,4 @@
-import discord, random, urllib.request, urllib.parse, json
+import discord, random, urllib.request, urllib.parse, json, argparse
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
@@ -40,6 +40,24 @@ def true_page(arg):
         return info['query']['redirects'][0]['to']
     return arg
 
+
+def get_heroes_list():
+    html = BSoup(get_text('Stats Table'), "lxml")
+    table = html.find('table')
+    heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
+    return heroes_list
+
+def list_row_to_dict(row):
+    data = row.find_all('td')
+    colour, weapon = row['data-weapon-type'].split()
+    hero = {
+        'Name':data[1].text,
+        'Colour':colour,
+        'Weapon':weapon,
+        'Movement':row['data-move-type'],
+        'HP':int(data[4].text), 'ATK':int(data[5].text), 'SPD':int(data[6].text), 'DEF':int(data[7].text), 'RES':int(data[8].text), 'BST':int(data[9].text)
+    }
+    return hero
 
 def get_icon(arg, prefix=""):
     url = feh_source %\
@@ -115,6 +133,82 @@ def get_gauntlet_scores():
                 s[0]['Status'] = 'Strong'
         return scores
 
+
+def standardize(d, k):
+    l = d[k]
+    valid_filters = ['Red', 'Blue', 'Green', 'Neutral', 'Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Breath', 'Dagger', 'Infantry', 'Cavalry', 'Armored', 'Flying']
+    valid_sorts = ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST', 'Name', 'Colour', 'Weapon', 'Movement']
+    for i in range(len(l)):
+        l[i] = l[i].title()
+        if l[i] == 'R':
+            l[i] = 'Red'
+        if l[i] == 'B':
+            l[i] = 'Blue'
+        if l[i] == 'G':
+            l[i] = 'Green'
+        if l[i] == 'C':
+            l[i] = 'Colourless'
+        if l[i] == 'Sw':
+            l[i] = 'Sword'
+        if l[i] == 'La':
+            l[i] = 'Lance'
+        if l[i] == 'Ax':
+            l[i] = 'Axe'
+        if l[i] == 'Bo':
+            l[i] = 'Bow'
+        if l[i] == 'St':
+            l[i] = 'Staff'
+        if l[i] == 'Br':
+            l[i] = 'Breath'
+        if l[i] == 'Da':
+            l[i] = 'Dagger'
+        if l[i] == 'In':
+            l[i] = 'Infantry'
+        if l[i] in ['Ca', 'Mo', 'Mounted']:
+            l[i] = 'Cavalry'
+        if l[i] in ['Ar', 'Armoured']:
+            l[i] = 'Armored'
+        if l[i] == 'Fl':
+            l[i] = 'Flying'
+        if l[i] in ['Hp', 'Atk', 'Spd', 'Def', 'Res', 'Bst']:
+            l[i] = l[i].upper()
+        if l[i] == 'Attack':
+            l[i] = 'ATK'
+        if l[i] == 'Speed':
+            l[i] = 'SPD'
+        if l[i] == 'Defense':
+            l[i] = 'DEF'
+        if l[i] == 'Resistance':
+            l[i] = 'RES'
+        if l[i] in ['Total', 'Stats', 'Stat']:
+            l[i] = 'BST'
+        if l[i] == 'Na':
+            l[i] = 'Name'
+        if l[i] == 'Co':
+            l[i] = 'Colour'
+        if l[i] == 'We':
+            l[i] = 'Weapon'
+        if l[i] == 'Mov':
+            l[i] = 'Movement'
+    print(l)
+    if k == 'f': 
+        if bool(set(l) - set(valid_filters)):
+            return None
+        else:
+            colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Colourless'], l))
+            weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath'], l))
+            move = list(filter(lambda x:x in ['Infantry', 'Cavalry', 'Armored', 'Flying'], l))
+            filters = {}
+            if colours:
+                filters['Colour'] = colours
+            if weapons:
+                filters['Weapon'] = weapons
+            if move:
+                filters['Movement'] = move
+            return filters
+    if k == 's' and bool(set(l) - set(valid_sorts)):
+        return None
+    return l
 
 class Utilities:
     """I'll help you any way I can."""
@@ -321,6 +415,66 @@ class Utilities:
                     inline=False
                 )
         await self.bot.say(embed=message)
+
+    @bot.command(aliases=['list'])
+    async def fehlist(self, *args):
+        """I will create a list of heroes to serve your needs.
+Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
+Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored).
+Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. The order you declare these will be the order of priority.
+There are shorthands to make it easier:
+Red, Blue, Green, Colourless = r, b, g, c
+Sword, Lance, Axe, Bow, Dagger, Staff, Breath = sw, la, ax, bo, da, st, br
+Infantry, Cavalry, Flying, Armored = in, ca, fl, ar
+Name, Colour, Weapon, Movement Type = na, co, we, mov
+Or you can just type out the full name.
+Example: !list -f red sword infantry -s attack hp
+         is the same as
+         !list -f r sw in -s atk hp
+         and will produce a list of units that are Red, wield Swords and are Infantry sorted by Attack and then by HP.
+        """
+        if args:
+            if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args):
+                await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
+                return
+        
+        # set up argument parser
+        parser = argparse.ArgumentParser(description='Process arguments for heroes list.')
+        parser.add_argument('-f', nargs='*')
+        parser.add_argument('-s', nargs='*')
+        parser.add_argument('-r', action='store_const', const=False, default=True)
+        args = vars(parser.parse_args(args=args))
+        filters = {}
+        if args['f']:
+            filters = standardize(args, 'f')
+            if filters is None:
+                await self.bot.say('Invalid filters or multiple filters for the same field were selected.')
+                return
+        sort_keys = []
+        if args['s']:
+            sort_keys = standardize(args, 's')
+            if sort_keys is None:
+                await self.bot.say('Invalid fields to sort by were selected.')
+                return
+        heroes = get_heroes_list()
+        for f in filters:
+            heroes = list(filter(lambda h:h[f] in filters[f], heroes))
+        if not heroes:
+            await self.bot.say('No results found for selected filters.')
+            return
+        for key in reversed(sort_keys):
+            heroes = sorted(heroes, key=lambda h:h[key], reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r'])
+        list_string = ', '.join([h['Name'] + (' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') for h in heroes])
+        n = 0
+        while len(list_string) > 2000:
+            list_string = ', '.join([h['Name'] + (' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') for h in heroes])
+            if n == 0:
+                heroes = heroes[:100]
+                n += 5
+            else:
+                n += 5
+        message = list_string
+        await self.bot.say(message)
 
 
 def setup(bot):
