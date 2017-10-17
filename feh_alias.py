@@ -33,8 +33,6 @@ aliases = {
     'babe':'Lukas',
     'ginger stud':'Lukas',
     'you':'Lukas',
-    "book's son":'Seliph',
-    'books son':'Seliph',
     'rein':'Reinhardt',
     'bridelia':'Cordelia (Bridal Blessings)',
     'broy':'Roy (Brave Heroes)',
@@ -49,4 +47,9 @@ aliases = {
     'nohrzura':'Azura (Performing Arts)',
     'axezura':'Azura (Performing Arts)',
     'nohr azura':'Azura (Performing Arts)'
+}
+
+sons = {
+    'Datagne#6415':'Tobin',
+    'bookofholsety#2235':'Seliph'
 }
