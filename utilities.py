@@ -136,7 +136,7 @@ def get_gauntlet_scores():
 
 def standardize(d, k):
     l = d[k]
-    valid_filters = ['Red', 'Blue', 'Green', 'Neutral', 'Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Breath', 'Dagger', 'Infantry', 'Cavalry', 'Armored', 'Flying']
+    valid_filters = ['Red', 'Blue', 'Green', 'Neutral', 'Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Breath', 'Tome', 'Dagger', 'Infantry', 'Cavalry', 'Armored', 'Flying']
     valid_sorts = ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST', 'Name', 'Colour', 'Weapon', 'Movement']
     for i in range(len(l)):
         l[i] = l[i].title()
@@ -162,6 +162,8 @@ def standardize(d, k):
             l[i] = 'Breath'
         if l[i] == 'Da':
             l[i] = 'Dagger'
+        if l[i] == 'To':
+            l[i] = 'Tome'
         if l[i] == 'In':
             l[i] = 'Infantry'
         if l[i] in ['Ca', 'Mo', 'Mounted']:
@@ -196,7 +198,7 @@ def standardize(d, k):
             return None
         else:
             colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Colourless'], l))
-            weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath'], l))
+            weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath', 'Tome'], l))
             move = list(filter(lambda x:x in ['Infantry', 'Cavalry', 'Armored', 'Flying'], l))
             filters = {}
             if colours:
@@ -420,11 +422,11 @@ class Utilities:
     async def fehlist(self, *args):
         """I will create a list of heroes to serve your needs.
 Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
-Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored).
+Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored).
 Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. The order you declare these will be the order of priority.
 There are shorthands to make it easier:
 Red, Blue, Green, Colourless = r, b, g, c
-Sword, Lance, Axe, Bow, Dagger, Staff, Breath = sw, la, ax, bo, da, st, br
+Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath = sw, la, ax, bo, da, st, to, br
 Infantry, Cavalry, Flying, Armored = in, ca, fl, ar
 Name, Colour, Weapon, Movement Type = na, co, we, mov
 Or you can just type out the full name.
