@@ -2,7 +2,7 @@ import discord, random, urllib.request, urllib.parse, json
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
-from feh_alias import aliases
+from feh_alias import *
 
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
@@ -145,9 +145,8 @@ class Utilities:
     @bot.command(pass_context=True)
     async def feh(self, ctx, *, arg):
         """I will provide some information on a Fire Emblem Heroes topic."""
-        print(hash(ctx.message.author))
-        if str(ctx.message.author) == 'bookofholsety#2235' and arg.lower() in ['son', 'my son']:
-            arg = 'Seliph'
+        if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
+            arg = sons[str(ctx.message.author)]
         else:
             arg = true_page(arg)
         if arg == INVALID_HERO:
