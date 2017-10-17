@@ -22,9 +22,9 @@ def true_page(arg):
         return 'Robin (M)'
     if arg.lower() == 'mcorrin':
         return 'Corrin (M)'
-    if arg.lower() == 'atiki':
+    if arg.lower() in ['atiki', 'legal tiki']:
         return 'Tiki (Adult)'
-    if arg.lower() == 'ytiki':
+    if arg.lower() in ['ytiki', 'loli tiki']:
         return 'Tiki (Young)'
     if arg.lower() == 'qr':
         return 'Quick Riposte'
@@ -40,6 +40,10 @@ def true_page(arg):
     if arg.lower() == 'tailtyu':
         return 'Tailtiu'
     # nicknames
+    if arg.lower() in ['chiken', 'floof chiken', 'chicken', 'floof chicken', 'floof dragon']:
+        return 'Fae'
+    if arg.lower() == 'floof':
+        return 'Genny'
     if arg.lower() == 'lucy':
         return 'Lucius'
     if arg.lower() == 'doot':
