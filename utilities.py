@@ -2,6 +2,8 @@ import discord, random, urllib.request, urllib.parse, json
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
+from feh_alias import aliases
+
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
 GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
@@ -14,59 +16,8 @@ def get_page(url):
 
 def true_page(arg):
     # extra cases for common aliases
-    if arg.lower() == 'frobin':
-        return 'Robin (F)'
-    if arg.lower() == 'fcorrin':
-        return 'Corrin (F)'
-    if arg.lower() == 'mrobin':
-        return 'Robin (M)'
-    if arg.lower() == 'mcorrin':
-        return 'Corrin (M)'
-    if arg.lower() in ['atiki', 'legal tiki']:
-        return 'Tiki (Adult)'
-    if arg.lower() in ['ytiki', 'loli tiki']:
-        return 'Tiki (Young)'
-    if arg.lower() == 'qr':
-        return 'Quick Riposte'
-    if arg.lower() in ['ld', 'lnd']:
-        return 'Life and Death'
-    if arg.lower() == 'qp':
-        return 'Quickened Pulse'
-    if arg.lower() == 'dd':
-        return 'Distant Defense'
-    # jugdral
-    if arg.lower() in ['siglud', 'zigludo']:
-        return 'Sigurd'
-    if arg.lower() == 'tailtyu':
-        return 'Tailtiu'
-    # nicknames
-    if arg.lower() in ['chiken', 'floof chiken', 'chicken', 'floof chicken', 'floof dragon']:
-        return 'Fae'
-    if arg.lower() == 'floof':
-        return 'Genny'
-    if arg.lower() == 'lucy':
-        return 'Lucius'
-    if arg.lower() == 'doot':
-        return 'Delthea'
-    if arg.lower() == 'thorp':
-        return 'Tharja'
-    if arg.lower() == 'gwendy':
-        return 'Gwendolyn'
-    if arg.lower() in ['babe', 'ginger stud']:
-        return 'Lukas'
-    if arg.lower() == 'rein':
-        return 'Reinhardt'
-    if arg.lower() == 'bridelia':
-        return 'Cordelia (Bridal Blessings)'
-    # brave aliases
-    if arg.lower() in ['broy', 'boy', 'our boy']:
-        return 'Roy (Brave Heroes)'
-    if arg.lower() in ['blyn', 'byn']:
-        return 'Lyn (Brave Heroes)'
-    if arg.lower() == 'bike':
-        return 'Ike (Brave Heroes)'
-    if arg.lower() in ['blucina', 'lancina']:
-        return 'Lucina (Brave Heroes)'
+    if arg.lower() in aliases:
+        return aliases[arg.lower()]
 
     # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
     arg = arg.split('(')
@@ -191,10 +142,14 @@ class Utilities:
         message += '```'
         await self.bot.say(message)
         
-    @bot.command()
-    async def feh(self, *, arg):
+    @bot.command(pass_context=True)
+    async def feh(self, ctx, *, arg):
         """I will provide some information on a Fire Emblem Heroes topic."""
-        arg = true_page(arg)
+        print(hash(ctx.message.author))
+        if str(ctx.message.author) == 'bookofholsety#2235' and arg.lower() in ['son', 'my son']:
+            arg = 'Seliph'
+        else:
+            arg = true_page(arg)
         if arg == INVALID_HERO:
             await self.bot.say("I'm afraid I couldn't find information on that.")
             return
