@@ -34,6 +34,11 @@ def true_page(arg):
         return 'Quickened Pulse'
     if arg.lower() == 'dd':
         return 'Distant Defense'
+    # jugdral
+    if arg.lower() in ['siglud', 'zigludo']:
+        return 'Sigurd'
+    if arg.lower() == 'tailtyu':
+        return 'Tailtiu'
     # nicknames
     if arg.lower() == 'lucy':
         return 'Lucius'
@@ -43,7 +48,7 @@ def true_page(arg):
         return 'Tharja'
     if arg.lower() == 'gwendy':
         return 'Gwendolyn'
-    if arg.lower() == 'babe':
+    if arg.lower() in ['babe', 'ginger stud']:
         return 'Lukas'
     if arg.lower() == 'rein':
         return 'Reinhardt'
