@@ -33,6 +33,8 @@ aliases = {
     'babe':'Lukas',
     'ginger stud':'Lukas',
     'you':'Lukas',
+    "book's son":'Seliph',
+    'books son':'Seliph',
     'rein':'Reinhardt',
     'bridelia':'Cordelia (Bridal Blessings)',
     'broy':'Roy (Brave Heroes)',
