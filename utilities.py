@@ -198,17 +198,14 @@ def standardize(d, k):
             colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Colourless'], l))
             weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath'], l))
             move = list(filter(lambda x:x in ['Infantry', 'Cavalry', 'Armored', 'Flying'], l))
-            if len(colours) > 1 or len(weapons) > 1 or len(move) > 1:
-                return None
-            else:
-                filters = {}
-                if colours:
-                    filters['Colour'] = colours[0]
-                if weapons:
-                    filters['Weapon'] = weapons[0]
-                if move:
-                    filters['Movement'] = move[0]
-                return filters
+            filters = {}
+            if colours:
+                filters['Colour'] = colours
+            if weapons:
+                filters['Weapon'] = weapons
+            if move:
+                filters['Movement'] = move
+            return filters
     if k == 's' and bool(set(l) - set(valid_sorts)):
         return None
     return l
@@ -421,6 +418,26 @@ class Utilities:
 
     @bot.command(aliases=['list'])
     async def fehlist(self, *args):
+        """I will create a list of heroes to serve your needs.
+Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
+Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored).
+Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. The order you declare these will be the order of priority.
+There are shorthands to make it easier:
+Red, Blue, Green, Colourless = r, b, g, c
+Sword, Lance, Axe, Bow, Dagger, Staff, Breath = sw, la, ax, bo, da, st, br
+Infantry, Cavalry, Flying, Armored = in, ca, fl, ar
+Name, Colour, Weapon, Movement Type = na, co, we, mov
+Or you can just type out the full name.
+Example: !list -f red sword infantry -s attack hp
+         is the same as
+         !list -f r sw in -s atk hp
+         and will produce a list of units that are Red, wield Swords and are Infantry sorted by Attack and then by HP.
+        """
+        if args:
+            if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args):
+                await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
+                return
+        
         # set up argument parser
         parser = argparse.ArgumentParser(description='Process arguments for heroes list.')
         parser.add_argument('-f', nargs='*')
@@ -441,7 +458,7 @@ class Utilities:
                 return
         heroes = get_heroes_list()
         for f in filters:
-            heroes = list(filter(lambda h:h[f] == filters[f], heroes))
+            heroes = list(filter(lambda h:h[f] in filters[f], heroes))
         if not heroes:
             await self.bot.say('No results found for selected filters.')
             return
@@ -458,6 +475,7 @@ class Utilities:
                 n += 5
         message = list_string
         await self.bot.say(message)
+
 
 def setup(bot):
     bot.add_cog(Utilities(bot))
