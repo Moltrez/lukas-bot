@@ -2,7 +2,7 @@ import discord, random, urllib.request, urllib.parse, json
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
-from feh_alias import aliases
+from feh_alias import *
 
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
@@ -86,7 +86,6 @@ def extract_table(table_html):
 def format_stats_table(table):
     if len(table) == 0:
         return None
-    print(table)
     stats = '`|' + '|'.join(['%8s' % key if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
     for set in table:
         stats += '\n`|' + '|'.join(['%8s' % set[key] if key != 'Rarity' else set[key] for key in set][:-1]) + '|`'
@@ -145,9 +144,8 @@ class Utilities:
     @bot.command(pass_context=True)
     async def feh(self, ctx, *, arg):
         """I will provide some information on a Fire Emblem Heroes topic."""
-        print(hash(ctx.message.author))
-        if str(ctx.message.author) == 'bookofholsety#2235' and arg.lower() in ['son', 'my son']:
-            arg = 'Seliph'
+        if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
+            arg = sons[str(ctx.message.author)]
         else:
             arg = true_page(arg)
         if arg == INVALID_HERO:
@@ -157,18 +155,29 @@ class Utilities:
         message = discord.Embed(
             title=arg,
             url=feh_source % (urllib.parse.quote(arg)),
-            color=0xe74c3c
+            color=0x222222
         )
         categories = get_categories(arg)
         if 'Heroes' in categories:
-            icon = get_icon(arg, "Icon_Portrait_")
-            if not icon is None:
-                message.set_thumbnail(url=icon)
             html = BSoup(get_text(arg), "lxml")
             stats = get_infobox(html)
             base_stats_table, max_stats_table = [extract_table(a)
                                                  for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
-            print(stats)
+            colour = 0x54676E # colorless
+            if 'Red' in stats['Weapon Type']:
+                colour = 0xCC2844
+            if 'Blue' in stats['Weapon Type']:
+                colour = 0x2A63E6
+            if 'Green' in stats['Weapon Type']:
+                colour = 0x139F13
+            message = discord.Embed(
+                title=arg,
+                url=feh_source % (urllib.parse.quote(arg)),
+                color=colour
+            )
+            icon = get_icon(arg, "Icon_Portrait_")
+            if not icon is None:
+                message.set_thumbnail(url=icon)
             rarity = ', '.join(a+'★' for a in stats['Rarities'] if a.isdigit())
             message.add_field(
                 name="Rarities",
