@@ -66,5 +66,6 @@ flaunt = {
     'ErrantDShepherd#8839':'https://cdn.discordapp.com/attachments/367370320962650113/370023047652048896/Screenshot_20171017-183902.png',
     'bookofholsety#2235':'https://cdn.discordapp.com/attachments/369523314126749706/370042437411930112/2017-10-18_13.54.58.png',
     'Dr. Letha#0629':'https://cdn.discordapp.com/attachments/369523314126749706/370042170209468426/Screenshot_20171010-093438.png',
-    'Datagne#6415':'https://cdn.discordapp.com/attachments/369523314126749706/370107115513315329/Screenshot_20171018-081321-058.png'
+    'Datagne#6415':'https://cdn.discordapp.com/attachments/369523314126749706/370107115513315329/Screenshot_20171018-081321-058.png',
+    'Mr.Pepsi™#8225':'https://cdn.discordapp.com/attachments/369522639955296268/370153179389755393/Screenshot_2017-10-18-18-13-54.png'
 }
