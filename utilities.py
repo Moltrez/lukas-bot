@@ -212,8 +212,8 @@ def standardize(d, k):
         return None
     return l
 
-class Utilities:
-    """I'll help you any way I can."""
+class MagikarpJump:
+    """The game we don't play anymore."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -223,9 +223,15 @@ class Utilities:
         """I will tell you which rod will net you the best Magikarp."""
         await self.bot.say(random.choice(['L', 'M', 'R']))
         
+class FireEmblemHeroes:
+    """The game we don't play anymore."""
+
+    def __init__(self, bot):
+        self.bot = bot
         
     @bot.command()
     async def gauntlet(self):
+        """I will tell you the current Voting Gauntlet score."""
         scores = get_gauntlet_scores()
         longest = max(scores, key=lambda s: len(s[0]['Score']) + len(s[0]['Status']) + 3)
         longest = len(longest[0]['Score']) + len(longest[0]['Status']) + 3
@@ -417,7 +423,16 @@ class Utilities:
                     inline=False
                 )
         await self.bot.say(embed=message)
-
+    
+    @bot.command(pass_context=True)
+    async def flaunt(self, ctx):
+        """Use this command to show off your prized units."""
+        user = str(ctx.message.author)
+        message = "I'm afraid you have nothing to flaunt."
+        if user in flaunt:
+            message = flaunt[user]
+        await self.bot.say(message)
+    
     @bot.command(aliases=['list'])
     async def fehlist(self, *args):
         """I will create a list of heroes to serve your needs.
@@ -480,4 +495,5 @@ Example: !list -f red sword infantry -s attack hp
 
 
 def setup(bot):
-    bot.add_cog(Utilities(bot))
+    bot.add_cog(MagikarpJump(bot))
+    bot.add_cog(FireEmblemHeroes(bot))
