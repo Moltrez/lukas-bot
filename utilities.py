@@ -218,7 +218,7 @@ class MagikarpJump:
     def __init__(self, bot):
         self.bot = bot
 
-    @bot.command()
+    @bot.command(aliases=['Lmr'])
     async def lmr(self):
         """I will tell you which rod will net you the best Magikarp."""
         await self.bot.say(random.choice(['L', 'M', 'R']))
@@ -229,7 +229,7 @@ class FireEmblemHeroes:
     def __init__(self, bot):
         self.bot = bot
         
-    @bot.command()
+    @bot.command(aliases=['Gauntlet'])
     async def gauntlet(self):
         """I will tell you the current Voting Gauntlet score."""
         scores = get_gauntlet_scores()
@@ -243,7 +243,7 @@ class FireEmblemHeroes:
         message += '```'
         await self.bot.say(message)
         
-    @bot.command(pass_context=True)
+    @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on a Fire Emblem Heroes topic."""
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
@@ -424,7 +424,7 @@ class FireEmblemHeroes:
                 )
         await self.bot.say(embed=message)
     
-    @bot.command(pass_context=True)
+    @bot.command(pass_context=True, aliases=['Flaunt'])
     async def flaunt(self, ctx):
         """Use this command to show off your prized units."""
         user = str(ctx.message.author)
@@ -433,7 +433,7 @@ class FireEmblemHeroes:
             message = flaunt[user]
         await self.bot.say(message)
     
-    @bot.command(aliases=['list'])
+    @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
         """I will create a list of heroes to serve your needs.
 Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
