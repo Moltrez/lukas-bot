@@ -1,4 +1,5 @@
 aliases = {
+    'meta':'Ayra',
     'frobin':'Robin (F)',
     'fcorrin':'Corrin (F)',
     'mrobin':'Robin (M)',
