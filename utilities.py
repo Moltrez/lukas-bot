@@ -245,7 +245,7 @@ class FireEmblemHeroes:
         
     @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, ctx, *, arg):
-        """I will provide some information on a Fire Emblem Heroes topic."""
+        """I will provide some information on any Fire Emblem Heroes topic."""
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
             arg = sons[str(ctx.message.author)]
         else:
@@ -426,7 +426,8 @@ class FireEmblemHeroes:
     
     @bot.command(pass_context=True, aliases=['Flaunt'])
     async def flaunt(self, ctx):
-        """Use this command to show off your prized units."""
+        """Use this command to show off your prized units.
+Flaunts are personalized, so contact monkeybard or someone who knows monkeybard with a screenshot of your prized unit to add your flaunt."""
         user = str(ctx.message.author)
         message = "I'm afraid you have nothing to flaunt."
         if user in flaunt:
