@@ -243,13 +243,15 @@ class FireEmblemHeroes:
         message += '```'
         await self.bot.say(message)
         
-    @bot.command(pass_context=True, aliases=['Feh'])
-    async def feh(self, ctx, *, arg):
-        """I will provide some information on a Fire Emblem Heroes topic."""
-        if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
-            arg = sons[str(ctx.message.author)]
-        else:
-            arg = true_page(arg)
+    #@bot.command(pass_context=True, aliases=['Feh'])
+    @bot.command(aliases=['Feh'])
+    async def feh(self, *, arg):
+    #async def feh(self, ctx, *, arg):
+        """I will provide some information on any Fire Emblem Heroes topic."""
+        #if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
+            #arg = sons[str(ctx.message.author)]
+        #else:
+        arg = true_page(arg)
         if arg == INVALID_HERO:
             await self.bot.say("I'm afraid I couldn't find information on that.")
             return
