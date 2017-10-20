@@ -1,5 +1,6 @@
 aliases = {
     'meta':'Ayra',
+    'speed is everything':'Ayra',
     'frobin':'Robin (F)',
     'fcorrin':'Corrin (F)',
     'mrobin':'Robin (M)',
@@ -17,7 +18,7 @@ aliases = {
     'dc':'Distant Counter',
     'siglud':'Sigurd',
     'zigludo':'Sigurd',
-    'ZIGLUDO-CHAN-SAN-SAMA-SENPAI-SAN-SAMA-SAN-SENPAI-CHAN':'Sigurd',
+    'zigludo-chan-san-sama-senpai-san-sama-san-senpai-chan':'Sigurd',
     'tailtyu':'Tailtiu',
     'chiken':'Fae',
     'floof chiken':'Fae',
@@ -39,6 +40,7 @@ aliases = {
     'ginger stud':'Lukas',
     'you':'Lukas',
     'rein':'Reinhardt',
+    'magic is everything':'Reinhardt',
     'bridelia':'Cordelia (Bridal Blessings)',
     'broy':'Roy (Brave Heroes)',
     'boy':'Roy (Brave Heroes)',
