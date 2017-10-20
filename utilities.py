@@ -430,14 +430,15 @@ class FireEmblemHeroes:
         """Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
-        message = "I'm afraid you have nothing to flaunt."
         if user in flaunt:
             request = urllib.request.Request(flaunt[user], headers={'User-Agent': 'Mozilla/5.0'})
             response = urllib.request.urlopen(request)
             f = response.read()
             f = io.BytesIO(f)
             f.name = os.path.basename(flaunt[user])
-        await self.bot.upload(f)
+            await self.bot.upload(f)
+        else:
+            await self.bot.say("I'm afraid you have nothing to flaunt.")
     
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
