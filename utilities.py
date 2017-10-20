@@ -11,7 +11,8 @@ GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
 def get_page(url):
     print(url)
-    response = urllib.request.urlopen(url)
+    request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    response = urllib.request.urlopen(request)
     return json.load(response)
 
 def true_page(arg):
@@ -427,7 +428,7 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['Flaunt'])
     async def flaunt(self, ctx):
         """Use this command to show off your prized units.
-Flaunts are personalized, so contact monkeybard or someone who knows monkeybard with a screenshot of your prized unit to add your flaunt."""
+If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
         message = "I'm afraid you have nothing to flaunt."
         if user in flaunt:

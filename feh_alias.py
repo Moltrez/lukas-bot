@@ -1,4 +1,5 @@
 aliases = {
+    'meta':'Ayra',
     'frobin':'Robin (F)',
     'fcorrin':'Corrin (F)',
     'mrobin':'Robin (M)',
@@ -62,7 +63,7 @@ flaunt = {
     'InvdrZim13#0826':'https://cdn.discordapp.com/attachments/369523314126749706/370016114102763520/Screenshot_20171017-211149.png',
     'MCProductions#6839':'https://cdn.discordapp.com/attachments/369523314126749706/370015689257385985/Super_Tiki.png',
     'monkeybard#3663':'https://cdn.discordapp.com/attachments/326581929614901250/370016478222745600/Screenshot_20171018-121234.png',
-    'Blaze#1888':'https://cdn.discordapp.com/attachments/367370320962650113/370021129194307585/Broy.png',
+    'Blaze#1888':'https://cdn.discordapp.com/attachments/367370320962650113/370263882058563594/Heroes_Roy.png',
     'ErrantDShepherd#8839':'https://cdn.discordapp.com/attachments/367370320962650113/370023047652048896/Screenshot_20171017-183902.png',
     'bookofholsety#2235':'https://cdn.discordapp.com/attachments/369523314126749706/370042437411930112/2017-10-18_13.54.58.png',
     'Dr. Letha#0629':'https://cdn.discordapp.com/attachments/369523314126749706/370042170209468426/Screenshot_20171010-093438.png',
