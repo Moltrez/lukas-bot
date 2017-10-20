@@ -12,7 +12,7 @@ GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 def get_page(url):
     print(url)
     request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(url)
+    response = urllib.request.urlopen(request)
     return json.load(response)
 
 def true_page(arg):
