@@ -11,6 +11,7 @@ GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
 def get_page(url):
     print(url)
+    request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     response = urllib.request.urlopen(url)
     return json.load(response)
 
@@ -243,15 +244,14 @@ class FireEmblemHeroes:
         message += '```'
         await self.bot.say(message)
         
-    #@bot.command(pass_context=True, aliases=['Feh'])
-    @bot.command(aliases=['Feh'])
+    @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, *, arg):
-    #async def feh(self, ctx, *, arg):
+    async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
-        #if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
-            #arg = sons[str(ctx.message.author)]
-        #else:
-        arg = true_page(arg)
+        if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
+            arg = sons[str(ctx.message.author)]
+        else:
+            arg = true_page(arg)
         if arg == INVALID_HERO:
             await self.bot.say("I'm afraid I couldn't find information on that.")
             return
