@@ -1,4 +1,4 @@
-import discord, random, urllib.request, urllib.parse, json, argparse
+import discord, random, urllib.request, urllib.parse, json, argparse, io, os.path
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
@@ -432,8 +432,12 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
         user = str(ctx.message.author)
         message = "I'm afraid you have nothing to flaunt."
         if user in flaunt:
-            message = flaunt[user]
-        await self.bot.say(message)
+            request = urllib.request.Request(flaunt[user], headers={'User-Agent': 'Mozilla/5.0'})
+            response = urllib.request.urlopen(request)
+            f = response.read()
+            f = io.BytesIO(f)
+            f.name = os.path.basename(flaunt[user])
+        await self.bot.upload(f)
     
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):

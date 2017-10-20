@@ -5,7 +5,7 @@ from lukas_quest import *
 
 import utilities, chat, lukas_quest
 
-bot = commands.Bot(command_prefix=['!', 'lukas '], description='I am here to serve. I will try to respond to messages that start with `!` or `lukas `.')
+bot = commands.Bot(command_prefix=['!', '?', 'lukas '], description='I am here to serve. I will try to respond to messages that start with `!` or `lukas `.')
 
 lukas = Lukas('./lukas_stats.json')
 debug = False
