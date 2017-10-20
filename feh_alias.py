@@ -17,6 +17,7 @@ aliases = {
     'dc':'Distant Counter',
     'siglud':'Sigurd',
     'zigludo':'Sigurd',
+    'ZIGLUDO-CHAN-SAN-SAMA-SENPAI-SAN-SAMA-SAN-SENPAI-CHAN':'Sigurd',
     'tailtyu':'Tailtiu',
     'chiken':'Fae',
     'floof chiken':'Fae',
