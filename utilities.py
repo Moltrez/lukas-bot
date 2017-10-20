@@ -488,15 +488,10 @@ Example: !list -f red sword infantry -s attack hp
             return
         for key in reversed(sort_keys):
             heroes = sorted(heroes, key=lambda h:h[key], reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r'])
-        list_string = ', '.join([h['Name'] + (' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') for h in heroes])
-        n = 0
+        list_string = ', '.join([h['Name'] + ((' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') if len(sort_keys) != 1 or sort_keys[0] != 'Name' else '') for h in heroes])
         while len(list_string) > 2000:
-            list_string = ', '.join([h['Name'] + (' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') for h in heroes])
-            if n == 0:
-                heroes = heroes[:100]
-                n += 5
-            else:
-                n += 5
+            list_string = ', '.join([h['Name'] + ((' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') if len(sort_keys) != 1 or sort_keys[0] != 'Name' else '') for h in heroes])
+            heroes = heroes[:-1]
         message = list_string
         await self.bot.say(message)
 
