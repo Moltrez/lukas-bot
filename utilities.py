@@ -245,7 +245,6 @@ class FireEmblemHeroes:
         await self.bot.say(message)
         
     @bot.command(pass_context=True, aliases=['Feh'])
-    async def feh(self, *, arg):
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
