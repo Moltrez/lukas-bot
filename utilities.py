@@ -1,4 +1,4 @@
-import discord, random, urllib.request, urllib.parse, json, argparse, io, os.path, operator
+import discord, random, urllib.request, urllib.parse, json, argparse, io, os.path, operator, itertools
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
@@ -228,7 +228,6 @@ def standardize(d, k):
                 return None
             elif filt[0]:
                 field, number = filt
-                print(number, field)
             else:
                 j=0
                 for j in range(1, len(filt[1])):
@@ -237,16 +236,31 @@ def standardize(d, k):
                     j += 1
                 number = filt[1][:j-1]
                 field = filt[1][j-1:]
-                print(number, field)
-            field = standardize({'s':[field]}, 's')
+            field = standardize({'s':field if isinstance(field, list) else [field]}, 's')
             if field:
-                field = field[0]
-                if field not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
+                if isinstance(field[0], tuple):
+                    field = field[0]
+                elif field[0] not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
                     return None
             else:
                 return None
             l[i] = (op, field, int(number))
-    print(l)
+        if ',' in l[i] or '+' in l[i]:
+            fields = None
+            if ',' in l[i] and '+' not in l[i]:
+                fields = l[i].split(',')
+            if '+' in l[i] and ',' not in l[i]:
+                fields = l[i].split('+')
+            if not fields or '' in fields:
+                return None
+            fields = standardize({'s':fields if isinstance(fields, list) else [fields]}, 's')
+            if fields:
+                for f in fields:
+                    if f not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
+                        return None
+            else:
+                return None
+            l[i] = tuple(fields)
     if k == 'f': 
         if bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_filters)):
             return None
@@ -264,7 +278,6 @@ def standardize(d, k):
                 filters['Movement'] = move
             if thresh:
                 filters['Threshold'] = thresh
-            print(filters)
             return filters
     if k == 's' and bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_sorts)):
         return None
@@ -543,15 +556,38 @@ Example: !list -f red sword infantry -s attack hp
                 heroes = list(filter(lambda h:h[f] in filters[f], heroes))
             else:
                 for t in filters[f]:
-                    heroes = list(filter(lambda h:t[0](h[t[1]], t[2]), heroes))
+                    heroes = list(filter(lambda h:t[0](list(itertools.accumulate([h[field] for field in t[1]]))[-1], t[2]), heroes))
         if not heroes:
             await self.bot.say('No results found for selected filters.')
             return
         for key in reversed(sort_keys):
-            heroes = sorted(heroes, key=lambda h:h[key], reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r'])
-        list_string = ', '.join([h['Name'] + ((' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') if len(sort_keys) != 1 or sort_keys[0] != 'Name' else '') for h in heroes])
+            heroes = sorted(heroes,
+                            key=lambda h:
+                                list(
+                                    itertools.accumulate([h[field] for field in key] if isinstance(key, tuple) else [h[key]]))[-1],
+                                    reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r']
+                                    )
+        list_string = ', '.join([
+            h['Name'] + (
+                (' ('+','.join([
+                    str(
+                        list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
+                        ) for k in sort_keys if k != 'Name'
+                    ])+')' if sort_keys else '')
+                if len(sort_keys) != 1 or sort_keys[0] != 'Name' else ''
+                ) for h in heroes
+            ])
         while len(list_string) > 2000:
-            list_string = ', '.join([h['Name'] + ((' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') if len(sort_keys) != 1 or sort_keys[0] != 'Name' else '') for h in heroes])
+            list_string = ', '.join([
+                h['Name'] + (
+                    (' ('+','.join([
+                        str(
+                            list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
+                            ) for k in sort_keys if k != 'Name'
+                        ])+')' if sort_keys else '')
+                    if len(sort_keys) != 1 or sort_keys[0] != 'Name' else ''
+                    ) for h in heroes
+                ])
             heroes = heroes[:-1]
         message = list_string
         await self.bot.say(message)
