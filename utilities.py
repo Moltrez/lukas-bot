@@ -1,4 +1,4 @@
-import discord, random, urllib.request, urllib.parse, json, argparse, io, os.path
+import discord, random, urllib.request, urllib.parse, json, argparse, io, os.path, operator
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
@@ -167,7 +167,7 @@ def standardize(d, k):
             l[i] = 'Tome'
         if l[i] == 'In':
             l[i] = 'Infantry'
-        if l[i] in ['Ca', 'Mo', 'Mounted']:
+        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse']:
             l[i] = 'Cavalry'
         if l[i] in ['Ar', 'Armoured']:
             l[i] = 'Armored'
@@ -193,14 +193,68 @@ def standardize(d, k):
             l[i] = 'Weapon'
         if l[i] == 'Mov':
             l[i] = 'Movement'
+        if '>' in l[i] or '<' in l[i] or '=' in l[i]:
+            op = None
+            filt = None
+            if '>' in l[i] and '>=' not in l[i]:                
+                # greater than
+                filt = l[i].split('>')
+                op = operator.gt
+            if '>=' in l[i]:
+                # greater than or equal
+                filt = l[i].split('>=')
+                op = operator.ge
+            if '<' in l[i] and '<=' not in l[i]:
+                # less than
+                filt = l[i].split('<')
+                op = operator.lt
+            if '<=' in l[i]:
+                # less than or equal
+                filt = l[i].split('<=')
+                op = operator.le
+            if '=' in l[i] and '!=' not in l[i] and '>=' not in l[i] and '<=' not in l[i]:
+                # equal
+                filt = l[i].split('=')
+                if len(filt) == 3:
+                    del filt[1]
+                op = operator.eq
+            if '!=' in l[i]:
+                # not equal
+                filt = l[i].split('!=')
+                op = operator.ne
+            if filt is None or operator is None:
+                return None
+            if len(filt) != 2:
+                return None
+            elif filt[0]:
+                field, number = filt
+                print(number, field)
+            else:
+                j=0
+                for j in range(1, len(filt[1])):
+                    if not filt[1][:j].isdigit():
+                        break
+                    j += 1
+                number = filt[1][:j-1]
+                field = filt[1][j-1:]
+                print(number, field)
+            field = standardize({'s':[field]}, 's')
+            if field:
+                field = field[0]
+                if field not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
+                    return None
+            else:
+                return None
+            l[i] = (op, field, int(number))
     print(l)
     if k == 'f': 
-        if bool(set(l) - set(valid_filters)):
+        if bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_filters)):
             return None
         else:
             colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Colourless'], l))
             weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath', 'Tome'], l))
             move = list(filter(lambda x:x in ['Infantry', 'Cavalry', 'Armored', 'Flying'], l))
+            thresh = list(filter(lambda x:isinstance(x, tuple), l))
             filters = {}
             if colours:
                 filters['Colour'] = colours
@@ -208,8 +262,11 @@ def standardize(d, k):
                 filters['Weapon'] = weapons
             if move:
                 filters['Movement'] = move
+            if thresh:
+                filters['Threshold'] = thresh
+            print(filters)
             return filters
-    if k == 's' and bool(set(l) - set(valid_sorts)):
+    if k == 's' and bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_sorts)):
         return None
     return l
 
@@ -482,7 +539,11 @@ Example: !list -f red sword infantry -s attack hp
                 return
         heroes = get_heroes_list()
         for f in filters:
-            heroes = list(filter(lambda h:h[f] in filters[f], heroes))
+            if f != 'Threshold':
+                heroes = list(filter(lambda h:h[f] in filters[f], heroes))
+            else:
+                for t in filters[f]:
+                    heroes = list(filter(lambda h:t[0](h[t[1]], t[2]), heroes))
         if not heroes:
             await self.bot.say('No results found for selected filters.')
             return
