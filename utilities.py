@@ -1,4 +1,4 @@
-import discord, random, urllib.request, urllib.parse, json, argparse, io, os.path
+import discord, random, urllib.request, urllib.parse, json, argparse, io, os.path, operator, itertools
 from discord.ext import commands as bot
 from bs4 import BeautifulSoup as BSoup
 
@@ -167,7 +167,7 @@ def standardize(d, k):
             l[i] = 'Tome'
         if l[i] == 'In':
             l[i] = 'Infantry'
-        if l[i] in ['Ca', 'Mo', 'Mounted']:
+        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse']:
             l[i] = 'Cavalry'
         if l[i] in ['Ar', 'Armoured']:
             l[i] = 'Armored'
@@ -193,14 +193,82 @@ def standardize(d, k):
             l[i] = 'Weapon'
         if l[i] == 'Mov':
             l[i] = 'Movement'
-    print(l)
+        if '>' in l[i] or '<' in l[i] or '=' in l[i]:
+            op = None
+            filt = None
+            if '>' in l[i] and '>=' not in l[i]:                
+                # greater than
+                filt = l[i].split('>')
+                op = operator.gt
+            if '>=' in l[i]:
+                # greater than or equal
+                filt = l[i].split('>=')
+                op = operator.ge
+            if '<' in l[i] and '<=' not in l[i]:
+                # less than
+                filt = l[i].split('<')
+                op = operator.lt
+            if '<=' in l[i]:
+                # less than or equal
+                filt = l[i].split('<=')
+                op = operator.le
+            if '=' in l[i] and '!=' not in l[i] and '>=' not in l[i] and '<=' not in l[i]:
+                # equal
+                filt = l[i].split('=')
+                if len(filt) == 3:
+                    del filt[1]
+                op = operator.eq
+            if '!=' in l[i]:
+                # not equal
+                filt = l[i].split('!=')
+                op = operator.ne
+            if filt is None or operator is None:
+                return None
+            if len(filt) != 2:
+                return None
+            elif filt[0]:
+                field, number = filt
+            else:
+                j=0
+                for j in range(1, len(filt[1])):
+                    if not filt[1][:j].isdigit():
+                        break
+                    j += 1
+                number = filt[1][:j-1]
+                field = filt[1][j-1:]
+            field = standardize({'s':field if isinstance(field, list) else [field]}, 's')
+            if field:
+                if isinstance(field[0], tuple):
+                    field = field[0]
+                elif field[0] not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
+                    return None
+            else:
+                return None
+            l[i] = (op, field, int(number))
+        if '+' in l[i]:
+            fields = None
+            if ',' in l[i] and '+' not in l[i]:
+                fields = l[i].split(',')
+            if '+' in l[i] and ',' not in l[i]:
+                fields = l[i].split('+')
+            if not fields or '' in fields:
+                return None
+            fields = standardize({'s':fields if isinstance(fields, list) else [fields]}, 's')
+            if fields:
+                for f in fields:
+                    if f not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
+                        return None
+            else:
+                return None
+            l[i] = tuple(fields)
     if k == 'f': 
-        if bool(set(l) - set(valid_filters)):
+        if bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_filters)):
             return None
         else:
             colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Colourless'], l))
             weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath', 'Tome'], l))
             move = list(filter(lambda x:x in ['Infantry', 'Cavalry', 'Armored', 'Flying'], l))
+            thresh = list(filter(lambda x:isinstance(x, tuple), l))
             filters = {}
             if colours:
                 filters['Colour'] = colours
@@ -208,8 +276,10 @@ def standardize(d, k):
                 filters['Weapon'] = weapons
             if move:
                 filters['Movement'] = move
+            if thresh:
+                filters['Threshold'] = thresh
             return filters
-    if k == 's' and bool(set(l) - set(valid_sorts)):
+    if k == 's' and bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_sorts)):
         return None
     return l
 
@@ -430,27 +500,30 @@ class FireEmblemHeroes:
         """Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
-        message = "I'm afraid you have nothing to flaunt."
         if user in flaunt:
             request = urllib.request.Request(flaunt[user], headers={'User-Agent': 'Mozilla/5.0'})
             response = urllib.request.urlopen(request)
             f = response.read()
             f = io.BytesIO(f)
             f.name = os.path.basename(flaunt[user])
-        await self.bot.upload(f)
+            await self.bot.upload(f)
+        else:
+            await self.bot.say("I'm afraid you have nothing to flaunt.")
     
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
         """I will create a list of heroes to serve your needs.
 Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
-Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored).
-Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. The order you declare these will be the order of priority.
+Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored). You can also filter by a stat threshold such as (HP>30) or (DEF+RES>50).
+Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. You can also sort by added stat totals such as (DEF+RES) or (ATK+SPD). The order you declare these will be the order of priority.
 There are shorthands to make it easier:
 Red, Blue, Green, Colourless = r, b, g, c
 Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath = sw, la, ax, bo, da, st, to, br
 Infantry, Cavalry, Flying, Armored = in, ca, fl, ar
 Name, Colour, Weapon, Movement Type = na, co, we, mov
 Or you can just type out the full name.
+Sorting by an added stat total is as simple as typing in all the stats you want to add with a + between them without spaces. Examples: atk+def+spd def+res
+You can filter by a stat or an added stat total by typing the stat(s) as you would for sort and adding a comparison and number. Examples: hp>30 spd<20 def>=30 atk==35 atk=35 hp+spd>60
 Example: !list -f red sword infantry -s attack hp
          is the same as
          !list -f r sw in -s atk hp
@@ -481,21 +554,43 @@ Example: !list -f red sword infantry -s attack hp
                 return
         heroes = get_heroes_list()
         for f in filters:
-            heroes = list(filter(lambda h:h[f] in filters[f], heroes))
+            if f != 'Threshold':
+                heroes = list(filter(lambda h:h[f] in filters[f], heroes))
+            else:
+                for t in filters[f]:
+                    heroes = list(filter(lambda h:t[0](list(itertools.accumulate([h[field] for field in t[1]]))[-1], t[2]), heroes))
         if not heroes:
             await self.bot.say('No results found for selected filters.')
             return
         for key in reversed(sort_keys):
-            heroes = sorted(heroes, key=lambda h:h[key], reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r'])
-        list_string = ', '.join([h['Name'] + (' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') for h in heroes])
-        n = 0
+            heroes = sorted(heroes,
+                            key=lambda h:
+                                list(
+                                    itertools.accumulate([h[field] for field in key] if isinstance(key, tuple) else [h[key]]))[-1],
+                                    reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r']
+                                    )
+        list_string = ', '.join([
+            h['Name'] + (
+                (' ('+','.join([
+                    str(
+                        list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
+                        ) for k in sort_keys if k != 'Name'
+                    ])+')' if sort_keys else '')
+                if len(sort_keys) != 1 or sort_keys[0] != 'Name' else ''
+                ) for h in heroes
+            ])
         while len(list_string) > 2000:
-            list_string = ', '.join([h['Name'] + (' ('+','.join([str(h[k]) for k in sort_keys if k != 'Name'])+')' if sort_keys else '') for h in heroes])
-            if n == 0:
-                heroes = heroes[:100]
-                n += 5
-            else:
-                n += 5
+            list_string = ', '.join([
+                h['Name'] + (
+                    (' ('+','.join([
+                        str(
+                            list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
+                            ) for k in sort_keys if k != 'Name'
+                        ])+')' if sort_keys else '')
+                    if len(sort_keys) != 1 or sort_keys[0] != 'Name' else ''
+                    ) for h in heroes
+                ])
+            heroes = heroes[:-1]
         message = list_string
         await self.bot.say(message)
 
