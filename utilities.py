@@ -240,7 +240,7 @@ def standardize(d, k):
             if field:
                 if isinstance(field[0], tuple):
                     field = field[0]
-                elif field[0] not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
+                elif field[0] not in ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST']:
                     return None
             else:
                 return None
@@ -256,7 +256,7 @@ def standardize(d, k):
             fields = standardize({'s':fields if isinstance(fields, list) else [fields]}, 's')
             if fields:
                 for f in fields:
-                    if f not in ['HP', 'ATK', 'SPD', 'DEF', 'RES']:
+                    if f not in ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST']:
                         return None
             else:
                 return None
