@@ -245,7 +245,7 @@ def standardize(d, k):
             else:
                 return None
             l[i] = (op, field, int(number))
-        if ',' in l[i] or '+' in l[i]:
+        if '+' in l[i]:
             fields = None
             if ',' in l[i] and '+' not in l[i]:
                 fields = l[i].split(',')
@@ -514,14 +514,16 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
     async def fehlist(self, *args):
         """I will create a list of heroes to serve your needs.
 Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
-Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored).
-Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. The order you declare these will be the order of priority.
+Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored). You can also filter by a stat threshold such as (HP>30) or (DEF+RES>50).
+Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. You can also sort by added stat totals such as (DEF+RES) or (ATK+SPD). The order you declare these will be the order of priority.
 There are shorthands to make it easier:
 Red, Blue, Green, Colourless = r, b, g, c
 Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath = sw, la, ax, bo, da, st, to, br
 Infantry, Cavalry, Flying, Armored = in, ca, fl, ar
 Name, Colour, Weapon, Movement Type = na, co, we, mov
 Or you can just type out the full name.
+Sorting by an added stat total is as simple as typing in all the stats you want to add with a + between them without spaces. Examples: atk+def+spd def+res
+You can filter by a stat or an added stat total by typing the stat(s) as you would for sort and adding a comparison and number. Examples: hp>30 spd<20 def>=30 atk==35 atk=35 hp+spd>60
 Example: !list -f red sword infantry -s attack hp
          is the same as
          !list -f r sw in -s atk hp
