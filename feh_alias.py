@@ -76,6 +76,14 @@ sons = {
     'InvdrZim13#0826':'Jeorge'
 }
 
+waifu = {
+    'monkeybard#3663':'Norne',
+    'MCProductions#6839':'Tiki (Adult)',
+    'Dr. Letha#0629':'Narcian',
+    'Black Mage#3584':'Palla',
+    'InvdrZim13#0826':'Jeorge'
+}
+
 flaunt = {
     'InvdrZim13#0826':'https://cdn.discordapp.com/attachments/369523314126749706/370016114102763520/Screenshot_20171017-211149.png',
     'MCProductions#6839':'https://cdn.discordapp.com/attachments/369523314126749706/370015689257385985/Super_Tiki.png',

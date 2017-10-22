@@ -349,12 +349,16 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
+        original_arg = arg
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
             arg = sons[str(ctx.message.author)]
+        elif str(ctx.message.author) in waifus and arg.lower() in ['waifu', 'my waifu']:
+            arg = waifus[str(ctx.message.author)]
+
         else:
             arg = true_page(arg)
         if arg == INVALID_HERO:
-            await self.bot.say("I'm afraid I couldn't find information on that.")
+            await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
             return
         print(arg)
         message = discord.Embed(
