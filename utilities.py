@@ -141,7 +141,7 @@ def format_stats_table(table):
     ret = header + rows
     if '+' in list(ivs.values()) or '-' in list(ivs.values()):
         ret += "\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._"
-    return header + rows
+    return ret
 
 def calc_bst(stats_table):
     if len(stats_table) == 0:
