@@ -38,6 +38,7 @@ aliases = {
     'fluff':'Genny',
     'qr fodder':'Subaki',
     'flying booboo':'Subaki',
+    'does her best':'Nino',
     'strongsturdyslow':'Arden',
     'strong, sturdy, slow':'Arden',
     'strong sturdy slow':'Arden',
