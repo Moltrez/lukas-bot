@@ -92,6 +92,7 @@ waifus = {
     'Darrman#2798':'Sigurd',
     'Tchyrimi#7149':'Mae',
     'Indigo_Hue47#4821':'Saizo',
+    'Colorz💜#7111':'Linde',
     'Kon#2272':'Titania'
 }
 
