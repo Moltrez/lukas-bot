@@ -140,7 +140,7 @@ def format_stats_table(table):
     header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in table[0]][:-1]) + '|`'
     ret = header + rows
     if '+' in list(ivs.values()) or '-' in list(ivs.values()):
-        ret += "\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._"
+        ret += "\n\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._"
     return ret
 
 def calc_bst(stats_table):

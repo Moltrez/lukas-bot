@@ -36,6 +36,8 @@ aliases = {
     'fluff chiken':'Fae',
     'floof':'Genny',
     'fluff':'Genny',
+    'qr fodder':'Subaki',
+    'flying booboo':'Subaki',
     'strongsturdyslow':'Arden',
     'strong, sturdy, slow':'Arden',
     'strong sturdy slow':'Arden',
