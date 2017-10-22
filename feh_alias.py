@@ -88,6 +88,7 @@ waifus = {
     'InvdrZim13#0826':'Jeorge',
     'Zylphe#7994':'Hana',
     'Darrman#2798':'Sigurd',
+    'Indigo_Hue47#4821':'Saizo',
     'Kon#2272':'Titania'
 }
 
