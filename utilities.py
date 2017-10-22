@@ -102,14 +102,43 @@ def extract_table(table_html):
     return table
 
 
+#def format_stats_table(table):
+    #if len(table) == 0:
+        #return None
+    #stats = '`|' + '|'.join(['%8s' % key if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
+    #for set in table:
+        #stats += '\n`|' + '|'.join(['%8s' % set[key] if key != 'Rarity' else set[key] for key in set][:-1]) + '|`'
+    #return stats
+
 def format_stats_table(table):
     if len(table) == 0:
         return None
-    stats = '`|' + '|'.join(['%8s' % key if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
+    ivs = {'HP':'', 'ATK':'', 'SPD':'', 'DEF':'', 'RES':'', 'Total':''}
+    rows = ''
     for set in table:
-        stats += '\n`|' + '|'.join(['%8s' % set[key] if key != 'Rarity' else set[key] for key in set][:-1]) + '|`'
-    return stats
-
+        rows += '\n`'
+        for key in set:
+            if key == 'Rarity':
+                rows += '|' + set[key] + '|'
+                continue
+            if key == 'Total':
+                continue
+            stats = set[key].split('/')
+            neutral = stats[0]
+            format = '%4s'
+            if len(stats) == 3:
+                neutral = stats[1]
+                if int(stats[2]) - int(stats[1]) == 4:
+                    ivs[key] = '+'
+                if int(stats[1]) - int(stats[0]) == 4:
+                    if ivs[key] == '+':
+                        ivs[key] = '±'
+                    else:
+                        ivs[key] = '-'
+            rows += format % neutral + '|'
+        rows += '`'
+    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
+    return header + rows
 
 def calc_bst(stats_table):
     if len(stats_table) == 0:
@@ -373,12 +402,13 @@ class FireEmblemHeroes:
             message.add_field(
                 name="Base Stats",
                 value=format_stats_table(base_stats_table),
-                inline=False
+                inline=True
             )
             message.add_field(
                 name="Max Level Stats",
-                value=format_stats_table(max_stats_table),
-                inline=False
+                value=format_stats_table(max_stats_table) +
+                "\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._",
+                inline=True
             )
             skill_tables = html.find_all("table", attrs={"class":"skills-table"})
             skills = ''
