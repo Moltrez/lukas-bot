@@ -52,6 +52,7 @@ aliases = {
     'you':'Lukas',
     'rein':'Reinhardt',
     'magic is everything':'Reinhardt',
+    'marthina':'Marth (Masked)',
     'bridelia':'Cordelia (Bridal Blessings)',
     'broy':'Roy (Brave Heroes)',
     'boy':'Roy (Brave Heroes)',
