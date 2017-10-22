@@ -73,7 +73,8 @@ aliases = {
 sons = {
     'Datagne#6415':'Tobin',
     'bookofholsety#2235':'Seliph',
-    'InvdrZim13#0826':'Jeorge'
+    'InvdrZim13#0826':'Jeorge',
+    'Mystic#2694':'Gray'
 }
 
 waifus = {

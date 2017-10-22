@@ -357,7 +357,7 @@ class FireEmblemHeroes:
         else:
             arg = true_page(arg)
         if arg == INVALID_HERO:
-            if original_arg in ['son', 'my son', 'waifu', 'my waifu']:
+            if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
                 await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
             else:
                 await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
