@@ -76,7 +76,8 @@ sons = {
     'InvdrZim13#0826':'Jeorge',
     'Blaze#1888':'Roy',
     'MCProductions#6839':'Roy',
-    'Mystic#2694':'Gray'
+    'Mystic#2694':'Gray',
+    'Kon#2272':'Soren'
 }
 
 waifus = {
@@ -86,7 +87,8 @@ waifus = {
     'Black Mage#3584':'Palla',
     'InvdrZim13#0826':'Jeorge',
     'Zylphe#7994':'Hana',
-    'Darrman#2798':'Sigurd'
+    'Darrman#2798':'Sigurd',
+    'Kon#2272':'Titania'
 }
 
 flaunt = {
