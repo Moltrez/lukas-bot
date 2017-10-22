@@ -131,7 +131,10 @@ def format_stats_table(table):
                 if int(stats[2]) - int(stats[1]) == 4:
                     ivs[key] = '+'
                 if int(stats[1]) - int(stats[0]) == 4:
-                    ivs[key] = '-'
+                    if ivs[key] == '+':
+                        ivs[key] = '±'
+                    else:
+                        ivs[key] = '-'
             rows += format % neutral + '|'
         rows += '`'
     header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
