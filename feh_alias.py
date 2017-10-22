@@ -42,6 +42,7 @@ aliases = {
     'strongsturdyslow':'Arden',
     'strong, sturdy, slow':'Arden',
     'strong sturdy slow':'Arden',
+    'alvis':'Arvis',
     'ploymaster':'Arvis',
     'bbq':'Arvis',
     'doot':'Delthea',
