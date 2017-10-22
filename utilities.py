@@ -119,7 +119,7 @@ def format_stats_table(table):
         rows += '\n`'
         for key in set:
             if key == 'Rarity':
-                rows += '|' + set[key] + '|'
+                rows += '|' + set[key] + '★|'
                 continue
             if key == 'Total':
                 continue
@@ -137,7 +137,10 @@ def format_stats_table(table):
                         ivs[key] = '-'
             rows += format % neutral + '|'
         rows += '`'
-    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
+    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in table[0]][:-1]) + '|`'
+    ret = header + rows
+    if '+' in list(ivs.values()) or '-' in list(ivs.values()):
+        ret += "\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._"
     return header + rows
 
 def calc_bst(stats_table):
@@ -406,8 +409,7 @@ class FireEmblemHeroes:
             )
             message.add_field(
                 name="Max Level Stats",
-                value=format_stats_table(max_stats_table) +
-                "\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._",
+                value=format_stats_table(max_stats_table),
                 inline=True
             )
             skill_tables = html.find_all("table", attrs={"class":"skills-table"})
