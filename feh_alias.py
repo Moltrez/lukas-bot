@@ -81,7 +81,9 @@ waifus = {
     'MCProductions#6839':'Tiki (Adult)',
     'Dr. Letha#0629':'Narcian',
     'Black Mage#3584':'Palla',
-    'InvdrZim13#0826':'Jeorge'
+    'InvdrZim13#0826':'Jeorge',
+    'Zylphe#7994':'Hana',
+    'Darrman#2798':'Sigurd'
 }
 
 flaunt = {
