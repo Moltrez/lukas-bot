@@ -76,7 +76,7 @@ sons = {
     'InvdrZim13#0826':'Jeorge'
 }
 
-waifu = {
+waifus = {
     'monkeybard#3663':'Norne',
     'MCProductions#6839':'Tiki (Adult)',
     'Dr. Letha#0629':'Narcian',
