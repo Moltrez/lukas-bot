@@ -77,17 +77,20 @@ sons = {
     'Blaze#1888':'Roy',
     'MCProductions#6839':'Roy',
     'Mystic#2694':'Gray',
+    'Tchyrimi#7149':'Lucius',
     'Kon#2272':'Soren'
 }
 
 waifus = {
     'monkeybard#3663':'Norne',
+    'Zane Avernathy#7138':'Lucius',
     'MCProductions#6839':'Tiki (Adult)',
     'Dr. Letha#0629':'Narcian',
     'Black Mage#3584':'Palla',
     'InvdrZim13#0826':'Jeorge',
     'Zylphe#7994':'Hana',
     'Darrman#2798':'Sigurd',
+    'Tchyrimi#7149':'Mae',
     'Indigo_Hue47#4821':'Saizo',
     'Kon#2272':'Titania'
 }
