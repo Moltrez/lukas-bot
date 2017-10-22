@@ -74,6 +74,8 @@ sons = {
     'Datagne#6415':'Tobin',
     'bookofholsety#2235':'Seliph',
     'InvdrZim13#0826':'Jeorge',
+    'Blaze#1888':'Roy',
+    'MCProductions#6839':'Roy',
     'Mystic#2694':'Gray'
 }
 
