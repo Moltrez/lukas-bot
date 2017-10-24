@@ -101,6 +101,8 @@ waifus = {
 }
 
 flaunt = {
+    'Karinole#6528':'https://media.discordapp.net/attachments/369522639955296268/372488306908200960/Screenshot_20171024-165500.png',
+    'Darrman#2798':'https://media.discordapp.net/attachments/369522639955296268/372487390637457409/Screenshot_2017-10-24-21-46-541.png',
     'InvdrZim13#0826':'https://media.discordapp.net/attachments/369523314126749706/370016114102763520/Screenshot_20171017-211149.png',
     'MCProductions#6839':'https://media.discordapp.net/attachments/369523314126749706/371841366264774657/Screenshot_20171022-210353.png',
     'monkeybard#3663':'https://media.discordapp.net/attachments/369522639955296268/372265366665297920/Screenshot_20171024-170814.png',
