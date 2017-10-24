@@ -539,7 +539,7 @@ class FireEmblemHeroes:
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
         if user in flaunt:
-            request = urllib.request.Request(flaunt[user], headers={'User-Agent': 'Mozilla/5.0'})
+            request = urllib.request.Request(flaunt[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
             response = urllib.request.urlopen(request)
             f = response.read()
             f = io.BytesIO(f)
