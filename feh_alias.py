@@ -67,7 +67,10 @@ aliases = {
     'spurmaster':'Lucina (Brave Heroes)',
     'nohrzura':'Azura (Performing Arts)',
     'axezura':'Azura (Performing Arts)',
-    'nohr azura':'Azura (Performing Arts)'
+    'nohr azura':'Azura (Performing Arts)',
+    'doga':'Draug',
+    'dohga':'Draug',
+    'pointchoker':'Draug'
 }
 
 sons = {
@@ -77,6 +80,7 @@ sons = {
     'Blaze#1888':'Roy',
     'MCProductions#6839':'Roy',
     'Mystic#2694':'Gray',
+    'Dr. Letha#0629':'Draug',
     'Tchyrimi#7149':'Lucius',
     'Kon#2272':'Soren'
 }
