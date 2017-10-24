@@ -119,7 +119,7 @@ def format_stats_table(table):
         rows += '\n`'
         for key in set:
             if key == 'Rarity':
-                rows += '|' + set[key] + '|'
+                rows += '|' + set[key] + '★|'
                 continue
             if key == 'Total':
                 continue
@@ -137,8 +137,11 @@ def format_stats_table(table):
                         ivs[key] = '-'
             rows += format % neutral + '|'
         rows += '`'
-    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
-    return header + rows
+    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in table[0]][:-1]) + '|`'
+    ret = header + rows
+    if '+' in list(ivs.values()) or '-' in list(ivs.values()):
+        ret += "\n\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._"
+    return ret
 
 def calc_bst(stats_table):
     if len(stats_table) == 0:
@@ -346,12 +349,18 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
+        original_arg = arg
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
             arg = sons[str(ctx.message.author)]
+        elif str(ctx.message.author) in waifus and arg.lower() in ['waifu', 'my waifu']:
+            arg = waifus[str(ctx.message.author)]
         else:
             arg = true_page(arg)
         if arg == INVALID_HERO:
-            await self.bot.say("I'm afraid I couldn't find information on that.")
+            if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+                await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
+            else:
+                await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
             return
         print(arg)
         message = discord.Embed(
@@ -406,8 +415,7 @@ class FireEmblemHeroes:
             )
             message.add_field(
                 name="Max Level Stats",
-                value=format_stats_table(max_stats_table) +
-                "\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._",
+                value=format_stats_table(max_stats_table),
                 inline=True
             )
             skill_tables = html.find_all("table", attrs={"class":"skills-table"})
@@ -531,7 +539,7 @@ class FireEmblemHeroes:
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
         if user in flaunt:
-            request = urllib.request.Request(flaunt[user], headers={'User-Agent': 'Mozilla/5.0'})
+            request = urllib.request.Request(flaunt[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
             response = urllib.request.urlopen(request)
             f = response.read()
             f = io.BytesIO(f)
