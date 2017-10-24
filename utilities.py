@@ -350,11 +350,15 @@ class FireEmblemHeroes:
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
         original_arg = arg
+        passive_level = 3
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
             arg = sons[str(ctx.message.author)]
         elif str(ctx.message.author) in waifus and arg.lower() in ['waifu', 'my waifu']:
             arg = waifus[str(ctx.message.author)]
         else:
+            if arg[-1] in ['1','2','3']:
+                passive_level = int(arg[-1])
+                arg = arg[:-2]
             arg = true_page(arg)
         if arg == INVALID_HERO:
             if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
@@ -482,7 +486,7 @@ class FireEmblemHeroes:
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
             html = BSoup(get_text(arg), "lxml")
             stats_table = html.find("table", attrs={"class": "sortable"})
-            stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")] + \
+            stats = [a.get_text().strip() for a in stats_table.find_all("tr")[1 if len(stats_table.find_all("tr")) < 4 else passive_level].find_all("td")] + \
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
             stats = [a if a else 'N/A' for a in stats]
