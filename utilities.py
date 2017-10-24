@@ -358,7 +358,7 @@ class FireEmblemHeroes:
         else:
             if arg[-1] in ['1','2','3']:
                 passive_level = int(arg[-1])
-                arg = arg[:-2]
+                arg = arg[:-1].strip()
             arg = true_page(arg)
         if arg == INVALID_HERO:
             if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
