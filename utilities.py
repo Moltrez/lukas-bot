@@ -486,7 +486,7 @@ class FireEmblemHeroes:
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
             html = BSoup(get_text(arg), "lxml")
             stats_table = html.find("table", attrs={"class": "sortable"})
-            stats = [a.get_text().strip() for a in stats_table.find_all("tr")[1 if len(stats_table.find_all("tr")) < 4 else passive_level].find_all("td")] + \
+            stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")] + \
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
             stats = [a if a else 'N/A' for a in stats]
