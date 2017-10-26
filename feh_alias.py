@@ -68,6 +68,7 @@ aliases = {
     'nohrzura':'Azura (Performing Arts)',
     'axezura':'Azura (Performing Arts)',
     'nohr azura':'Azura (Performing Arts)',
+    'axura':'Azura (Performing Arts)',
     'doga':'Draug',
     'dohga':'Draug',
     'pointchoker':'Draug'
@@ -115,5 +116,8 @@ flaunt = {
     'Zylphe#7994':'https://media.discordapp.net/attachments/369522639955296268/370154665700098058/Screenshot_2017-10-15-11-54-43-61.png',
     'Zmr56 is Bored#0800':'https://media.discordapp.net/attachments/369522639955296268/370362796400967701/Screenshot_2017-09-16-17-28-35.png',
     'Chastlily/Lys#8151':'https://media.discordapp.net/attachments/370949018488012800/371259186689998848/image-5.png',
+    'Glaceo#1485':'https://media.discordapp.net/attachments/369522639955296268/373189308791652354/Screenshot_3376.png',
+    'Dialzza#6871':'https://media.discordapp.net/attachments/370949018488012800/373150943543427082/image.png',
+    'Eliwood#6752':'https://media.discordapp.net/attachments/370949018488012800/373151012216635392/image.png',
     'East#2679':'https://media.discordapp.net/attachments/370949018488012800/371259318517104640/image-6.png'
 }
