@@ -56,7 +56,9 @@ def list_row_to_dict(row):
         'Colour':colour,
         'Weapon':weapon,
         'Movement':row['data-move-type'],
-        'HP':int(data[4].text), 'ATK':int(data[5].text), 'SPD':int(data[6].text), 'DEF':int(data[7].text), 'RES':int(data[8].text), 'BST':int(data[9].text)
+        'HP':int(data[4].text) if data[4].text.isdigit() else 0, 'ATK':int(data[5].text) if data[5].text.isdigit() else 0,
+        'SPD':int(data[6].text) if data[6].text.isdigit() else 0, 'DEF':int(data[7].text) if data[7].text.isdigit() else 0,
+        'RES':int(data[8].text) if data[8].text.isdigit() else 0, 'BST':int(data[9].text) if data[9].text.isdigit() else 0
     }
     return hero
 
