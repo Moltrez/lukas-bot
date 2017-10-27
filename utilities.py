@@ -104,14 +104,6 @@ def extract_table(table_html):
     return table
 
 
-#def format_stats_table(table):
-    #if len(table) == 0:
-        #return None
-    #stats = '`|' + '|'.join(['%8s' % key if key != 'Rarity' else '★' for key in table[0]][:-1]) + '|`'
-    #for set in table:
-        #stats += '\n`|' + '|'.join(['%8s' % set[key] if key != 'Rarity' else set[key] for key in set][:-1]) + '|`'
-    #return stats
-
 def format_stats_table(table):
     if len(table) == 0:
         return None
@@ -130,13 +122,14 @@ def format_stats_table(table):
             format = '%4s'
             if len(stats) == 3:
                 neutral = stats[1]
-                if int(stats[2]) - int(stats[1]) == 4:
-                    ivs[key] = '+'
-                if int(stats[1]) - int(stats[0]) == 4:
-                    if ivs[key] == '+':
-                        ivs[key] = '±'
-                    else:
-                        ivs[key] = '-'
+                if neutral.isdigit():
+                    if int(stats[2]) - int(stats[1]) == 4:
+                        ivs[key] = '+'
+                    if int(stats[1]) - int(stats[0]) == 4:
+                        if ivs[key] == '+':
+                            ivs[key] = '±'
+                        else:
+                            ivs[key] = '-'
             rows += format % neutral + '|'
         rows += '`'
     header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in table[0]][:-1]) + '|`'
