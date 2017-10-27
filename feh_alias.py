@@ -34,6 +34,7 @@ aliases = {
     'fluff chicken':'Fae',
     'fluff dragon':'Fae',
     'fluff chiken':'Fae',
+    'nowitch':'Nowi (Trick or Defeat!)',
     'floof':'Genny',
     'fluff':'Genny',
     'qr fodder':'Subaki',
