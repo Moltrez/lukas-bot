@@ -29,7 +29,7 @@ def true_page(arg):
         else:
             arg[1] = arg[1].title()
     arg = '('.join(arg)
-    arg = arg.replace("'S", "'s").replace(" And ", " and ").replace(" Or ", " or ").replace(" Of ", " of ").\
+    arg = arg.replace("'S", "'s").replace(" And ", " and ").replace(" Or ", " or ").replace(" Of ", " of ").replace(" For ", " for ").\
         replace('Hp ', 'HP ').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus')
 
@@ -223,7 +223,7 @@ def standardize(d, k):
         if '>' in l[i] or '<' in l[i] or '=' in l[i]:
             op = None
             filt = None
-            if '>' in l[i] and '>=' not in l[i]:                
+            if '>' in l[i] and '>=' not in l[i]:
                 # greater than
                 filt = l[i].split('>')
                 op = operator.gt
@@ -288,7 +288,7 @@ def standardize(d, k):
             else:
                 return None
             l[i] = tuple(fields)
-    if k == 'f': 
+    if k == 'f':
         if bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_filters)):
             return None
         else:
@@ -320,13 +320,13 @@ class MagikarpJump:
     async def lmr(self):
         """I will tell you which rod will net you the best Magikarp."""
         await self.bot.say(random.choice(['L', 'M', 'R']))
-        
+
 class FireEmblemHeroes:
-    """The game we don't play anymore."""
+    """The game that we do still play a lot."""
 
     def __init__(self, bot):
         self.bot = bot
-        
+
     @bot.command(aliases=['Gauntlet'])
     async def gauntlet(self):
         """I will tell you the current Voting Gauntlet score."""
@@ -340,7 +340,7 @@ class FireEmblemHeroes:
 """.format(s[0]['Name'], s[1]['Name'], (s[0]['Score'] + ' (' + s[0]['Status'] + ')'), ('(' + s[1]['Status'] + ') ' +  s[1]['Score']), width = longest)
         message += '```'
         await self.bot.say(message)
-        
+
     @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
@@ -531,7 +531,7 @@ class FireEmblemHeroes:
                     inline=False
                 )
         await self.bot.say(embed=message)
-    
+
     @bot.command(pass_context=True, aliases=['Flaunt'])
     async def flaunt(self, ctx):
         """Use this command to show off your prized units.
@@ -546,7 +546,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
             await self.bot.upload(f)
         else:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
-    
+
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
         """I will create a list of heroes to serve your needs.
@@ -570,7 +570,7 @@ Example: !list -f red sword infantry -s attack hp
             if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args) or (args[0] not in ['-r', '-f', '-s']):
                 await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
                 return
-        
+
         # set up argument parser
         parser = argparse.ArgumentParser(description='Process arguments for heroes list.')
         parser.add_argument('-f', nargs='*')
