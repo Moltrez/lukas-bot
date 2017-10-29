@@ -120,5 +120,6 @@ flaunt = {
     'Glaceo#1485':'https://media.discordapp.net/attachments/369522639955296268/373189308791652354/Screenshot_3376.png',
     'Dialzza#6871':'https://media.discordapp.net/attachments/370949018488012800/373150943543427082/image.png',
     'Eliwood#6752':'https://media.discordapp.net/attachments/370949018488012800/373151012216635392/image.png',
+    'e;me#1870':'https://media.discordapp.net/attachments/367370320962650113/374222005366554634/image.png',
     'East#2679':'https://media.discordapp.net/attachments/370949018488012800/371259318517104640/image-6.png'
 }
