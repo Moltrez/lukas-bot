@@ -15,7 +15,7 @@ def get_page(url):
     response = urllib.request.urlopen(request)
     return json.load(response)
 
-def true_page(arg):
+def find_name(arg):
     # extra cases for common aliases
     if arg.lower() in aliases:
         return aliases[arg.lower()]
@@ -43,7 +43,7 @@ def true_page(arg):
 
 
 def get_heroes_list():
-    html = BSoup(get_text('Stats Table'), "lxml")
+    html = get_page_text('Stats Table')
     table = html.find('table')
     heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
     return heroes_list
@@ -81,10 +81,10 @@ def get_categories(arg):
     return [a['title'].lstrip('Category:') for a in categories]
 
 
-def get_text(arg):
+def get_page_text(arg):
     url = feh_source % "api.php?action=parse&page=%s&format=json" % (urllib.parse.quote(arg))
     info = get_page(url)
-    return info['parse']['text']['*']
+    return BSoup(info['parse']['text']['*'], "lxml")
 
 
 def get_infobox(html):
@@ -354,7 +354,7 @@ class FireEmblemHeroes:
             if arg[-1] in ['1','2','3']:
                 passive_level = int(arg[-1])
                 arg = arg[:-1].strip()
-            arg = true_page(arg)
+            arg = find_name(arg)
         if arg == INVALID_HERO:
             if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
                 await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
@@ -369,7 +369,7 @@ class FireEmblemHeroes:
         )
         categories = get_categories(arg)
         if 'Heroes' in categories:
-            html = BSoup(get_text(arg), "lxml")
+            html = get_page_text(arg)
             stats = get_infobox(html)
             base_stats_table, max_stats_table = [extract_table(a)
                                                  for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
@@ -445,7 +445,7 @@ class FireEmblemHeroes:
             icon = get_icon(arg, "Weapon_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
-            html = BSoup(get_text(arg), "lxml")
+            html = get_page_text(arg)
             stats = get_infobox(html)
             print(stats)
             message.add_field(
@@ -479,7 +479,7 @@ class FireEmblemHeroes:
                 inline=False
             )
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
-            html = BSoup(get_text(arg), "lxml")
+            html = get_page_text(arg)
             stats_table = html.find("table", attrs={"class": "sortable"})
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")] + \
                     [a.get_text().strip() for a in
@@ -524,7 +524,7 @@ class FireEmblemHeroes:
                                 for b in
                                 [a.find_all("td") for a in learners_table.find_all("tr")[1:]]]
                 else:
-                    learners = [a['Name'] for a in extract_table(learners_table)]
+                    learners = [a['Hero'] for a in extract_table(learners_table)]
                 message.add_field(
                     name="Heroes with " + arg,
                     value=', '.join(learners),
