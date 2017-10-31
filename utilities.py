@@ -79,7 +79,7 @@ class FireEmblemHeroes:
             icon = get_icon(arg, "Icon_Portrait_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
-            rarity = ', '.join(a+'★' for a in stats['Rarities'] if a.isdigit())
+            rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
             message.add_field(
                 name="Rarities",
                 value= rarity if rarity else 'N/A'
@@ -121,12 +121,19 @@ class FireEmblemHeroes:
                 elif 'Cooldown' in headings:
                     # specials
                     skills += '**Specials:** '
+                last_learned = None
                 for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
-                    slot = row.find("td", attrs={"rowspan":True})
+                    slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
                     if not slot is None:
-                        skills = skills.rstrip(', ') + '\n**' + slot.get_text() + '**: '
-                    skills += row.find("td").get_text().strip() + ', '
-                skills = skills.rstrip(', ') + '\n'
+                        skills = skills.rstrip(', ')
+                        if not last_learned is None:
+                            skills += last_learned
+                        skills += '\n**' + slot.get_text() + '**: '
+                    skills += row.find("td").get_text().strip()
+                    if 'Type': # if we're in passives, get learned levels
+                         last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
+                    skills += ', '
+                skills = skills.rstrip(', ') + last_learned + '\n'
             message.add_field(
                 name="Learnable Skills",
                 value=skills,
