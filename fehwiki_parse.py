@@ -1,5 +1,6 @@
 import urllib.request, urllib.parse, json, io
 from bs4 import BeautifulSoup as BSoup
+from feh_alias import *
 
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'

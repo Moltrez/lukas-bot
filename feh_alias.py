@@ -107,7 +107,7 @@ flaunt = {
     'Darrman#2798':'https://media.discordapp.net/attachments/369522639955296268/372487390637457409/Screenshot_2017-10-24-21-46-541.png',
     'InvdrZim13#0826':'https://media.discordapp.net/attachments/369523314126749706/370016114102763520/Screenshot_20171017-211149.png',
     'MCProductions#6839':'https://media.discordapp.net/attachments/369523314126749706/374650882639396864/Screenshot_20171030-150802.png',
-    'monkeybard#3663':'https://media.discordapp.net/attachments/369522639955296268/372265366665297920/Screenshot_20171024-170814.png',
+    'monkeybard#3663':'https://media.discordapp.net/attachments/369523314126749706/374782923028561920/Screenshot_20171031-155232.png',
     'Blaze#1888':'https://media.discordapp.net/attachments/367370320962650113/373497728505741312/Heroes_Roy.png',
     'ErrantDShepherd#8839':'https://media.discordapp.net/attachments/367370320962650113/373499088857202688/Screenshot_20171025-184714.png',
     'bookofholsety#2235':'https://media.discordapp.net/attachments/369523314126749706/370042437411930112/2017-10-18_13.54.58.png',

@@ -86,11 +86,11 @@ class FireEmblemHeroes:
                 name="Rarities",
                 value= rarity if rarity else 'N/A'
             )
-            bst = calc_bst(max_stats_table)
+            bst = get_bst(max_stats_table)
             if not bst is None:
                 message.add_field(
                     name="BST",
-                    value=str(get_bst(max_stats_table))
+                    value=str(bst)
                 )
             message.add_field(
                 name="Weapon Type",
