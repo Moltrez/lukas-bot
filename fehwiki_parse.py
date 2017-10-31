@@ -19,9 +19,9 @@ def find_name(arg):
     if arg.lower() in aliases:
         return aliases[arg.lower()]
 
-    arg = arg.title().replace('Hp ', 'HP ').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
+    arg = arg.title().replace('Hp', 'HP').replace('Atk', 'Attack').replace('Spd', 'Speed').replace(' Def', ' Defense').replace('Res', 'Resistance').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
-        replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus')
+        replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace('+', ' Plus')
 
     redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve&format=json" % (urllib.parse.quote(arg))
     info = get_page(redirect)

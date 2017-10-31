@@ -55,11 +55,7 @@ class FireEmblemHeroes:
                 await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
             return
         print(arg)
-        message = discord.Embed(
-            title=arg,
-            url=feh_source % (urllib.parse.quote(arg)),
-            color=0x222222
-        )
+
         categories = get_categories(arg)
         if 'Heroes' in categories:
             html = get_page_text(arg)
@@ -135,6 +131,11 @@ class FireEmblemHeroes:
                 inline=False
             )
         elif 'Weapons' in categories:
+            message = discord.Embed(
+                title=arg,
+                url=feh_source % (urllib.parse.quote(arg)),
+                color=0x222222
+            )
             icon = get_icon(arg, "Weapon_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
@@ -174,10 +175,50 @@ class FireEmblemHeroes:
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
             html = get_page_text(arg)
             stats_table = html.find("table", attrs={"class": "sortable"})
+            # get the data from the appropriate row dictated by passive_level (if it exists)
+            # append the inherit restriction (and slot)
             stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")] + \
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
             stats = [a if a else 'N/A' for a in stats]
+
+            colour = 0xe8e1c9
+            if 'Specials' in categories:
+                colour = 0xf499fe
+            elif 'Assists' in categories:
+                colour = 0x1fe2c3
+
+            passive_colours = {1:0xcd914c, 2:0xa8b0b0, 3:0xd8b956}
+            skill_name = stats[1 if 'Passives' in categories else 0]
+
+            # use learners table to figure out seal colour
+            if 'Seal Exclusive Skills' not in categories:
+                learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
+                learners = {i+1:[] for i in range(5)}
+                # l_data is one row in a 2D array representing the learners table
+                for l_data in [a.find_all("td") for a in learners_table.find_all("tr")[(1 if 'Passives' in categories else 0):]]:
+                    # append a name to the appropriate level
+                    skill_chain_position = -1
+                    skill_level = 5
+                    for i in range(len(l_data)):
+                        text = l_data[i].get_text()
+                        if skill_name in text:
+                            skill_chain_position = i
+                            skill_level = int(text[-1])
+                            if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
+                                colour = passive_colours[skill_chain_position]
+                    learners[skill_level].append(l_data[0].find_all("a")[1].get_text())
+                learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
+            else:
+                if skill_name[-1] in ['1', '2', '3']:
+                    colour = passive_colours[int(skill_name[-1])]
+
+            message = discord.Embed(
+                title=skill_name,
+                url=feh_source % (urllib.parse.quote(arg)),
+                color=colour
+            )
+
             if 'Passives' in categories:
                 icon = get_icon(stats[1])
                 if not icon is None:
@@ -210,17 +251,6 @@ class FireEmblemHeroes:
                 value='Only, '.join(stats[-2].split('Only'))[:-2]
             )
             if 'Seal Exclusive Skills' not in categories:
-                learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
-                learners = {i+1:[] for i in range(5)}
-                if 'Passives' in categories:
-                    # l_data is one row in a 2D array representing the learners table ignoring table headings
-                    for l_data in [a.find_all("td") for a in learners_table.find_all("tr")[1:]]:
-                        # append a name to the appropriate level
-                        learners[int(l_data[-1 if (len(l_data)-1) < (passive_level+1) else passive_level].get_text()[-1])].append(l_data[0].find_all("a")[1].get_text())
-                    learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
-                else:
-                    learners = [a['Hero'] for a in extract_table(learners_table)]
-                    learners = ', '.join(learners)
                 message.add_field(
                     name="Heroes with " + arg,
                     value=learners,
