@@ -213,7 +213,7 @@ class FireEmblemHeroes:
                 learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
                 learners = []
                 if 'Passives' in categories:
-                    learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1].get_text()[-1] + "★)"
+                    learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1 if (len(b)-1) < (passive_level+1) else passive_level].get_text()[-1] + "★)"
                                 for b in
                                 [a.find_all("td") for a in learners_table.find_all("tr")[1:]]]
                 else:
