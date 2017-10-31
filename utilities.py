@@ -178,32 +178,32 @@ class FireEmblemHeroes:
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
             stats = [a if a else 'N/A' for a in stats]
-            message.add_field(
-                name="Effect",
-                value=stats[2],
-                inline=False
-            )
             if 'Passives' in categories:
                 icon = get_icon(stats[1])
                 if not icon is None:
                     message.set_thumbnail(url=icon)
-                message.add_field(
+                    message.add_field(
                     name="Slot",
                     value=stats[-1]
-                )
-            elif 'Specials' in categories:
-                message.add_field(
+                    )
+                elif 'Specials' in categories:
+                    message.add_field(
                     name="Cooldown",
                     value=stats[1]
-                )
-            elif 'Assists' in categories:
-                message.add_field(
+                    )
+                elif 'Assists' in categories:
+                    message.add_field(
                     name="Range",
                     value=stats[1]
-                )
+                    )
+                    message.add_field(
+                    name="SP Cost",
+                    value=stats[3]
+                    )
             message.add_field(
-                name="SP Cost",
-                value=stats[3]
+                name="Effect",
+                value=stats[2],
+                inline=False
             )
             message.add_field(
                 name="Inherit Restrictions",
@@ -211,16 +211,19 @@ class FireEmblemHeroes:
             )
             if 'Seal Exclusive Skills' not in categories:
                 learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
-                learners = []
+                learners = {i+1:[] for i in range(5)}
                 if 'Passives' in categories:
-                    learners = [b[0].find_all("a")[1].get_text() + " (" + b[-1 if (len(b)-1) < (passive_level+1) else passive_level].get_text()[-1] + "★)"
-                                for b in
-                                [a.find_all("td") for a in learners_table.find_all("tr")[1:]]]
+                    # l_data is one row in a 2D array representing the learners table ignoring table headings
+                    for l_data in [a.find_all("td") for a in learners_table.find_all("tr")[1:]]:
+                        # append a name to the appropriate level
+                        learners[int(l_data[-1 if (len(l_data)-1) < (passive_level+1) else passive_level].get_text()[-1])].append(l_data[0].find_all("a")[1].get_text())
+                    learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
                 else:
                     learners = [a['Hero'] for a in extract_table(learners_table)]
+                    learners = ', '.join(learners)
                 message.add_field(
                     name="Heroes with " + arg,
-                    value=', '.join(learners),
+                    value=learners,
                     inline=False
                 )
         await self.bot.say(embed=message)

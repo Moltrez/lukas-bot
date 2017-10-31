@@ -30,14 +30,15 @@ def find_name(arg):
     arg = '('.join(arg)
     arg = arg.replace("'S", "'s").replace(" And ", " and ").replace(" Or ", " or ").replace(" Of ", " of ").replace(" For ", " for ").\
         replace('Hp ', 'HP ').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
-        replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus')
+        replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
+        replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus')
 
-    redirect = feh_source % "api.php?action=query&titles=%s&redirects=true&format=json" % (urllib.parse.quote(arg))
+    redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve&format=json" % (urllib.parse.quote(arg))
     info = get_page(redirect)
-    if '-1' in info['query']['pages']:
+    if not info[1] or not info[1][0]:
         return INVALID_HERO
-    if 'redirects' in info['query']:
-        return info['query']['redirects'][0]['to']
+    else:
+        return info[1][0]
     return arg
 
 
