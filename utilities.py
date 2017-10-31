@@ -57,18 +57,20 @@ class FireEmblemHeroes:
         print(arg)
 
         categories = get_categories(arg)
+        weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E}
+
         if 'Heroes' in categories:
             html = get_page_text(arg)
             stats = get_infobox(html)
             base_stats_table, max_stats_table = [extract_table(a)
                                                  for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
-            colour = 0x54676E # colorless
+            colour = weapon_colours['Colourless']
             if 'Red' in stats['Weapon Type']:
-                colour = 0xCC2844
+                colour = weapon_colours['Red']
             if 'Blue' in stats['Weapon Type']:
-                colour = 0x2A63E6
+                colour = weapon_colours['Blue']
             if 'Green' in stats['Weapon Type']:
-                colour = 0x139F13
+                colour = weapon_colours['Green']
             message = discord.Embed(
                 title=arg,
                 url=feh_source % (urllib.parse.quote(arg)),
@@ -131,17 +133,26 @@ class FireEmblemHeroes:
                 inline=False
             )
         elif 'Weapons' in categories:
+            colour = 0x222222 # for dragonstones, which are any colour
+            if any(i in ['Swords', 'Red Tomes'] for i in categories):
+                colour = weapon_colours['Red']
+            elif any(i in ['Lances', 'Blue Tomes'] for i in categories):
+                colour = weapon_colours['Blue']
+            elif any(i in ['Axes', 'Green Tomes'] for i in categories):
+                colour = weapon_colours['Green']
+            elif any(i in ['Staves', 'Daggers', 'Bows'] for i in categories):
+                colour = weapon_colours['Colourless']
+
             message = discord.Embed(
                 title=arg,
                 url=feh_source % (urllib.parse.quote(arg)),
-                color=0x222222
+                color=colour
             )
             icon = get_icon(arg, "Weapon_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
             html = get_page_text(arg)
             stats = get_infobox(html)
-            print(stats)
             message.add_field(
                 name="Might",
                 value=stats['Might']
@@ -166,7 +177,6 @@ class FireEmblemHeroes:
                 )
             learners_table = html.find("table", attrs={"class":"sortable"})
             learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
-            print(learners)
             message.add_field(
                 name="Heroes with " + arg,
                 value=', '.join(learners),
@@ -194,21 +204,9 @@ class FireEmblemHeroes:
             # use learners table to figure out seal colour
             if 'Seal Exclusive Skills' not in categories:
                 learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
-                learners = {i+1:[] for i in range(5)}
-                # l_data is one row in a 2D array representing the learners table
-                for l_data in [a.find_all("td") for a in learners_table.find_all("tr")[(1 if 'Passives' in categories else 0):]]:
-                    # append a name to the appropriate level
-                    skill_chain_position = -1
-                    skill_level = 5
-                    for i in range(len(l_data)):
-                        text = l_data[i].get_text()
-                        if skill_name in text:
-                            skill_chain_position = i
-                            skill_level = int(text[-1])
-                            if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
-                                colour = passive_colours[skill_chain_position]
-                    learners[skill_level].append(l_data[0].find_all("a")[1].get_text())
-                learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
+                skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
+                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
+                    colour = passive_colours[skill_chain_position]
             else:
                 if skill_name[-1] in ['1', '2', '3']:
                     colour = passive_colours[int(skill_name[-1])]

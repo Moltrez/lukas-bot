@@ -21,7 +21,7 @@ def find_name(arg):
 
     arg = arg.title().replace('Hp', 'HP').replace('Atk', 'Attack').replace('Spd', 'Speed').replace(' Def', ' Defense').replace('Res', 'Resistance').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
-        replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace('+', ' Plus')
+        replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')
 
     redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve&format=json" % (urllib.parse.quote(arg))
     info = get_page(redirect)
@@ -139,6 +139,22 @@ def get_bst(stats_table):
         return None
     return stats_table[-1]['Total']
 
+
+def get_learners(learners_table, categories, skill_name):
+    learners = {i+1:[] for i in range(5)}
+    # l_data is one row in a 2D array representing the learners table
+    skill_chain_position = -1
+    for l_data in [a.find_all("td") for a in learners_table.find_all("tr")[(1 if 'Passives' in categories else 0):]]:
+        # append a name to the appropriate level
+        skill_level = 5
+        for i in range(len(l_data)):
+            text = l_data[i].get_text()
+            if skill_name in text:
+                skill_chain_position = i
+                skill_level = int(text[-1])
+        learners[skill_level].append(l_data[0].find_all("a")[1].get_text())
+    learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
+    return skill_chain_position, learners
 
 def get_gauntlet_scores():
         newurl = urllib.request.urlopen(GAUNTLET_URL).geturl()
