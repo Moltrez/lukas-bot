@@ -186,20 +186,20 @@ class FireEmblemHeroes:
                     name="Slot",
                     value=stats[-1]
                     )
-                elif 'Specials' in categories:
-                    message.add_field(
-                    name="Cooldown",
-                    value=stats[1]
-                    )
-                elif 'Assists' in categories:
-                    message.add_field(
-                    name="Range",
-                    value=stats[1]
-                    )
-                    message.add_field(
-                    name="SP Cost",
-                    value=stats[3]
-                    )
+            elif 'Specials' in categories:
+                message.add_field(
+                name="Cooldown",
+                value=stats[1]
+                )
+            elif 'Assists' in categories:
+                message.add_field(
+                name="Range",
+                value=stats[1]
+                )
+            message.add_field(
+            name="SP Cost",
+            value=stats[3]
+            )
             message.add_field(
                 name="Effect",
                 value=stats[2],
@@ -207,7 +207,7 @@ class FireEmblemHeroes:
             )
             message.add_field(
                 name="Inherit Restrictions",
-                value=stats[-2]
+                value='Only, '.join(stats[-2].split('Only'))[:-2]
             )
             if 'Seal Exclusive Skills' not in categories:
                 learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]

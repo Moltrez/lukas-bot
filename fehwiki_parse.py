@@ -19,17 +19,7 @@ def find_name(arg):
     if arg.lower() in aliases:
         return aliases[arg.lower()]
 
-    # convert arg to title case, in the case of (A), (F), (BB), etc. convert stuff in parentheses to upper
-    arg = arg.split('(')
-    arg[0] = arg[0].title()
-    if len(arg) > 1:
-        if len(arg[1]) <= 3:
-            arg[1] = arg[1].upper()
-        else:
-            arg[1] = arg[1].title()
-    arg = '('.join(arg)
-    arg = arg.replace("'S", "'s").replace(" And ", " and ").replace(" Or ", " or ").replace(" Of ", " of ").replace(" For ", " for ").\
-        replace('Hp ', 'HP ').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
+    arg = arg.title().replace('Hp ', 'HP ').replace('Atk ', 'Attack ').replace('Spd ', 'Speed ').replace('Def ', 'Defense ').replace('Res ', 'Resistance ').replace(' +', ' Plus').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
         replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus')
 
