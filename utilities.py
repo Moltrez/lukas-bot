@@ -21,7 +21,7 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 
-def get_unit_stats(args):
+def get_unit_stats(args, default_rarity=None):
     # convert to lower case
     args = list(map(lambda x:x.lower(), args))
     try:
@@ -44,6 +44,8 @@ def get_unit_stats(args):
         # get rarity
         rarities = [str(i)+'*' for i in range(1,6)]
         rarity, args = find_arg(args, rarities, range(1,6), 'rarities')
+        if rarity is None:
+            rarity = default_rarity
         # check for manual stat modifiers as well
         modifiers = [a for a in args if '/' in a]
         if modifiers:
@@ -483,6 +485,79 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
             await self.bot.say(embed=message)
         else:
             await self.bot.say(unit_stats)
+
+    @bot.command(aliases=['Fehcompare', 'compare', 'Compare'])
+    async def fehcompare(self, *args):
+        """I will compare the max stats of two units with specified parameters.
+Please reference ?help fehstats for the kinds of accepted parameters.
+Simply type in unit builds as you would with ?fehstats and add a v between the units. Use -q to only show the difference.
+Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default."""
+        args = list(map(lambda a:a.lower(), args))
+        if args.count('v') != 1:
+            await self.bot.say("Please use one `v` to separate the units you wish to compare.")
+        quiet_mode = '-q' in args
+        if quiet_mode:
+            args.remove('-q')
+        unit1_args = args[:args.index('v')]
+        unit2_args = args[args.index('v')+1:]
+        unit1_stats = get_unit_stats(unit1_args, default_rarity=5)
+        if not isinstance(unit1_stats, tuple):
+            await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
+            return
+        unit2_stats = get_unit_stats(unit2_args, default_rarity=5)
+        if not isinstance(unit2_stats, tuple):
+            await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
+            return
+
+        unit1, base1, max1 = unit1_stats
+        unit2, base2, max2 = unit2_stats
+        if not quiet_mode:
+            base1_table = array_to_table(base1)
+            max1_table = array_to_table(max1)
+            message = discord.Embed(
+                title=unit1,
+                url=feh_source % (urllib.parse.quote(unit1)),
+                color=0x222222
+            )
+            icon = get_icon(unit1, "Icon_Portrait_")
+            if not icon is None:
+                message.set_thumbnail(url=icon)
+            message.add_field(
+                name="Base Stats",
+                value=format_stats_table(base1_table),
+                inline=True
+            )
+            message.add_field(
+                name="Max Level Stats",
+                value=format_stats_table(max1_table),
+                inline=True
+            )
+            await self.bot.say(embed=message)
+            base2_table = array_to_table(base2)
+            max2_table = array_to_table(max2)
+            message = discord.Embed(
+                title=unit2,
+                url=feh_source % (urllib.parse.quote(unit2)),
+                color=0x222222
+            )
+            icon = get_icon(unit2, "Icon_Portrait_")
+            if not icon is None:
+                message.set_thumbnail(url=icon)
+            message.add_field(
+                name="Base Stats",
+                value=format_stats_table(base2_table),
+                inline=True
+            )
+            message.add_field(
+                name="Max Level Stats",
+                value=format_stats_table(max2_table),
+                inline=True
+            )
+            await self.bot.say(embed=message)
+        max1 = np.array(list(filter(lambda r:any(r), max1))[0])
+        max2 = np.array(list(filter(lambda r:any(r), max2))[0])
+        difference = max1 - max2
+        await self.bot.say("%s has %s compared to %s." % (unit1, ', '.join(['%s: **%d**' % (stats[i], difference[i]) for i in range(5)]), unit2))
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
