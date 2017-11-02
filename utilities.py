@@ -157,14 +157,14 @@ def array_to_table(array):
     return ret
 
 class FireEmblemHeroes:
-"""The game that we do still play a lot."""
+    """The game that we do still play a lot."""
 
     def __init__(self, bot):
         self.bot = bot
 
     @bot.command(aliases=['Gauntlet'])
     async def gauntlet(self):
-"""I will tell you the current Voting Gauntlet score."""
+        """I will tell you the current Voting Gauntlet score."""
         try:
             scores = get_gauntlet_scores()
         except urllib.error.HTTPError as err:
@@ -183,7 +183,7 @@ class FireEmblemHeroes:
 
     @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, ctx, *, arg):
-"""I will provide some information on any Fire Emblem Heroes topic."""
+        """I will provide some information on any Fire Emblem Heroes topic."""
         original_arg = arg
         passive_level = 3
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
@@ -427,7 +427,7 @@ class FireEmblemHeroes:
 
     @bot.command(pass_context=True, aliases=['Flaunt'])
     async def flaunt(self, ctx):
-"""Use this command to show off your prized units.
+        """Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
         if user in flaunt:
@@ -442,7 +442,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
 
     @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
     async def fehstats(self, *args):
-"""I will calculate the stats of a unit given some parameters.
+        """I will calculate the stats of a unit given some parameters.
 Possible Parameters (all optional):
                     +[boon], -[bane]: specify a unit's boon and bane where [boon] and [bane] are one of the following: HP, ATK, SPD, DEF, RES. The boon and bane cannot specify the same stat. If a boon or a bane is specified the other must be as well. Default is neutral. Example: +spd -hp
           +[number between 1 and 10]: specify the level of merge a unit is. Default is no merges. Example: +5
@@ -481,7 +481,7 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
-"""I will create a list of heroes to serve your needs.
+        """I will create a list of heroes to serve your needs.
 Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
 Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored). You can also filter by a stat threshold such as (HP>30) or (DEF+RES>50).
 Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. You can also sort by added stat totals such as (DEF+RES) or (ATK+SPD). The order you declare these will be the order of priority.
