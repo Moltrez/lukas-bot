@@ -21,9 +21,9 @@ def get_unit_stats(args):
     args = list(map(lambda x:x.lower(), args))
     try:
         # get IV information
-        stats = ['hp', 'atk', 'spd', 'def', 'res']
-        boons = ['+'+s for s in stats]
-        banes = ['-'+s for s in stats]
+        stats = ['HP', 'ATK', 'SPD', 'DEF', 'RES']
+        boons = ['+'+s.lower() for s in stats]
+        banes = ['-'+s.lower() for s in stats]
         boon, args = find_arg(args, boons, stats, 'boons')
         bane, args = find_arg(args, banes, stats, 'banes')
         if (boon and not bane) or (bane and not boon):
@@ -58,9 +58,27 @@ def get_unit_stats(args):
             modifiers_array = np.zeros(5, dtype=np.int32)
             modifiers_array[:len(modifiers)] = list(map(int, modifiers))
             print('modifiers:', modifiers_array, ', remaining args:', args)
+        args = ' '.join(args)
+        unit = find_name(args)
+        if unit == INVALID_HERO:
+            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
+        print(unit)
+        # confirm its a unit
+        categories = get_categories(unit)
+        if 'Heroes' not in categories:
+            return '%s does not seem to be a hero.' % (unit)
+        # actually fetch the unit's information
+        html = get_page_html(unit)
+        base_stats_table, max_stats_table = get_heroes_stats_tables(html)
+        print(base_stats_table, max_stats_table)
+
         return []
     except ValueError as err:
         return err.args[0]
+    except urllib.error.HTTPError as err:
+        if err.code == 500:
+            return "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
+
 
 def find_arg(args, param_list, return_list, param_type):
     """Finds arguments that exist in param_list and return the corresponding value from return_list."""
@@ -84,7 +102,12 @@ class FireEmblemHeroes:
     @bot.command(aliases=['Gauntlet'])
     async def gauntlet(self):
         """I will tell you the current Voting Gauntlet score."""
-        scores = get_gauntlet_scores()
+        try:
+            scores = get_gauntlet_scores()
+        except urllib.error.HTTPError as err:
+            if err.code == 500:
+                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                return
         longest = max(scores, key=lambda s: len(s[0]['Score']) + len(s[0]['Status']) + 3)
         longest = len(longest[0]['Score']) + len(longest[0]['Status']) + 3
         message = '```'
@@ -108,7 +131,12 @@ class FireEmblemHeroes:
             if arg[-1] in ['1','2','3']:
                 passive_level = int(arg[-1])
                 arg = arg[:-1].strip()
-            arg = find_name(arg)
+            try:
+                arg = find_name(arg)
+            except urllib.error.HTTPError as err:
+                if err.code == 500:
+                    await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                    return
         if arg == INVALID_HERO:
             if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
                 await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
@@ -116,8 +144,13 @@ class FireEmblemHeroes:
                 await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
             return
         print(arg)
+        try:
+            categories = get_categories(arg)
+        except urllib.error.HTTPError as err:
+            if err.code == 500:
+                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                return
 
-        categories = get_categories(arg)
         weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E}
 
         if 'Heroes' in categories:
@@ -344,14 +377,14 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
         else:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
 
-    @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
-    async def fehstats(self, *args):
-        unit_stats = get_unit_stats(args)
-        if isinstance(unit_stats, list):
-            await self.bot.say('got a stats list')
-        else:
-            await self.bot.say('got an error')
-        await self.bot.say(unit_stats)
+    # @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
+    # async def fehstats(self, *args):
+    #     unit_stats = get_unit_stats(args)
+    #     if isinstance(unit_stats, list):
+    #         await self.bot.say('got a stats list')
+    #     else:
+    #         await self.bot.say('got an error')
+    #     await self.bot.say(unit_stats)
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
@@ -395,7 +428,13 @@ Example: !list -f red sword infantry -s attack hp
             if sort_keys is None:
                 await self.bot.say('Invalid fields to sort by were selected.')
                 return
-        heroes = get_heroes_list()
+        try:
+            heroes = get_heroes_list()
+        except urllib.error.HTTPError as err:
+            if err.code == 500:
+                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                return
+
         for f in filters:
             if f != 'Threshold':
                 heroes = list(filter(lambda h:h[f] in filters[f], heroes))
