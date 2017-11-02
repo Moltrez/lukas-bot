@@ -157,14 +157,14 @@ def array_to_table(array):
     return ret
 
 class FireEmblemHeroes:
-    """The game that we do still play a lot."""
+"""The game that we do still play a lot."""
 
     def __init__(self, bot):
         self.bot = bot
 
     @bot.command(aliases=['Gauntlet'])
     async def gauntlet(self):
-        """I will tell you the current Voting Gauntlet score."""
+"""I will tell you the current Voting Gauntlet score."""
         try:
             scores = get_gauntlet_scores()
         except urllib.error.HTTPError as err:
@@ -183,7 +183,7 @@ class FireEmblemHeroes:
 
     @bot.command(pass_context=True, aliases=['Feh'])
     async def feh(self, ctx, *, arg):
-        """I will provide some information on any Fire Emblem Heroes topic."""
+"""I will provide some information on any Fire Emblem Heroes topic."""
         original_arg = arg
         passive_level = 3
         if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
@@ -427,7 +427,7 @@ class FireEmblemHeroes:
 
     @bot.command(pass_context=True, aliases=['Flaunt'])
     async def flaunt(self, ctx):
-        """Use this command to show off your prized units.
+"""Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
         if user in flaunt:
@@ -442,6 +442,16 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
 
     @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
     async def fehstats(self, *args):
+"""I will calculate the stats of a unit given some parameters.
+Possible Parameters (all optional):
+                    +[boon], -[bane]: specify a unit's boon and bane where [boon] and [bane] are one of the following: HP, ATK, SPD, DEF, RES. The boon and bane cannot specify the same stat. If a boon or a bane is specified the other must be as well. Default is neutral. Example: +spd -hp
+          +[number between 1 and 10]: specify the level of merge a unit is. Default is no merges. Example: +5
+                        [c, b, a, s]: specify the level of summoner support the unit has. Default is no support. Example: s
+[number/number/number/number/number]: specify any additional modifiers such as modifiers from skills or weapon mt. The order is HP/ATK/SPD/DEF/RES. If you specify less than 5, for example 1/1/1, it will add 1 to HP/ATK/SPD only. Default is no modifiers. Example: 0/5/-5/0/0
+           [number between 1 and 5]*: specify the rarity of the unit. If left unspecified, shows stats for all rarities. Example: 5*
+Example usage:
+?stats lukas 5* +10 +def -spd 0/14 s
+will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summoner S Support and an additional 14 attack (presumably from a Slaying Lance+)."""
         unit_stats = get_unit_stats(args)
         if isinstance(unit_stats, tuple):
             unit, base, max = unit_stats
@@ -471,7 +481,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
-        """I will create a list of heroes to serve your needs.
+"""I will create a list of heroes to serve your needs.
 Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
 Filters reduce the list down to the heroes you want. You can filter by Colour (Red, Blue, Green, Colourless), Weapon (Sword, Lance, Axe, Bow, Dagger, Staff, Tome, Breath) or Movement Type (Infantry, Cavalry, Flying, Armored). You can also filter by a stat threshold such as (HP>30) or (DEF+RES>50).
 Sorting fields let you choose how to sort the heroes. You can sort highest first in any stat (HP, ATK, SPD, DEF, RES, BST (Total)) or alphabetically by Name, Colour, Weapon or Movement Type. You can also sort by added stat totals such as (DEF+RES) or (ATK+SPD). The order you declare these will be the order of priority.
@@ -486,8 +496,7 @@ You can filter by a stat or an added stat total by typing the stat(s) as you wou
 Example: !list -f red sword infantry -s attack hp
          is the same as
          !list -f r sw in -s atk hp
-         and will produce a list of units that are Red, wield Swords and are Infantry sorted by Attack and then by HP.
-        """
+         and will produce a list of units that are Red, wield Swords and are Infantry sorted by Attack and then by HP."""
         if args:
             if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args) or (args[0] not in ['-r', '-f', '-s']):
                 await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
