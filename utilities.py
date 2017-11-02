@@ -21,7 +21,7 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 
-def get_unit_stats(args, default_rarity=None):
+def get_unit_stats(args, default_rarity=None, sender=None):
     # convert to lower case
     args = list(map(lambda x:x.lower(), args))
     try:
@@ -65,7 +65,7 @@ def get_unit_stats(args, default_rarity=None):
         else:
             modifiers = None
         args = ' '.join(args)
-        unit = find_name(args)
+        unit = find_name(args, sender=sender)
         if unit == INVALID_HERO:
             return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
         # confirm its a unit
@@ -440,8 +440,8 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
         else:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
 
-    @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats', 'FEHstat', 'FEHStat', 'FEHstats', 'FEHStats'])
-    async def fehstats(self, *args):
+    @bot.command(pass_context=True, aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats', 'FEHstat', 'FEHStat', 'FEHstats', 'FEHStats'])
+    async def fehstats(self, ctx, *args):
         """I will calculate the stats of a unit given some parameters.
 Possible Parameters (all optional):
                     +[boon], -[bane]: specify a unit's boon and bane where [boon] and [bane] are one of the following: HP, ATK, SPD, DEF, RES. The boon and bane cannot specify the same stat. If a boon or a bane is specified the other must be as well. Default is neutral. Example: +spd -hp
@@ -452,7 +452,7 @@ Possible Parameters (all optional):
 Example usage:
 ?stats lukas 5* +10 s +def -spd 0/14 0/-3/0/5
 will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summoner S Support and an additional 14 attack (presumably from a Slaying Lance+) as well as -3 attack and +5 defense (presumably from Fortress Defense)."""
-        unit_stats = get_unit_stats(args)
+        unit_stats = get_unit_stats(args, sender=str(ctx.message.author))
         if isinstance(unit_stats, tuple):
             unit, base, max = unit_stats
             base = array_to_table(base)
@@ -508,11 +508,11 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             args.remove('-q')
         unit1_args = args[:args.index(separator)]
         unit2_args = args[args.index(separator)+1:]
-        unit1_stats = get_unit_stats(unit1_args, default_rarity=5)
+        unit1_stats = get_unit_stats(unit1_args, default_rarity=5, sender=str(ctx.message.author))
         if not isinstance(unit1_stats, tuple):
             await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
             return
-        unit2_stats = get_unit_stats(unit2_args, default_rarity=5)
+        unit2_stats = get_unit_stats(unit2_args, default_rarity=5, sender=str(ctx.message.author))
         if not isinstance(unit2_stats, tuple):
             await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
             return
