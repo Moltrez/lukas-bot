@@ -447,7 +447,7 @@ Possible Parameters (all optional):
                     +[boon], -[bane]: specify a unit's boon and bane where [boon] and [bane] are one of the following: HP, ATK, SPD, DEF, RES. The boon and bane cannot specify the same stat. If a boon or a bane is specified the other must be as well. Default is neutral. Example: +spd -hp
           +[number between 1 and 10]: specify the level of merge a unit is. Default is no merges. Example: +5
                         [c, b, a, s]: specify the level of summoner support the unit has. Default is no support. Example: s
-[number/number/number/number/number]: specify any additional modifiers such as modifiers from skills or weapon mt. The order is HP/ATK/SPD/DEF/RES. If you specify less than 5, for example 1/1/1, it will add 1 to HP/ATK/SPD only. Default is no modifiers. Example: 0/5/-5/0/0
+[number/number/number/number/number]: specify any additional modifiers such as modifiers from skills or weapon mt. The order is HP/ATK/SPD/DEF/RES. If you specify less than 5 modifiers, for example 1/1/1, it will add 1 to HP/ATK/SPD only. Default is no modifiers. Example: 0/5/-5/0/0
            [number between 1 and 5]*: specify the rarity of the unit. If left unspecified, shows stats for all rarities. Example: 5*
 Example usage:
 ?stats lukas 5* +10 +def -spd 0/14 s
