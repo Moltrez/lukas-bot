@@ -34,6 +34,8 @@ aliases = {
     'fluff chicken':'Fae',
     'fluff dragon':'Fae',
     'fluff chiken':'Fae',
+    'scorn':'Corrin (F) (Nohrian Summer)',
+    'scam':'Camilla (Spring Festival)',
     'nowitch':'Nowi (Trick or Defeat!)',
     'floof':'Genny',
     'fluff':'Genny',
@@ -103,7 +105,7 @@ waifus = {
 }
 
 flaunt = {
-    'Karinole#6528':'https://media.discordapp.net/attachments/369522639955296268/372488306908200960/Screenshot_20171024-165500.png',
+    'Karinole#6528':'https://media.discordapp.net/attachments/369523314126749706/375452073812295681/Screenshot_20171101-211007.png',
     'Darrman#2798':'https://media.discordapp.net/attachments/369522639955296268/372487390637457409/Screenshot_2017-10-24-21-46-541.png',
     'InvdrZim13#0826':'https://media.discordapp.net/attachments/369523314126749706/370016114102763520/Screenshot_20171017-211149.png',
     'MCProductions#6839':'https://media.discordapp.net/attachments/369523314126749706/374650882639396864/Screenshot_20171030-150802.png',
@@ -121,5 +123,6 @@ flaunt = {
     'Dialzza#6871':'https://media.discordapp.net/attachments/370949018488012800/373150943543427082/image.png',
     'Eliwood#6752':'https://media.discordapp.net/attachments/370949018488012800/373151012216635392/image.png',
     'e;me#1870':'https://media.discordapp.net/attachments/367370320962650113/374222005366554634/image.png',
+    'SgtSmilies#4693':'https://media.discordapp.net/attachments/369523314126749706/375452625191043082/Screenshot_2017-11-01-19-12-43.png',
     'East#2679':'https://media.discordapp.net/attachments/370949018488012800/371259318517104640/image-6.png'
 }

@@ -261,6 +261,12 @@ class FireEmblemHeroes:
                     value=learners,
                     inline=False
                 )
+        else:
+            message = discord.Embed(
+                title=arg,
+                url=feh_source % (urllib.parse.quote(arg)),
+                color=0x222222
+            )
         await self.bot.say(embed=message)
 
     @bot.command(pass_context=True, aliases=['Flaunt'])
