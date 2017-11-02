@@ -1,4 +1,5 @@
 import discord, random, argparse, os.path, itertools
+import numpy as np
 from discord.ext import commands as bot
 from feh_alias import *
 from fehwiki_parse import *
@@ -13,6 +14,66 @@ class MagikarpJump:
     async def lmr(self):
         """I will tell you which rod will net you the best Magikarp."""
         await self.bot.say(random.choice(['L', 'M', 'R']))
+
+
+def get_unit_stats(args):
+    # convert to lower case
+    args = list(map(lambda x:x.lower(), args))
+    try:
+        # get IV information
+        stats = ['hp', 'atk', 'spd', 'def', 'res']
+        boons = ['+'+s for s in stats]
+        banes = ['-'+s for s in stats]
+        boon, args = find_arg(args, boons, stats, 'boons')
+        bane, args = find_arg(args, banes, stats, 'banes')
+        if (boon and not bane) or (bane and not boon):
+            return 'Only boon or only bane specified.'
+        if boon is not None and bane is not None:
+            if (boon == bane):
+                return 'Boon is the same as bane.'
+        print('boon: %s, bane: %s, remaining args:' % (boon, bane), args)
+        # get merge number
+        merges = ['+'+str(i) for i in range(1,11)]
+        merge, args = find_arg(args, merges, range(1,11), 'merge levels')
+        print('merge level: %d, remaining args:' % (merge), args)
+        # get summoner support level
+        supports = ['c', 'b', 'a', 's']
+        support, args = find_arg(args, supports, supports, 'summoner support levels')
+        print('summoner support level: %s, remaining args:' % support, args)
+        # get rarity
+        rarities = [str(i)+'*' for i in range(1,6)]
+        rarity, args = find_arg(args, rarities, range(1,6), 'rarities')
+        print('rarity: %s, remaining args:' % rarity, args)
+        # check for manual stat modifiers as well
+        modifiers = ['/' in a for a in args]
+        modifiers = args[modifiers.index(True)] if True in modifiers else None
+        if modifiers is not None:
+            args.remove(modifiers)
+            # check that each modifier is valid
+            modifiers = modifiers.split('/')
+            if len(modifiers) > 5:
+                return 'Too many stat modifiers specified.'
+            if not all([m[0] in ['-','+']+list(map(str, range(10))) and (m[1:].isdigit() or m[1:] == '') for m in modifiers]):
+                return 'Stat modifiers in wrong format (-number or +number).'
+            modifiers_array = np.zeros(5, dtype=np.int32)
+            modifiers_array[:len(modifiers)] = list(map(int, modifiers))
+            print('modifiers:', modifiers_array, ', remaining args:', args)
+        return []
+    except ValueError as err:
+        return err.args[0]
+
+def find_arg(args, param_list, return_list, param_type):
+    """Finds arguments that exist in param_list and return the corresponding value from return_list."""
+    arg_finding = [i in args for i in param_list]
+    arg_index = None
+    if arg_finding.count(True) > 1:
+        raise ValueError('Multiple %s specified.' % param_type)
+    elif arg_finding.count(True) == 1:
+        arg_index = arg_finding.index(True)
+    arg = return_list[arg_index] if arg_index is not None else None
+    if arg is not None:
+        args.remove(param_list[arg_index])
+    return arg, args
 
 class FireEmblemHeroes:
     """The game that we do still play a lot."""
@@ -60,10 +121,9 @@ class FireEmblemHeroes:
         weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E}
 
         if 'Heroes' in categories:
-            html = get_page_text(arg)
+            html = get_page_html(arg)
             stats = get_infobox(html)
-            base_stats_table, max_stats_table = [extract_table(a)
-                                                 for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
+            base_stats_table, max_stats_table = get_heroes_stats_tables(html)
             colour = weapon_colours['Colourless']
             if 'Red' in stats['Weapon Type']:
                 colour = weapon_colours['Red']
@@ -158,7 +218,7 @@ class FireEmblemHeroes:
             icon = get_icon(arg, "Weapon_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
-            html = get_page_text(arg)
+            html = get_page_html(arg)
             stats = get_infobox(html)
             message.add_field(
                 name="Might",
@@ -190,7 +250,7 @@ class FireEmblemHeroes:
                 inline=False
             )
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
-            html = get_page_text(arg)
+            html = get_page_html(arg)
             stats_table = html.find("table", attrs={"class": "sortable"})
             # get the data from the appropriate row dictated by passive_level (if it exists)
             # append the inherit restriction (and slot)
@@ -283,6 +343,15 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
             await self.bot.upload(f)
         else:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
+
+    @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
+    async def fehstats(self, *args):
+        unit_stats = get_unit_stats(args)
+        if isinstance(unit_stats, list):
+            await self.bot.say('got a stats list')
+        else:
+            await self.bot.say('got an error')
+        await self.bot.say(unit_stats)
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):

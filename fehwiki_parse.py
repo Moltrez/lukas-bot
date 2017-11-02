@@ -33,7 +33,7 @@ def find_name(arg):
 
 
 def get_heroes_list():
-    html = get_page_text('Stats Table')
+    html = get_page_html('Stats Table')
     table = html.find('table')
     heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
@@ -74,7 +74,7 @@ def get_categories(arg):
     return [a['title'].lstrip('Category:') for a in categories]
 
 
-def get_page_text(arg):
+def get_page_html(arg):
     url = feh_source % "api.php?action=parse&page=%s&format=json" % (urllib.parse.quote(arg))
     info = get_page(url)
     return BSoup(info['parse']['text']['*'], "lxml")
@@ -84,6 +84,10 @@ def get_infobox(html):
     table = html.find("div", attrs={"class": "hero-infobox"}).find("table")
     return {a.find("th").get_text().strip() if not a.find("th") is None else None: a.find(
         "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr")}
+
+
+def get_heroes_stats_tables(html):
+    return [extract_table(a) for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
 
 
 def extract_table(table_html):
