@@ -64,12 +64,10 @@ def get_unit_stats(args, default_rarity=None):
             modifiers = np.array(modifiers).sum(axis=0)
         else:
             modifiers = None
-        print(modifiers)
         args = ' '.join(args)
         unit = find_name(args)
         if unit == INVALID_HERO:
             return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
-        print(unit)
         # confirm its a unit
         categories = get_categories(unit)
         if 'Heroes' not in categories:
@@ -572,9 +570,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
         max1 = np.array(list(filter(lambda r:any(r), max1))[0])
         max2 = np.array(list(filter(lambda r:any(r), max2))[0])
         difference = max1 - max2
-        bst_diff = int(max1_table[-1]['Total']) - int(max2_table[-1]['Total'])
-        await self.bot.say("%s compared to %s: %s%s" %\
-         (unit1, unit2, ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
+        bst_diff = difference.sum()
+        if any(difference):
+            await self.bot.say("%s compared to %s: %s%s" %\
+             (unit1, unit2, ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
+        else:
+            await self.bot.say("There appears to be no difference between these units!")
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
