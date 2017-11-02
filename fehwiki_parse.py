@@ -1,4 +1,4 @@
-import urllib.request, urllib.parse, json, io
+import urllib.request, urllib.parse, json, io, operator
 from bs4 import BeautifulSoup as BSoup
 from feh_alias import *
 
