@@ -484,8 +484,8 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
         else:
             await self.bot.say(unit_stats)
 
-    @bot.command(aliases=['Fehcompare', 'compare', 'Compare', 'FEHcompare', 'FEHCompare'])
-    async def fehcompare(self, *args):
+    @bot.command(pass_context=True, aliases=['Fehcompare', 'compare', 'Compare', 'FEHcompare', 'FEHCompare'])
+    async def fehcompare(self, ctx, *args):
         """I will compare the max stats of two units with specified parameters.
 Please reference ?help fehstats for the kinds of accepted parameters.
 Simply type in unit builds as you would with ?fehstats and add a v or vs between the units. Use -q to only show the difference.
