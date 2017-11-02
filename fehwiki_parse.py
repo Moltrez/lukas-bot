@@ -150,13 +150,12 @@ def get_learners(learners_table, categories, skill_name):
     skill_chain_position = -1
     for l_data in [a.find_all("td") for a in learners_table.find_all("tr")[(1 if 'Passives' in categories else 0):]]:
         # append a name to the appropriate level
-        learned_level = 5
         for i in range(len(l_data)):
             text = l_data[i].get_text()
             if skill_name in text:
                 skill_chain_position = i
                 learned_level = int(text[-1])
-        learners[learned_level].append(l_data[0].find_all("a")[1].get_text())
+                learners[learned_level].append(l_data[0].find_all("a")[1].get_text())
     learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
     return skill_chain_position, learners
 
