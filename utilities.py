@@ -15,13 +15,17 @@ class MagikarpJump:
         """I will tell you which rod will net you the best Magikarp."""
         await self.bot.say(random.choice(['L', 'M', 'R']))
 
+# these are constant so declare up here
+stats = ['HP', 'ATK', 'SPD', 'DEF', 'RES']
+merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.array([2,1,1,1,1]), np.array([2,2,2,1,1]), np.array([2,2,2,2,2]),
+                 np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
+summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 
 def get_unit_stats(args):
     # convert to lower case
     args = list(map(lambda x:x.lower(), args))
     try:
         # get IV information
-        stats = ['HP', 'ATK', 'SPD', 'DEF', 'RES']
         boons = ['+'+s.lower() for s in stats]
         banes = ['-'+s.lower() for s in stats]
         boon, args = find_arg(args, boons, stats, 'boons')
@@ -31,19 +35,15 @@ def get_unit_stats(args):
         if boon is not None and bane is not None:
             if (boon == bane):
                 return 'Boon is the same as bane.'
-        print('boon: %s, bane: %s, remaining args:' % (boon, bane), args)
         # get merge number
         merges = ['+'+str(i) for i in range(1,11)]
         merge, args = find_arg(args, merges, range(1,11), 'merge levels')
-        print('merge level: %d, remaining args:' % (merge), args)
         # get summoner support level
         supports = ['c', 'b', 'a', 's']
         support, args = find_arg(args, supports, supports, 'summoner support levels')
-        print('summoner support level: %s, remaining args:' % support, args)
         # get rarity
         rarities = [str(i)+'*' for i in range(1,6)]
         rarity, args = find_arg(args, rarities, range(1,6), 'rarities')
-        print('rarity: %s, remaining args:' % rarity, args)
         # check for manual stat modifiers as well
         modifiers = ['/' in a for a in args]
         modifiers = args[modifiers.index(True)] if True in modifiers else None
@@ -70,9 +70,33 @@ def get_unit_stats(args):
         # actually fetch the unit's information
         html = get_page_html(unit)
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
-        print(base_stats_table, max_stats_table)
-
-        return []
+        base_stats = table_to_array(base_stats_table, boon, bane, rarity)
+        max_stats = table_to_array(max_stats_table, boon, bane, rarity)
+        # check if empty
+        if not any([any(r) for r in base_stats]):
+            return 'This hero does not appear to be available at the specified rarity.'
+        # calculate merge bonuses
+        if merge is not None:
+            for i in range(5):
+                if any(base_stats[i]):
+                    ordered_stats = (-base_stats[i]).argsort()
+                    bonuses = np.zeros(5, dtype=np.int32)
+                    bonuses[ordered_stats] = merge_bonuses[merge]
+                    base_stats[i] += bonuses
+                    max_stats[i] += bonuses
+        # summoner bonuses
+        if support is not None:
+            for i in range(5):
+                if any(base_stats[i]):
+                    base_stats[i] += summoner_bonuses[support]
+                    max_stats[i] += summoner_bonuses[support]
+        # add flat modifiers
+        if modifiers is not None:
+            for i in range(5):
+                if any(base_stats[i]):
+                    base_stats[i] += modifiers_array
+                    max_stats[i] += modifiers_array
+        return (unit, base_stats, max_stats)
     except ValueError as err:
         return err.args[0]
     except urllib.error.HTTPError as err:
@@ -92,6 +116,45 @@ def find_arg(args, param_list, return_list, param_type):
     if arg is not None:
         args.remove(param_list[arg_index])
     return arg, args
+
+
+def table_to_array(table, boon, bane, rarity):
+    #convert dictionary format to numpy arrays, accounting for boons banes and rarity
+    array = np.zeros((5,5), dtype=np.int32)
+    for i in range(len(table)):
+        row = table[i]
+        row_rarity = int(row['Rarity'])
+        if rarity is not None and row_rarity != rarity:
+            continue
+        else:
+            row_rarity -= 1
+        for key in row:
+            if key in ['Rarity','Total']:
+                continue
+            stat = row[key].split('/')
+            stat_index = 1
+            if boon and key == boon:
+                stat_index = 2
+            elif (bane and key == bane):
+                stat_index = 0
+            if len(stat) != 3:
+                stat_index = 0
+            array[row_rarity][stats.index(key)] = stat[stat_index]
+    return array
+
+def array_to_table(array):
+    # convert numpy array back to dictionary format
+    ret = []
+    for i in range(len(array)):
+        # skip empty rows
+        if any(array[i]):
+            p1 = {'Rarity':str(i+1)}
+            p2 = {stats[j]:str(array[i][j]) for j in range(5)}
+            p3 = {'Total':str(array[i].sum())}
+            row = dict(p1, **p2)
+            row.update(p3)
+            ret.append(row)
+    return ret
 
 class FireEmblemHeroes:
     """The game that we do still play a lot."""
@@ -377,14 +440,34 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
         else:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
 
-    # @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
-    # async def fehstats(self, *args):
-    #     unit_stats = get_unit_stats(args)
-    #     if isinstance(unit_stats, list):
-    #         await self.bot.say('got a stats list')
-    #     else:
-    #         await self.bot.say('got an error')
-    #     await self.bot.say(unit_stats)
+    @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
+    async def fehstats(self, *args):
+        unit_stats = get_unit_stats(args)
+        if isinstance(unit_stats, tuple):
+            unit, base, max = unit_stats
+            base = array_to_table(base)
+            max = array_to_table(max)
+            message = discord.Embed(
+                title=unit,
+                url=feh_source % (urllib.parse.quote(unit)),
+                color=0x222222
+            )
+            icon = get_icon(unit, "Icon_Portrait_")
+            if not icon is None:
+                message.set_thumbnail(url=icon)
+            message.add_field(
+                name="Base Stats",
+                value=format_stats_table(base),
+                inline=True
+            )
+            message.add_field(
+                name="Max Level Stats",
+                value=format_stats_table(max),
+                inline=True
+            )
+            await self.bot.say(embed=message)
+        else:
+            await self.bot.say(unit_stats)
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
