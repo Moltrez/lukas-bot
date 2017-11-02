@@ -473,6 +473,11 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
             if not icon is None:
                 message.set_thumbnail(url=icon)
             message.add_field(
+                name="BST",
+                value=max[-1]['Total'],
+                inline=False
+            )
+            message.add_field(
                 name="Base Stats",
                 value=format_stats_table(base),
                 inline=True
@@ -514,50 +519,62 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
         if not quiet_mode:
             base1_table = array_to_table(base1)
             max1_table = array_to_table(max1)
-            message = discord.Embed(
+            message1 = discord.Embed(
                 title=unit1,
                 url=feh_source % (urllib.parse.quote(unit1)),
                 color=0x222222
             )
             icon = get_icon(unit1, "Icon_Portrait_")
             if not icon is None:
-                message.set_thumbnail(url=icon)
-            message.add_field(
+                message1.set_thumbnail(url=icon)
+            message1.add_field(
+                name="BST",
+                value=max1_table[-1]['Total'],
+                inline=False
+            )
+            message1.add_field(
                 name="Base Stats",
                 value=format_stats_table(base1_table),
                 inline=True
             )
-            message.add_field(
+            message1.add_field(
                 name="Max Level Stats",
                 value=format_stats_table(max1_table),
                 inline=True
             )
-            await self.bot.say(embed=message)
             base2_table = array_to_table(base2)
             max2_table = array_to_table(max2)
-            message = discord.Embed(
+            message2 = discord.Embed(
                 title=unit2,
                 url=feh_source % (urllib.parse.quote(unit2)),
                 color=0x222222
             )
             icon = get_icon(unit2, "Icon_Portrait_")
             if not icon is None:
-                message.set_thumbnail(url=icon)
-            message.add_field(
+                message2.set_thumbnail(url=icon)
+            message2.add_field(
+                name="BST",
+                value=max2_table[-1]['Total'],
+                inline=False
+            )
+            message2.add_field(
                 name="Base Stats",
                 value=format_stats_table(base2_table),
                 inline=True
             )
-            message.add_field(
+            message2.add_field(
                 name="Max Level Stats",
                 value=format_stats_table(max2_table),
                 inline=True
             )
-            await self.bot.say(embed=message)
+            await self.bot.say(embed=message1)
+            await self.bot.say(embed=message2)
         max1 = np.array(list(filter(lambda r:any(r), max1))[0])
         max2 = np.array(list(filter(lambda r:any(r), max2))[0])
         difference = max1 - max2
-        await self.bot.say("%s has %s compared to %s." % (unit1, ', '.join(['%s: **%d**' % (stats[i], difference[i]) for i in range(5)]), unit2))
+        bst_diff = int(max1_table[-1]['Total']) - int(max2_table[-1]['Total'])
+        await self.bot.say("%s compared to %s: %s%s" %\
+         (unit1, unit2, ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
 
     @bot.command(aliases=['list', 'List', 'Fehlist'])
     async def fehlist(self, *args):
