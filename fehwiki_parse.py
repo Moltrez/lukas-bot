@@ -14,7 +14,12 @@ def get_page(url):
     return json.load(response)
 
 
-def find_name(arg):
+def find_name(arg, sender = None):
+    if sender:
+        if sender in sons and arg.lower() in ['son', 'my son']:
+            arg = sons[sender]
+        elif sender in waifus and arg.lower() in ['waifu', 'my waifu']:
+            arg = waifus[sender]
     # extra cases for common aliases
     if arg.lower() in aliases:
         return aliases[arg.lower()]

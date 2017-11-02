@@ -109,7 +109,7 @@ def get_unit_stats(args, default_rarity=None):
             return "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
 
 
-def find_arg(args, param_list, return_list, param_type):
+def find_arg(args, param_list, return_list, param_type, remove=True):
     """Finds arguments that exist in param_list and return the corresponding value from return_list."""
     arg_finding = [i in args for i in param_list]
     arg_index = None
@@ -118,7 +118,7 @@ def find_arg(args, param_list, return_list, param_type):
     elif arg_finding.count(True) == 1:
         arg_index = arg_finding.index(True)
     arg = return_list[arg_index] if arg_index is not None else None
-    if arg is not None:
+    if arg is not None and remove:
         args.remove(param_list[arg_index])
     return arg, args
 
@@ -167,8 +167,8 @@ class FireEmblemHeroes:
     def __init__(self, bot):
         self.bot = bot
 
-    @bot.command(aliases=['Gauntlet'])
-    async def gauntlet(self):
+    @bot.command(aliases=['gauntlet', 'Gauntlet', 'Fehgauntlet', 'FEHgauntlet', 'FEHGauntlet'])
+    async def fehgauntlet(self):
         """I will tell you the current Voting Gauntlet score."""
         try:
             scores = get_gauntlet_scores()
@@ -186,25 +186,20 @@ class FireEmblemHeroes:
         message += '```'
         await self.bot.say(message)
 
-    @bot.command(pass_context=True, aliases=['Feh'])
+    @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
         original_arg = arg
         passive_level = 3
-        if str(ctx.message.author) in sons and arg.lower() in ['son', 'my son']:
-            arg = sons[str(ctx.message.author)]
-        elif str(ctx.message.author) in waifus and arg.lower() in ['waifu', 'my waifu']:
-            arg = waifus[str(ctx.message.author)]
-        else:
-            if arg[-1] in ['1','2','3']:
-                passive_level = int(arg[-1])
-                arg = arg[:-1].strip()
-            try:
-                arg = find_name(arg)
-            except urllib.error.HTTPError as err:
-                if err.code == 500:
-                    await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                    return
+        if arg[-1] in ['1','2','3']:
+            passive_level = int(arg[-1])
+            arg = arg[:-1].strip()
+        try:
+            arg = find_name(arg, sender = str(ctx.message.author))
+        except urllib.error.HTTPError as err:
+            if err.code == 500:
+                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                return
         if arg == INVALID_HERO:
             if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
                 await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
@@ -430,8 +425,8 @@ class FireEmblemHeroes:
             )
         await self.bot.say(embed=message)
 
-    @bot.command(pass_context=True, aliases=['Flaunt'])
-    async def flaunt(self, ctx):
+    @bot.command(pass_context=True, aliases=['flaunt', 'Flaunt', 'Fehflaunt', 'FEHFlaunt'])
+    async def fehflaunt(self, ctx):
         """Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
@@ -445,7 +440,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
         else:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
 
-    @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats'])
+    @bot.command(aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats', 'FEHstat', 'FEHStat', 'FEHstats', 'FEHStats'])
     async def fehstats(self, *args):
         """I will calculate the stats of a unit given some parameters.
 Possible Parameters (all optional):
@@ -489,20 +484,30 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
         else:
             await self.bot.say(unit_stats)
 
-    @bot.command(aliases=['Fehcompare', 'compare', 'Compare'])
+    @bot.command(aliases=['Fehcompare', 'compare', 'Compare', 'FEHcompare', 'FEHCompare'])
     async def fehcompare(self, *args):
         """I will compare the max stats of two units with specified parameters.
 Please reference ?help fehstats for the kinds of accepted parameters.
-Simply type in unit builds as you would with ?fehstats and add a v between the units. Use -q to only show the difference.
+Simply type in unit builds as you would with ?fehstats and add a v or vs between the units. Use -q to only show the difference.
 Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default."""
         args = list(map(lambda a:a.lower(), args))
-        if args.count('v') != 1:
-            await self.bot.say("Please use one `v` to separate the units you wish to compare.")
-        quiet_mode = '-q' in args
-        if quiet_mode:
+        separators = ['v', 'vs', '-v', '&', '|']
+        try:
+            separator, args = find_arg(args, separators, separators, 'separator', remove=False)
+        except ValueError as err:
+            # multiple separators
+            await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+            return
+        # no separators
+        if separator is None:
+            await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+            return
+        quiet_mode = False
+        if '-q' in args:
+            quiet_mode = True
             args.remove('-q')
-        unit1_args = args[:args.index('v')]
-        unit2_args = args[args.index('v')+1:]
+        unit1_args = args[:args.index(separator)]
+        unit2_args = args[args.index(separator)+1:]
         unit1_stats = get_unit_stats(unit1_args, default_rarity=5)
         if not isinstance(unit1_stats, tuple):
             await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
@@ -577,7 +582,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
         else:
             await self.bot.say("There appears to be no difference between these units!")
 
-    @bot.command(aliases=['list', 'List', 'Fehlist'])
+    @bot.command(aliases=['list', 'List', 'Fehlist', 'FEHlist', 'FEHList'])
     async def fehlist(self, *args):
         """I will create a list of heroes to serve your needs.
 Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r (reverse the results)]
