@@ -178,11 +178,11 @@ def standardize(d, k):
     valid_sorts = ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST', 'Name', 'Colour', 'Weapon', 'Movement']
     for i in range(len(l)):
         l[i] = l[i].title()
-        if l[i] == 'R':
+        if l[i] in ['R', 'Re']:
             l[i] = 'Red'
-        if l[i] == 'B':
+        if l[i] in ['B', 'Bl']:
             l[i] = 'Blue'
-        if l[i] == 'G':
+        if l[i] in ['G', 'Gr']:
             l[i] = 'Green'
         if l[i] == 'C':
             l[i] = 'Colourless'
