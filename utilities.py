@@ -45,19 +45,24 @@ def get_unit_stats(args):
         rarities = [str(i)+'*' for i in range(1,6)]
         rarity, args = find_arg(args, rarities, range(1,6), 'rarities')
         # check for manual stat modifiers as well
-        modifiers = ['/' in a for a in args]
-        modifiers = args[modifiers.index(True)] if True in modifiers else None
-        if modifiers is not None:
-            args.remove(modifiers)
-            # check that each modifier is valid
-            modifiers = modifiers.split('/')
-            if len(modifiers) > 5:
-                return 'Too many stat modifiers specified.'
-            if not all([m[0] in ['-','+']+list(map(str, range(10))) and (m[1:].isdigit() or m[1:] == '') for m in modifiers]):
-                return 'Stat modifiers in wrong format (-number or +number).'
-            modifiers_array = np.zeros(5, dtype=np.int32)
-            modifiers_array[:len(modifiers)] = list(map(int, modifiers))
-            print('modifiers:', modifiers_array, ', remaining args:', args)
+        modifiers = [a for a in args if '/' in a]
+        if modifiers:
+            for i in range(len(modifiers)):
+                modifier = modifiers[i]
+                args.remove(modifier)
+                # check that each modifier is valid
+                modifier = modifier.split('/')
+                if len(modifier) > 5:
+                    return 'Too many stat modifiers specified.'
+                if not all([m[0] in ['-','+']+list(map(str, range(10))) and (m[1:].isdigit() or m[1:] == '') for m in modifier]):
+                    return 'Stat modifiers in wrong format (-number or +number).'
+                modifier_array = np.zeros(5, dtype=np.int32)
+                modifier_array[:len(modifier)] = list(map(int, modifier))
+                modifiers[i] = modifier_array
+            modifiers = np.array(modifiers).sum(axis=0)
+        else:
+            modifiers = None
+        print(modifiers)
         args = ' '.join(args)
         unit = find_name(args)
         if unit == INVALID_HERO:
@@ -94,8 +99,8 @@ def get_unit_stats(args):
         if modifiers is not None:
             for i in range(5):
                 if any(base_stats[i]):
-                    base_stats[i] += modifiers_array
-                    max_stats[i] += modifiers_array
+                    base_stats[i] += modifiers
+                    max_stats[i] += modifiers
         return (unit, base_stats, max_stats)
     except ValueError as err:
         return err.args[0]
@@ -447,11 +452,11 @@ Possible Parameters (all optional):
                     +[boon], -[bane]: specify a unit's boon and bane where [boon] and [bane] are one of the following: HP, ATK, SPD, DEF, RES. The boon and bane cannot specify the same stat. If a boon or a bane is specified the other must be as well. Default is neutral. Example: +spd -hp
           +[number between 1 and 10]: specify the level of merge a unit is. Default is no merges. Example: +5
                         [c, b, a, s]: specify the level of summoner support the unit has. Default is no support. Example: s
-[number/number/number/number/number]: specify any additional modifiers such as modifiers from skills or weapon mt. The order is HP/ATK/SPD/DEF/RES. If you specify less than 5 modifiers, for example 1/1/1, it will add 1 to HP/ATK/SPD only. Default is no modifiers. Example: 0/5/-5/0/0
+[number/number/number/number/number]: specify any additional modifiers such as modifiers from skills or weapon mt. The order is HP/ATK/SPD/DEF/RES. If you specify less than 5 modifiers, for example 1/1/1, it will add 1 to HP/ATK/SPD only. You can have as many of these as you want. Default is no modifiers. Example: 0/5/-5/0/0
            [number between 1 and 5]*: specify the rarity of the unit. If left unspecified, shows stats for all rarities. Example: 5*
 Example usage:
-?stats lukas 5* +10 +def -spd 0/14 s
-will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summoner S Support and an additional 14 attack (presumably from a Slaying Lance+)."""
+?stats lukas 5* +10 s +def -spd 0/14 0/-3/0/5
+will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summoner S Support and an additional 14 attack (presumably from a Slaying Lance+) as well as -3 attack and +5 defense (presumably from Fortress Defense)."""
         unit_stats = get_unit_stats(args)
         if isinstance(unit_stats, tuple):
             unit, base, max = unit_stats
