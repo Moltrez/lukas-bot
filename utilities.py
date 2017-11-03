@@ -77,6 +77,8 @@ def get_unit_stats(args, default_rarity=None, sender=None):
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
         max_stats = table_to_array(max_stats_table, boon, bane, rarity)
+        if any([not s.isdigit() for s in base_stats]):
+            return 'This hero does not appear to have stats yet.'
         # check if empty
         if not any([any(r) for r in base_stats]):
             return 'This hero does not appear to be available at the specified rarity.'
