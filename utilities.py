@@ -641,6 +641,7 @@ Example: !list -f red sword infantry -s attack hp
         if not heroes:
             await self.bot.say('No results found for selected filters.')
             return
+        await self.bot.say('Results found: %d' % len(heroes))
         for key in reversed(sort_keys):
             heroes = sorted(heroes,
                             key=lambda h:
