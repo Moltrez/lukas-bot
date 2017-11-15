@@ -356,11 +356,12 @@ class FireEmblemHeroes:
                 )
             learners_table = html.find("table", attrs={"class":"sortable"})
             learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
-            message.add_field(
-                name="Heroes with " + arg,
-                value=', '.join(learners),
-                inline=False
-            )
+            if learners:
+                message.add_field(
+                    name="Heroes with " + arg,
+                    value=', '.join(learners),
+                    inline=False
+                )
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
             html = get_page_html(arg)
             if html is None:
@@ -438,7 +439,7 @@ class FireEmblemHeroes:
                 name="Inherit Restrictions",
                 value=inherit_r
             )
-            if 'Seal Exclusive Skills' not in categories:
+            if 'Seal Exclusive Skills' not in categories and learners:
                 message.add_field(
                     name="Heroes with " + arg,
                     value=learners,
