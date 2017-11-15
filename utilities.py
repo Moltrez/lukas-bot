@@ -452,17 +452,25 @@ class FireEmblemHeroes:
             )
         await self.bot.say(embed=message)
 
+    flaunt_cache = {}
+
     @bot.command(pass_context=True, aliases=['flaunt', 'Flaunt', 'Fehflaunt', 'FEHFlaunt'])
     async def fehflaunt(self, ctx):
         """Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
         if user in flaunt:
-            request = urllib.request.Request(flaunt[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
-            response = urllib.request.urlopen(request)
-            f = response.read()
+            if user in self.flaunt_cache:
+                f = self.flaunt_cache[user]
+            else:
+                print("Downloading flaunt for "+user)
+                request = urllib.request.Request(flaunt[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
+                response = urllib.request.urlopen(request)
+                f = response.read()
+                self.flaunt_cache[user] = f
             f = io.BytesIO(f)
             f.name = os.path.basename(flaunt[user])
+            print("Uploading flaunt for "+user)
             await self.bot.upload(f)
         else:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
