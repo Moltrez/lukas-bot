@@ -430,9 +430,13 @@ class FireEmblemHeroes:
                 value=stats[2],
                 inline=False
             )
+            if 'Passives' in categories:
+                inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
+            else:
+                inherit_r = 'Only, '.join(stats[-2].split('Only'))[:(-2 if 'Only' in stats[-2] else None)]
             message.add_field(
                 name="Inherit Restrictions",
-                value='Only, '.join(stats[-2].split('Only'))[:-2]
+                value=inherit_r
             )
             if 'Seal Exclusive Skills' not in categories:
                 message.add_field(
