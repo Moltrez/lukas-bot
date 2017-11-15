@@ -6,12 +6,38 @@ feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
 GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
+page_cache = {}
 
-def get_page(url):
+def get_page(url, revprop='', prop='', cache=True):
     print(url)
-    request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    if url in page_cache and cache:
+        # get revid and compare
+        rev_url = url+'&prop='+revprop+'&format=xml'
+        request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0'})
+        response = urllib.request.urlopen(request)
+        soup = BSoup(response, "lxml")
+        if revprop == 'revisions':
+            revid = soup.revisions.rev['revid']
+        elif revprop == 'revid':
+            revid = soup.parse['revid']
+        if revid == page_cache[url]['revid']:
+            return page_cache[url]['soup']
+    query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=xml'
+    request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
     response = urllib.request.urlopen(request)
-    return json.load(response)
+    text = response.read().decode('utf-8')
+    soup = BSoup(text, "lxml")
+    if cache:
+        if revprop == 'revisions':
+            if not soup.revisions:
+                return None
+            revid = soup.revisions.rev['revid']
+        elif revprop == 'revid':
+            if not soup.parse:
+                return None
+            revid = soup.parse['revid']
+        page_cache[url] = {'revid':revid, 'soup':soup}
+    return soup
 
 
 def find_name(arg, sender = None):
@@ -28,12 +54,12 @@ def find_name(arg, sender = None):
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
         replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')
 
-    redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve&format=json" % (urllib.parse.quote(arg))
-    info = get_page(redirect)
-    if not info[1] or not info[1][0]:
-        return INVALID_HERO
+    redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve" % (urllib.parse.quote(arg))
+    info = get_page(redirect, cache=False)
+    if info.item:
+        return info.item.text.split('http')[0]
     else:
-        return info[1][0]
+        return INVALID_HERO
     return arg
 
 
@@ -62,28 +88,34 @@ def list_row_to_dict(row):
 
 def get_icon(arg, prefix=""):
     url = feh_source %\
-          "api.php?action=query&titles=File:%s%s.png&prop=imageinfo&iiprop=url&format=json" %\
+          "api.php?action=query&titles=File:%s%s.png" %\
           (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '')))
-    info = get_page(url)
-    if '-1' in info['query']['pages']:
+    info = get_page(url, 'revisions', 'imageinfo&iiprop=url')
+    if info:
+        return info.ii['url']
+    else:
         return None
-    return info['query']['pages'][next(iter(info['query']['pages']))]['imageinfo'][0]['url']
 
 
 def get_categories(arg):
-    url = feh_source % "api.php?action=query&titles=%s&prop=categories&format=json" % (urllib.parse.quote(arg))
-    info = get_page(url)
-    if 'categories' not in info['query']['pages'][next(iter(info['query']['pages']))]:
-        return []
-    categories = info['query']['pages'][next(iter(info['query']['pages']))]['categories']
-    return [a['title'].lstrip('Category:') for a in categories]
+    url = feh_source % "api.php?action=query&titles=%s" % (urllib.parse.quote(arg))
+    info = get_page(url, 'revisions', 'categories')
+    if info:
+        if info.categories:
+            return list(map(lambda x:x['title'].lstrip('Category:'), info.categories.find_all('cl')))
+        else:
+            return []
+    else:
+        return None
 
 
 def get_page_html(arg):
-    url = feh_source % "api.php?action=parse&page=%s&format=json" % (urllib.parse.quote(arg))
-    info = get_page(url)
-    return BSoup(info['parse']['text']['*'], "lxml")
-
+    url = feh_source % "api.php?action=parse&page=%s" % (urllib.parse.quote(arg))
+    info = get_page(url, 'revid', 'text')
+    if info:
+        return BSoup(info.text, "lxml")
+    else:
+        return None
 
 def get_infobox(html):
     table = html.find("div", attrs={"class": "hero-infobox"}).find("table")
@@ -192,8 +224,8 @@ def standardize(d, k):
             l[i] = 'Blue'
         if l[i] in ['G', 'Gr']:
             l[i] = 'Green'
-        if l[i] == 'C':
-            l[i] = 'Colourless'
+        if l[i] == ['C', 'Colourless', 'Colorless', 'Co', 'Ne', 'N']:
+            l[i] = 'Neutral'
         if l[i] == 'Sw':
             l[i] = 'Sword'
         if l[i] == 'La':
@@ -310,7 +342,7 @@ def standardize(d, k):
         if bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_filters)):
             return None
         else:
-            colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Colourless'], l))
+            colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Neutral'], l))
             weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath', 'Tome'], l))
             move = list(filter(lambda x:x in ['Infantry', 'Cavalry', 'Armored', 'Flying'], l))
             thresh = list(filter(lambda x:isinstance(x, tuple), l))

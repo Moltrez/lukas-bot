@@ -70,10 +70,14 @@ def get_unit_stats(args, default_rarity=None, sender=None):
             return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
         # confirm its a unit
         categories = get_categories(unit)
+        if categories is None:
+            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
         # actually fetch the unit's information
         html = get_page_html(unit)
+        if html is None:
+            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
         max_stats = table_to_array(max_stats_table, boon, bane, rarity)
@@ -136,7 +140,7 @@ def table_to_array(table, boon, bane, rarity):
         for key in row:
             if key in ['Rarity','Total']:
                 continue
-            stat = row[key].split('/')            
+            stat = row[key].split('/')
             if any([not s.isdigit() for s in stat]):
                 raise ValueError('This hero does not appear to have stats yet.')
             stat_index = 1
@@ -211,6 +215,10 @@ class FireEmblemHeroes:
         print(arg)
         try:
             categories = get_categories(arg)
+            if categories is None:
+                await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
+                return
+
         except urllib.error.HTTPError as err:
             if err.code == 500:
                 await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
@@ -220,6 +228,9 @@ class FireEmblemHeroes:
 
         if 'Heroes' in categories:
             html = get_page_html(arg)
+            if html is None:
+                await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
+                return
             stats = get_infobox(html)
             base_stats_table, max_stats_table = get_heroes_stats_tables(html)
             colour = weapon_colours['Colourless']
@@ -317,6 +328,9 @@ class FireEmblemHeroes:
             if not icon is None:
                 message.set_thumbnail(url=icon)
             html = get_page_html(arg)
+            if html is None:
+                await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
+                return
             stats = get_infobox(html)
             message.add_field(
                 name="Might",
@@ -349,6 +363,9 @@ class FireEmblemHeroes:
             )
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
             html = get_page_html(arg)
+            if html is None:
+                await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
+                return
             stats_table = html.find("table", attrs={"class": "sortable"})
             # get the data from the appropriate row dictated by passive_level (if it exists)
             # append the inherit restriction (and slot)
@@ -356,7 +373,6 @@ class FireEmblemHeroes:
                     [a.get_text().strip() for a in
                      stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
             stats = [a if a else 'N/A' for a in stats]
-
             colour = 0xe8e1c9
             if 'Specials' in categories:
                 colour = 0xf499fe
@@ -386,24 +402,29 @@ class FireEmblemHeroes:
                 icon = get_icon(stats[1])
                 if not icon is None:
                     message.set_thumbnail(url=icon)
+                message.add_field(
+                name="Slot",
+                value=stats_table.th.text.lstrip('Type ')
+                )
+                message.add_field(
+                name="SP Cost",
+                value=stats[0]
+                )
+            else:
+                if 'Specials' in categories:
                     message.add_field(
-                    name="Slot",
-                    value=stats[-1]
+                    name="Cooldown",
+                    value=stats[1]
                     )
-            elif 'Specials' in categories:
+                elif 'Assists' in categories:
+                    message.add_field(
+                    name="Range",
+                    value=stats[1]
+                    )
                 message.add_field(
-                name="Cooldown",
-                value=stats[1]
+                name="SP Cost",
+                value=stats[3]
                 )
-            elif 'Assists' in categories:
-                message.add_field(
-                name="Range",
-                value=stats[1]
-                )
-            message.add_field(
-            name="SP Cost",
-            value=stats[3]
-            )
             message.add_field(
                 name="Effect",
                 value=stats[2],
