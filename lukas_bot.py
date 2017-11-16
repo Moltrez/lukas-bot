@@ -24,7 +24,7 @@ async def on_message(message):
         c = ''
         for i in range(len(curr_cache)):
             c += curr_cache[i] + '\n'
-            if i+1 % 20 == 0 or i+1 == len(curr_cache):
+            if (i+1) % 20 == 0 or i+1 == len(curr_cache):
                 await bot.send_message(message.author, c)
                 c = ''
         return
