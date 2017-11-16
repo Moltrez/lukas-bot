@@ -77,6 +77,8 @@ def get_unit_stats(args, default_rarity=None, sender=None):
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
+        if base_stats_table is None or max_stats_table is None:
+            return 'This hero does not appear to have stats.'
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
         max_stats = table_to_array(max_stats_table, boon, bane, rarity)
         # check if empty
@@ -627,12 +629,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 message2.add_field(
                     name="Base Stats",
                     value=format_stats_table(base2_table),
-                    inline=True
+                    inline=False
                 )
                 message2.add_field(
                     name="Max Level Stats",
                     value=format_stats_table(max2_table),
-                    inline=True
+                    inline=False
                 )
                 await self.bot.say(embed=message1)
                 await self.bot.say(embed=message2)

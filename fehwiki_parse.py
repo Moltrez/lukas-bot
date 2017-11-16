@@ -232,7 +232,7 @@ def standardize(d, k):
             l[i] = 'Blue'
         if l[i] in ['G', 'Gr']:
             l[i] = 'Green'
-        if l[i] == ['C', 'Colourless', 'Colorless', 'Co', 'Ne', 'N']:
+        if l[i] in ['C', 'Colourless', 'Colorless', 'Ne', 'N']:
             l[i] = 'Neutral'
         if l[i] == 'Sw':
             l[i] = 'Sword'
