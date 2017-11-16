@@ -26,6 +26,7 @@ async def on_message(message):
             c += curr_cache[i] + '\n'
             if i+1 % 20 == 0 or i+1 == len(curr_cache):
                 await bot.send_message(message.author, c)
+                c = ''
         return
     luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
     if luke_pattern.match(message.content):
