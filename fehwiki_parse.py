@@ -17,7 +17,7 @@ def get_page(url, revprop='', prop='', cache=True):
             # get revid and compare
             rev_url = url+'&prop='+revprop+'&format=json'
             request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0'})
-            response = urllib.request.urlopen(request, timeout=15)
+            response = urllib.request.urlopen(request, timeout=5)
             print('Checking revids...')
             info = json.load(response)
             if revprop == 'revisions':
@@ -36,7 +36,7 @@ def get_page(url, revprop='', prop='', cache=True):
             return page_cache[url]['info']
     query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request, timeout=15)
+    response = urllib.request.urlopen(request, timeout=5)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:
