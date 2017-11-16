@@ -31,7 +31,6 @@ def get_page(url, revprop='', prop='', cache=True):
             print('Serving cache...')
             return page_cache[url]['info']
         except timeout:
-            print(err)
             print('Timed out, serving cache...')
             return page_cache[url]['info']
     query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=json'
