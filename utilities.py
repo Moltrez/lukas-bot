@@ -106,7 +106,7 @@ def get_unit_stats(args, default_rarity=None, sender=None):
     except ValueError as err:
         return err.args[0]
     except urllib.error.HTTPError as err:
-        if err.code == 500:
+        if err.code >= 500:
             return "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
 
 
@@ -176,7 +176,7 @@ class FireEmblemHeroes:
         try:
             scores = get_gauntlet_scores()
         except urllib.error.HTTPError as err:
-            if err.code == 500:
+            if err.code >= 500:
                 await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                 return
         longest = max(scores, key=lambda s: len(s[0]['Score']) + len(s[0]['Status']) + 3)
@@ -200,7 +200,7 @@ class FireEmblemHeroes:
         try:
             arg = find_name(arg, sender = str(ctx.message.author))
         except urllib.error.HTTPError as err:
-            if err.code == 500:
+            if err.code >= 500:
                 await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                 return
         if arg == INVALID_HERO:
@@ -233,9 +233,12 @@ class FireEmblemHeroes:
                 url=feh_source % (urllib.parse.quote(arg)),
                 color=colour
             )
-            icon = get_icon(arg, "Icon_Portrait_")
-            if not icon is None:
-                message.set_thumbnail(url=icon)
+            try:
+                icon = get_icon(arg, "Icon_Portrait_")
+                if not icon is None:
+                    message.set_thumbnail(url=icon)
+            except urllib.error.HTTPError as err:
+                print(err)
             rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
             message.add_field(
                 name="Rarities",
@@ -312,9 +315,12 @@ class FireEmblemHeroes:
                 url=feh_source % (urllib.parse.quote(arg)),
                 color=colour
             )
-            icon = get_icon(arg, "Weapon_")
-            if not icon is None:
-                message.set_thumbnail(url=icon)
+            try:
+                icon = get_icon(arg, "Weapon_")
+                if not icon is None:
+                    message.set_thumbnail(url=icon)
+            except urllib.error.HTTPError as err:
+                print(err)
             stats = get_infobox(html)
             message.add_field(
                 name="Might",
@@ -380,9 +386,12 @@ class FireEmblemHeroes:
             )
 
             if 'Passives' in categories:
-                icon = get_icon(stats[1])
-                if not icon is None:
-                    message.set_thumbnail(url=icon)
+                try:
+                    icon = get_icon(stats[1])
+                    if not icon is None:
+                        message.set_thumbnail(url=icon)
+                except urllib.error.HTTPError as err:
+                    print(err)
                 message.add_field(
                 name="Slot",
                 value=stats_table.th.text.lstrip('Type ') + '/S' if 'Sacred Seal' in categories else ''
@@ -480,9 +489,12 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                 url=feh_source % (urllib.parse.quote(unit)),
                 color=0x222222
             )
-            icon = get_icon(unit, "Icon_Portrait_")
-            if not icon is None:
-                message.set_thumbnail(url=icon)
+            try:
+                icon = get_icon(unit, "Icon_Portrait_")
+                if not icon is None:
+                    message.set_thumbnail(url=icon)
+            except urllib.error.HTTPError as err:
+                print(err)
             message.add_field(
                 name="BST",
                 value=max[-1]['Total'],
@@ -545,9 +557,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 url=feh_source % (urllib.parse.quote(unit1)),
                 color=0x222222
             )
-            icon = get_icon(unit1, "Icon_Portrait_")
-            if not icon is None:
-                message1.set_thumbnail(url=icon)
+            try:
+                icon = get_icon(unit1, "Icon_Portrait_")
+                if not icon is None:
+                    message1.set_thumbnail(url=icon)
+            except urllib.error.HTTPError as err:
+                print(err)
             message1.add_field(
                 name="BST",
                 value=max1_table[-1]['Total'],
@@ -570,9 +585,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 url=feh_source % (urllib.parse.quote(unit2)),
                 color=0x222222
             )
-            icon = get_icon(unit2, "Icon_Portrait_")
-            if not icon is None:
-                message2.set_thumbnail(url=icon)
+            try:
+                icon = get_icon(unit2, "Icon_Portrait_")
+                if not icon is None:
+                    message2.set_thumbnail(url=icon)
+            except urllib.error.HTTPError as err:
+                print(err)
             message2.add_field(
                 name="BST",
                 value=max2_table[-1]['Total'],
@@ -644,7 +662,7 @@ Example: !list -f red sword infantry -s attack hp
         try:
             heroes = get_heroes_list()
         except urllib.error.HTTPError as err:
-            if err.code == 500:
+            if err.code >= 500:
                 await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                 return
 
