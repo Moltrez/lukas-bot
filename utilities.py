@@ -20,6 +20,7 @@ stats = ['HP', 'ATK', 'SPD', 'DEF', 'RES']
 merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.array([2,1,1,1,1]), np.array([2,2,2,1,1]), np.array([2,2,2,2,2]),
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
+weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E}
 
 def get_unit_stats(args, default_rarity=None, sender=None):
     # convert to lower case
@@ -68,16 +69,12 @@ def get_unit_stats(args, default_rarity=None, sender=None):
         unit = find_name(args, sender=sender)
         if unit == INVALID_HERO:
             return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
-        # confirm its a unit
-        categories = get_categories(unit)
-        if categories is None:
+        # actually fetch the unit's information
+        categories, html = get_page_html(unit)
+        if html is None:
             return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
-        # actually fetch the unit's information
-        html = get_page_html(unit)
-        if html is None:
-            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
         max_stats = table_to_array(max_stats_table, boon, bane, rarity)
@@ -212,22 +209,13 @@ class FireEmblemHeroes:
             else:
                 await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
             return
-        print(arg)
-        try:
-            categories = get_categories(arg)
-            if categories is None:
-                await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
-                return
 
-        except urllib.error.HTTPError as err:
-            if err.code == 500:
-                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                return
-
-        weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E}
+        categories, html = get_page_html(arg)
+        if html is None:
+            await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
+            return
 
         if 'Heroes' in categories:
-            html = get_page_html(arg)
             if html is None:
                 await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
                 return
@@ -327,10 +315,6 @@ class FireEmblemHeroes:
             icon = get_icon(arg, "Weapon_")
             if not icon is None:
                 message.set_thumbnail(url=icon)
-            html = get_page_html(arg)
-            if html is None:
-                await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
-                return
             stats = get_infobox(html)
             message.add_field(
                 name="Might",
@@ -363,10 +347,6 @@ class FireEmblemHeroes:
                     inline=False
                 )
         elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
-            html = get_page_html(arg)
-            if html is None:
-                await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
-                return
             stats_table = html.find("table", attrs={"class": "sortable"})
             # get the data from the appropriate row dictated by passive_level (if it exists)
             # append the inherit restriction (and slot)
@@ -405,7 +385,7 @@ class FireEmblemHeroes:
                     message.set_thumbnail(url=icon)
                 message.add_field(
                 name="Slot",
-                value=stats_table.th.text.lstrip('Type ')
+                value=stats_table.th.text.lstrip('Type ') + '/S' if 'Sacred Seal' in categories else ''
                 )
                 message.add_field(
                 name="SP Cost",
@@ -440,6 +420,8 @@ class FireEmblemHeroes:
                 value=inherit_r
             )
             if 'Seal Exclusive Skills' not in categories and learners:
+                if 'Sacred Seals' in categories:
+                    learners = 'Available as Sacred Seal\n' + learners
                 message.add_field(
                     name="Heroes with " + arg,
                     value=learners,

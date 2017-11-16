@@ -1,7 +1,7 @@
 import discord, os, re, random
 from discord.ext import commands
 
-import utilities
+import utilities, fehwiki_parse
 
 bot = commands.Bot(command_prefix=['?', '? ', 'lukas ', 'Lukas ', 'lukas, ', 'Lukas, '], description='I am here to serve. I will try to respond to messages that start with `?` or `lukas `.')
 
@@ -18,6 +18,9 @@ async def on_ready():
 async def on_message(message):
     # we do not want the bot to reply to itself
     if message.author == bot.user:
+        return
+    if str(message.author) == 'monkeybard#3663' and message.content == '?cache':
+        await bot.send_message(message.author, '\n'.join(['<'+str(k)+'>' for k in fehwiki_parse.page_cache]))
         return
     luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
     if luke_pattern.match(message.content):

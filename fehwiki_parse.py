@@ -1,4 +1,4 @@
-import urllib.request, urllib.parse, json, io, operator
+import urllib.request, urllib.parse, io, operator
 from bs4 import BeautifulSoup as BSoup
 from feh_alias import *
 
@@ -50,7 +50,7 @@ def find_name(arg, sender = None):
     if arg.lower() in aliases:
         return aliases[arg.lower()]
 
-    arg = arg.title().replace('Hp', 'HP').replace('Atk', 'Attack').replace('Spd', 'Speed').replace(' Def', ' Defense').replace('Res', 'Resistance').\
+    arg = arg.title().replace('Hp', 'HP').replace('Atk', 'Attack').replace('Spd', 'Speed').replace(' Def', ' Defense').replace(' Res', 'Resistance').\
         replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
         replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')
 
@@ -97,25 +97,16 @@ def get_icon(arg, prefix=""):
         return None
 
 
-def get_categories(arg):
-    url = feh_source % "api.php?action=query&titles=%s" % (urllib.parse.quote(arg))
-    info = get_page(url, 'revisions', 'categories')
-    if info:
-        if info.categories:
-            return list(map(lambda x:x['title'].lstrip('Category:'), info.categories.find_all('cl')))
-        else:
-            return []
-    else:
-        return None
-
-
 def get_page_html(arg):
     url = feh_source % "api.php?action=parse&page=%s" % (urllib.parse.quote(arg))
-    info = get_page(url, 'revid', 'text')
+    info = get_page(url, 'revid', 'text|categories')
     if info:
-        return BSoup(info.text, "lxml")
+        categories = (list(map(lambda x:' '.join(x.text.split('_')), info.categories.find_all('cl')))) if info.categories else []
+        soup = BSoup(info.text, "lxml")
+        return categories, soup
     else:
-        return None
+        return None, None
+
 
 def get_infobox(html):
     table = html.find("div", attrs={"class": "hero-infobox"}).find("table")
