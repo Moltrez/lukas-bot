@@ -1,5 +1,6 @@
 import discord, random, argparse, os.path, itertools
 import numpy as np
+from socket import timeout
 from discord.ext import commands as bot
 from feh_alias import *
 from fehwiki_parse import *
@@ -192,261 +193,274 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
-        original_arg = arg
-        passive_level = 3
-        if arg[-1] in ['1','2','3']:
-            passive_level = int(arg[-1])
-            arg = arg[:-1].strip()
-
         try:
-            arg = find_name(arg, sender = str(ctx.message.author))
-            if arg == INVALID_HERO:
-                if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
-                    await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
-                else:
-                    await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
-                return
+            original_arg = arg
+            passive_level = 3
+            if arg[-1] in ['1','2','3']:
+                passive_level = int(arg[-1])
+                arg = arg[:-1].strip()
 
-            categories, html = get_page_html(arg)
-        except urllib.error.HTTPError as err:
-            print(err)
-            if err.code >= 500:
-                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                return
+            try:
+                arg = find_name(arg, sender = str(ctx.message.author))
+                if arg == INVALID_HERO:
+                    if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+                        await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
+                    else:
+                        await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
+                    return
 
-        if html is None:
-            await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
-            return
+                categories, html = get_page_html(arg)
+            except urllib.error.HTTPError as err:
+                print(err)
+                if err.code >= 500:
+                    await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                    return
 
-        if 'Heroes' in categories:
             if html is None:
                 await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
                 return
-            stats = get_infobox(html)
-            base_stats_table, max_stats_table = get_heroes_stats_tables(html)
-            colour = weapon_colours['Colourless']
-            if 'Red' in stats['Weapon Type']:
-                colour = weapon_colours['Red']
-            if 'Blue' in stats['Weapon Type']:
-                colour = weapon_colours['Blue']
-            if 'Green' in stats['Weapon Type']:
-                colour = weapon_colours['Green']
-            message = discord.Embed(
-                title=arg,
-                url=feh_source % (urllib.parse.quote(arg)),
-                color=colour
-            )
-            try:
-                icon = get_icon(arg, "Icon_Portrait_")
-                if not icon is None:
-                    message.set_thumbnail(url=icon)
-            except urllib.error.HTTPError as err:
-                print(err)
-            rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
-            message.add_field(
-                name="Rarities",
-                value= rarity if rarity else 'N/A'
-            )
-            bst = get_bst(max_stats_table)
-            if not bst is None:
-                message.add_field(
-                    name="BST",
-                    value=str(bst)
-                )
-            message.add_field(
-                name="Weapon Type",
-                value=stats['Weapon Type']
-            )
-            message.add_field(
-                name="Move Type",
-                value=stats['Move Type']
-            )
-            message.add_field(
-                name="Base Stats",
-                value=format_stats_table(base_stats_table),
-                inline=True
-            )
-            message.add_field(
-                name="Max Level Stats",
-                value=format_stats_table(max_stats_table),
-                inline=True
-            )
-            skill_tables = html.find_all("table", attrs={"class":"skills-table"})
-            skills = ''
-            for table in skill_tables:
-                headings = [a.get_text().strip() for a in table.find_all("th")]
-                if 'Might' in headings:
-                    # weapons
-                    skills += '**Weapons:** '
-                elif 'Range' in headings:
-                    # assists
-                    skills += '**Assists:** '
-                elif 'Cooldown' in headings:
-                    # specials
-                    skills += '**Specials:** '
-                last_learned = None
-                for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
-                    slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
-                    if not slot is None:
-                        skills = skills.rstrip(', ')
-                        if not last_learned is None:
-                            skills += last_learned
-                        skills += '\n**' + slot.get_text() + '**: '
-                    skills += row.find("td").get_text().strip()
-                    if 'Type': # if we're in passives, get learned levels
-                         last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
-                    skills += ', '
-                skills = skills.rstrip(', ') + last_learned + '\n'
-            message.add_field(
-                name="Learnable Skills",
-                value=skills,
-                inline=False
-            )
-        elif 'Weapons' in categories:
-            colour = 0x222222 # for dragonstones, which are any colour
-            if any(i in ['Swords', 'Red Tomes'] for i in categories):
-                colour = weapon_colours['Red']
-            elif any(i in ['Lances', 'Blue Tomes'] for i in categories):
-                colour = weapon_colours['Blue']
-            elif any(i in ['Axes', 'Green Tomes'] for i in categories):
-                colour = weapon_colours['Green']
-            elif any(i in ['Staves', 'Daggers', 'Bows'] for i in categories):
+
+            if 'Heroes' in categories:
+                if html is None:
+                    await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
+                    return
+                stats = get_infobox(html)
+                base_stats_table, max_stats_table = get_heroes_stats_tables(html)
                 colour = weapon_colours['Colourless']
-
-            message = discord.Embed(
-                title=arg,
-                url=feh_source % (urllib.parse.quote(arg)),
-                color=colour
-            )
-            try:
-                icon = get_icon(arg, "Weapon_")
-                if not icon is None:
-                    message.set_thumbnail(url=icon)
-            except urllib.error.HTTPError as err:
-                print(err)
-            stats = get_infobox(html)
-            message.add_field(
-                name="Might",
-                value=stats['Might']
-            )
-            message.add_field(
-                name="Range",
-                value=stats['Range']
-            )
-            message.add_field(
-                name="SP Cost",
-                value=stats['SP Cost']
-            )
-            message.add_field(
-                name="Exclusive?",
-                value=stats['Exclusive?']
-            )
-            if 'Special Effect' in stats:
-                message.add_field(
-                    name="Special Effect",
-                    value=stats[None],
-                    inline=False
+                if 'Red' in stats['Weapon Type']:
+                    colour = weapon_colours['Red']
+                if 'Blue' in stats['Weapon Type']:
+                    colour = weapon_colours['Blue']
+                if 'Green' in stats['Weapon Type']:
+                    colour = weapon_colours['Green']
+                message = discord.Embed(
+                    title=arg,
+                    url=feh_source % (urllib.parse.quote(arg)),
+                    color=colour
                 )
-            learners_table = html.find("table", attrs={"class":"sortable"})
-            learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
-            if learners:
-                message.add_field(
-                    name="Heroes with " + arg,
-                    value=', '.join(learners),
-                    inline=False
-                )
-        elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
-            stats_table = html.find("table", attrs={"class": "sortable"})
-            # get the data from the appropriate row dictated by passive_level (if it exists)
-            # append the inherit restriction (and slot)
-            stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")] + \
-                    [a.get_text().strip() for a in
-                     stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
-            stats = [a if a else 'N/A' for a in stats]
-            colour = 0xe8e1c9
-            if 'Specials' in categories:
-                colour = 0xf499fe
-            elif 'Assists' in categories:
-                colour = 0x1fe2c3
-
-            passive_colours = {1:0xcd914c, 2:0xa8b0b0, 3:0xd8b956}
-            skill_name = stats[1 if 'Passives' in categories else 0]
-
-            # use learners table to figure out seal colour
-            if 'Seal Exclusive Skills' not in categories:
-                learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
-                skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
-                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
-                    colour = passive_colours[skill_chain_position]
-            else:
-                if skill_name[-1] in ['1', '2', '3']:
-                    colour = passive_colours[int(skill_name[-1])]
-
-            message = discord.Embed(
-                title=skill_name,
-                url=feh_source % (urllib.parse.quote(arg)),
-                color=colour
-            )
-
-            if 'Passives' in categories:
                 try:
-                    icon = get_icon(stats[1])
+                    icon = get_icon(arg, "Icon_Portrait_")
                     if not icon is None:
                         message.set_thumbnail(url=icon)
                 except urllib.error.HTTPError as err:
                     print(err)
-                slot = stats_table.th.text[-2]
+                except timeout:
+                    print('Timed out on icon, skip.')
+                rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
                 message.add_field(
-                    name="Slot",
-                    value=slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')
+                    name="Rarities",
+                    value= rarity if rarity else 'N/A'
+                )
+                if max_stats_table:
+                    bst = get_bst(max_stats_table)
+                    if not bst is None:
+                        message.add_field(
+                            name="BST",
+                            value=str(bst)
+                        )
+                message.add_field(
+                    name="Weapon Type",
+                    value=stats['Weapon Type']
+                )
+                message.add_field(
+                    name="Move Type",
+                    value=stats['Move Type']
+                )
+                if base_stats_table:
+                    message.add_field(
+                        name="Base Stats",
+                        value=format_stats_table(base_stats_table),
+                        inline=False
+                    )
+                if max_stats_table:
+                    message.add_field(
+                        name="Max Level Stats",
+                        value=format_stats_table(max_stats_table),
+                        inline=False
+                    )
+                skill_tables = html.find_all("table", attrs={"class":"skills-table"})
+                skills = ''
+                for table in skill_tables:
+                    headings = [a.get_text().strip() for a in table.find_all("th")]
+                    if 'Might' in headings:
+                        # weapons
+                        skills += '**Weapons:** '
+                    elif 'Range' in headings:
+                        # assists
+                        skills += '**Assists:** '
+                    elif 'Cooldown' in headings:
+                        # specials
+                        skills += '**Specials:** '
+                    last_learned = None
+                    for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
+                        slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
+                        if not slot is None:
+                            skills = skills.rstrip(', ')
+                            if not last_learned is None:
+                                skills += last_learned
+                            skills += '\n**' + slot.get_text() + '**: '
+                        skills += row.find("td").get_text().strip()
+                        if 'Type': # if we're in passives, get learned levels
+                             last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
+                        skills += ', '
+                    skills = skills.rstrip(', ') + last_learned + '\n'
+                message.add_field(
+                    name="Learnable Skills",
+                    value=skills,
+                    inline=False
+                )
+            elif 'Weapons' in categories:
+                colour = 0x222222 # for dragonstones, which are any colour
+                if any(i in ['Swords', 'Red Tomes'] for i in categories):
+                    colour = weapon_colours['Red']
+                elif any(i in ['Lances', 'Blue Tomes'] for i in categories):
+                    colour = weapon_colours['Blue']
+                elif any(i in ['Axes', 'Green Tomes'] for i in categories):
+                    colour = weapon_colours['Green']
+                elif any(i in ['Staves', 'Daggers', 'Bows'] for i in categories):
+                    colour = weapon_colours['Colourless']
+
+                message = discord.Embed(
+                    title=arg,
+                    url=feh_source % (urllib.parse.quote(arg)),
+                    color=colour
+                )
+                try:
+                    icon = get_icon(arg, "Weapon_")
+                    if not icon is None:
+                        message.set_thumbnail(url=icon)
+                except urllib.error.HTTPError as err:
+                    print(err)
+                except timeout:
+                    print('Timed out on icon, skip.')
+                stats = get_infobox(html)
+                message.add_field(
+                    name="Might",
+                    value=stats['Might']
+                )
+                message.add_field(
+                    name="Range",
+                    value=stats['Range']
                 )
                 message.add_field(
                     name="SP Cost",
-                    value=stats[0]
+                    value=stats['SP Cost']
                 )
-            else:
+                message.add_field(
+                    name="Exclusive?",
+                    value=stats['Exclusive?']
+                )
+                if 'Special Effect' in stats:
+                    message.add_field(
+                        name="Special Effect",
+                        value=stats[None],
+                        inline=False
+                    )
+                learners_table = html.find("table", attrs={"class":"sortable"})
+                learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
+                if learners:
+                    message.add_field(
+                        name="Heroes with " + arg,
+                        value=', '.join(learners),
+                        inline=False
+                    )
+            elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
+                stats_table = html.find("table", attrs={"class": "sortable"})
+                # get the data from the appropriate row dictated by passive_level (if it exists)
+                # append the inherit restriction (and slot)
+                stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")] + \
+                        [a.get_text().strip() for a in
+                         stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
+                stats = [a if a else 'N/A' for a in stats]
+                colour = 0xe8e1c9
                 if 'Specials' in categories:
-                    message.add_field(
-                    name="Cooldown",
-                    value=stats[1]
-                    )
+                    colour = 0xf499fe
                 elif 'Assists' in categories:
+                    colour = 0x1fe2c3
+
+                passive_colours = {1:0xcd914c, 2:0xa8b0b0, 3:0xd8b956}
+                skill_name = stats[1 if 'Passives' in categories else 0]
+
+                # use learners table to figure out seal colour
+                if 'Seal Exclusive Skills' not in categories:
+                    learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
+                    skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
+                    if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
+                        colour = passive_colours[skill_chain_position]
+                else:
+                    if skill_name[-1] in ['1', '2', '3']:
+                        colour = passive_colours[int(skill_name[-1])]
+
+                message = discord.Embed(
+                    title=skill_name,
+                    url=feh_source % (urllib.parse.quote(arg)),
+                    color=colour
+                )
+
+                if 'Passives' in categories:
+                    try:
+                        icon = get_icon(stats[1])
+                        if not icon is None:
+                            message.set_thumbnail(url=icon)
+                    except urllib.error.HTTPError as err:
+                        print(err)
+                    except timeout:
+                        print('Timed out on icon, skip.')
+                    slot = stats_table.th.text[-2]
                     message.add_field(
-                    name="Range",
-                    value=stats[1]
+                        name="Slot",
+                        value=slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')
+                    )
+                    message.add_field(
+                        name="SP Cost",
+                        value=stats[0]
+                    )
+                else:
+                    if 'Specials' in categories:
+                        message.add_field(
+                        name="Cooldown",
+                        value=stats[1]
+                        )
+                    elif 'Assists' in categories:
+                        message.add_field(
+                        name="Range",
+                        value=stats[1]
+                        )
+                    message.add_field(
+                    name="SP Cost",
+                    value=stats[3]
                     )
                 message.add_field(
-                name="SP Cost",
-                value=stats[3]
-                )
-            message.add_field(
-                name="Effect",
-                value=stats[2],
-                inline=False
-            )
-            if 'Passives' in categories:
-                inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
-            else:
-                inherit_r = 'Only, '.join(stats[-2].split('Only'))[:(-2 if 'Only' in stats[-2] else None)]
-            message.add_field(
-                name="Inherit Restrictions",
-                value=inherit_r
-            )
-            if 'Seal Exclusive Skills' not in categories and learners:
-                if 'Sacred Seals' in categories:
-                    learners = 'Available as Sacred Seal\n' + learners
-                message.add_field(
-                    name="Heroes with " + arg,
-                    value=learners,
+                    name="Effect",
+                    value=stats[2],
                     inline=False
                 )
-        else:
-            message = discord.Embed(
-                title=arg,
-                url=feh_source % (urllib.parse.quote(arg)),
-                color=0x222222
-            )
-        await self.bot.say(embed=message)
+                if 'Passives' in categories:
+                    inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
+                else:
+                    inherit_r = 'Only, '.join(stats[-2].split('Only'))[:(-2 if 'Only' in stats[-2] else None)]
+                message.add_field(
+                    name="Inherit Restrictions",
+                    value=inherit_r
+                )
+                if 'Seal Exclusive Skills' not in categories and learners:
+                    if 'Sacred Seals' in categories:
+                        learners = 'Available as Sacred Seal\n' + learners
+                    message.add_field(
+                        name="Heroes with " + arg,
+                        value=learners,
+                        inline=False
+                    )
+            else:
+                message = discord.Embed(
+                    title=arg,
+                    url=feh_source % (urllib.parse.quote(arg)),
+                    color=0x222222
+                )
+            await self.bot.say(embed=message)
+        except timeout:
+            print("Timed out.")
+            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
     flaunt_cache = {}
 
@@ -483,40 +497,45 @@ Possible Parameters (all optional):
 Example usage:
 ?stats lukas 5* +10 s +def -spd 0/14 0/-3/0/5
 will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summoner S Support and an additional 14 attack (presumably from a Slaying Lance+) as well as -3 attack and +5 defense (presumably from Fortress Defense)."""
-        unit_stats = get_unit_stats(args, sender=str(ctx.message.author))
-        if isinstance(unit_stats, tuple):
-            unit, base, max = unit_stats
-            base = array_to_table(base)
-            max = array_to_table(max)
-            message = discord.Embed(
-                title=unit,
-                url=feh_source % (urllib.parse.quote(unit)),
-                color=0x222222
-            )
-            try:
-                icon = get_icon(unit, "Icon_Portrait_")
-                if not icon is None:
-                    message.set_thumbnail(url=icon)
-            except urllib.error.HTTPError as err:
-                print(err)
-            message.add_field(
-                name="BST",
-                value=max[-1]['Total'],
-                inline=False
-            )
-            message.add_field(
-                name="Base Stats",
-                value=format_stats_table(base),
-                inline=True
-            )
-            message.add_field(
-                name="Max Level Stats",
-                value=format_stats_table(max),
-                inline=True
-            )
-            await self.bot.say(embed=message)
-        else:
-            await self.bot.say(unit_stats)
+        try:
+            unit_stats = get_unit_stats(args, sender=str(ctx.message.author))
+            if isinstance(unit_stats, tuple):
+                unit, base, max = unit_stats
+                base = array_to_table(base)
+                max = array_to_table(max)
+                message = discord.Embed(
+                    title=unit,
+                    url=feh_source % (urllib.parse.quote(unit)),
+                    color=0x222222
+                )
+                try:
+                    icon = get_icon(unit, "Icon_Portrait_")
+                    if not icon is None:
+                        message.set_thumbnail(url=icon)
+                except urllib.error.HTTPError as err:
+                    print(err)
+                except timeout:
+                    print('Timed out on icon, skip.')
+                message.add_field(
+                    name="BST",
+                    value=max[-1]['Total'],
+                    inline=False
+                )
+                message.add_field(
+                    name="Base Stats",
+                    value=format_stats_table(base),
+                    inline=False
+                )
+                message.add_field(
+                    name="Max Level Stats",
+                    value=format_stats_table(max),
+                    inline=False
+                )
+                await self.bot.say(embed=message)
+            else:
+                await self.bot.say(unit_stats)
+        except timeout:
+            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
     @bot.command(pass_context=True, aliases=['Fehcompare', 'compare', 'Compare', 'FEHcompare', 'FEHCompare'])
     async def fehcompare(self, ctx, *args):
@@ -524,103 +543,110 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
 Please reference ?help fehstats for the kinds of accepted parameters.
 Simply type in unit builds as you would with ?fehstats and add a v or vs between the units. Use -q to only show the difference.
 Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default."""
-        args = list(map(lambda a:a.lower(), args))
-        separators = ['v', 'vs', '-v', '&', '|']
         try:
-            separator, args = find_arg(args, separators, separators, 'separator', remove=False)
-        except ValueError as err:
-            # multiple separators
-            await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
-            return
-        # no separators
-        if separator is None:
-            await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
-            return
-        quiet_mode = False
-        if '-q' in args:
-            quiet_mode = True
-            args.remove('-q')
-        unit1_args = args[:args.index(separator)]
-        unit2_args = args[args.index(separator)+1:]
-        unit1_stats = get_unit_stats(unit1_args, default_rarity=5, sender=str(ctx.message.author))
-        if not isinstance(unit1_stats, tuple):
-            await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
-            return
-        unit2_stats = get_unit_stats(unit2_args, default_rarity=5, sender=str(ctx.message.author))
-        if not isinstance(unit2_stats, tuple):
-            await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
-            return
+            args = list(map(lambda a:a.lower(), args))
+            separators = ['v', 'vs', '-v', '&', '|']
+            try:
+                separator, args = find_arg(args, separators, separators, 'separator', remove=False)
+            except ValueError as err:
+                # multiple separators
+                await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+                return
+            # no separators
+            if separator is None:
+                await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+                return
+            quiet_mode = False
+            if '-q' in args:
+                quiet_mode = True
+                args.remove('-q')
+            unit1_args = args[:args.index(separator)]
+            unit2_args = args[args.index(separator)+1:]
+            unit1_stats = get_unit_stats(unit1_args, default_rarity=5, sender=str(ctx.message.author))
+            if not isinstance(unit1_stats, tuple):
+                await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
+                return
+            unit2_stats = get_unit_stats(unit2_args, default_rarity=5, sender=str(ctx.message.author))
+            if not isinstance(unit2_stats, tuple):
+                await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
+                return
 
-        unit1, base1, max1 = unit1_stats
-        unit2, base2, max2 = unit2_stats
-        if not quiet_mode:
-            base1_table = array_to_table(base1)
-            max1_table = array_to_table(max1)
-            message1 = discord.Embed(
-                title=unit1,
-                url=feh_source % (urllib.parse.quote(unit1)),
-                color=0x222222
-            )
-            try:
-                icon = get_icon(unit1, "Icon_Portrait_")
-                if not icon is None:
-                    message1.set_thumbnail(url=icon)
-            except urllib.error.HTTPError as err:
-                print(err)
-            message1.add_field(
-                name="BST",
-                value=max1_table[-1]['Total'],
-                inline=False
-            )
-            message1.add_field(
-                name="Base Stats",
-                value=format_stats_table(base1_table),
-                inline=True
-            )
-            message1.add_field(
-                name="Max Level Stats",
-                value=format_stats_table(max1_table),
-                inline=True
-            )
-            base2_table = array_to_table(base2)
-            max2_table = array_to_table(max2)
-            message2 = discord.Embed(
-                title=unit2,
-                url=feh_source % (urllib.parse.quote(unit2)),
-                color=0x222222
-            )
-            try:
-                icon = get_icon(unit2, "Icon_Portrait_")
-                if not icon is None:
-                    message2.set_thumbnail(url=icon)
-            except urllib.error.HTTPError as err:
-                print(err)
-            message2.add_field(
-                name="BST",
-                value=max2_table[-1]['Total'],
-                inline=False
-            )
-            message2.add_field(
-                name="Base Stats",
-                value=format_stats_table(base2_table),
-                inline=True
-            )
-            message2.add_field(
-                name="Max Level Stats",
-                value=format_stats_table(max2_table),
-                inline=True
-            )
-            await self.bot.say(embed=message1)
-            await self.bot.say(embed=message2)
-        max1 = np.array(list(filter(lambda r:any(r), max1))[0])
-        max2 = np.array(list(filter(lambda r:any(r), max2))[0])
-        difference = max1 - max2
-        bst_diff = difference.sum()
-        if any(difference):
-            await self.bot.say("%s compared to %s: %s%s" %\
-             (unit1, unit2, ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
-        else:
-            await self.bot.say("There appears to be no difference between these units!")
+            unit1, base1, max1 = unit1_stats
+            unit2, base2, max2 = unit2_stats
+            if not quiet_mode:
+                base1_table = array_to_table(base1)
+                max1_table = array_to_table(max1)
+                message1 = discord.Embed(
+                    title=unit1,
+                    url=feh_source % (urllib.parse.quote(unit1)),
+                    color=0x222222
+                )
+                try:
+                    icon = get_icon(unit1, "Icon_Portrait_")
+                    if not icon is None:
+                        message1.set_thumbnail(url=icon)
+                except urllib.error.HTTPError as err:
+                    print(err)
+                except timeout:
+                    print('Timed out on icon, skip.')
+                message1.add_field(
+                    name="BST",
+                    value=max1_table[-1]['Total'],
+                    inline=False
+                )
+                message1.add_field(
+                    name="Base Stats",
+                    value=format_stats_table(base1_table),
+                    inline=False
+                )
+                message1.add_field(
+                    name="Max Level Stats",
+                    value=format_stats_table(max1_table),
+                    inline=False
+                )
+                base2_table = array_to_table(base2)
+                max2_table = array_to_table(max2)
+                message2 = discord.Embed(
+                    title=unit2,
+                    url=feh_source % (urllib.parse.quote(unit2)),
+                    color=0x222222
+                )
+                try:
+                    icon = get_icon(unit2, "Icon_Portrait_")
+                    if not icon is None:
+                        message2.set_thumbnail(url=icon)
+                except urllib.error.HTTPError as err:
+                    print(err)
+                except timeout:
+                    print('Timed out on icon, skip.')
+                message2.add_field(
+                    name="BST",
+                    value=max2_table[-1]['Total'],
+                    inline=False
+                )
+                message2.add_field(
+                    name="Base Stats",
+                    value=format_stats_table(base2_table),
+                    inline=True
+                )
+                message2.add_field(
+                    name="Max Level Stats",
+                    value=format_stats_table(max2_table),
+                    inline=True
+                )
+                await self.bot.say(embed=message1)
+                await self.bot.say(embed=message2)
+            max1 = np.array(list(filter(lambda r:any(r), max1))[0])
+            max2 = np.array(list(filter(lambda r:any(r), max2))[0])
+            difference = max1 - max2
+            bst_diff = difference.sum()
+            if any(difference):
+                await self.bot.say("%s compared to %s: %s%s" %\
+                 (unit1, unit2, ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
+            else:
+                await self.bot.say("There appears to be no difference between these units!")
+        except timeout:
+            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
     @bot.command(aliases=['list', 'List', 'Fehlist', 'FEHlist', 'FEHList'])
     async def fehlist(self, *args):
@@ -640,64 +666,54 @@ Example: !list -f red sword infantry -s attack hp
          is the same as
          !list -f r sw in -s atk hp
          and will produce a list of units that are Red, wield Swords and are Infantry sorted by Attack and then by HP."""
-        if args:
-            if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args) or (args[0] not in ['-r', '-f', '-s']):
-                await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
-                return
-
-        # set up argument parser
-        parser = argparse.ArgumentParser(description='Process arguments for heroes list.')
-        parser.add_argument('-f', nargs='*')
-        parser.add_argument('-s', nargs='*')
-        parser.add_argument('-r', action='store_const', const=False, default=True)
-        args = vars(parser.parse_args(args=args))
-        filters = {}
-        if args['f']:
-            filters = standardize(args, 'f')
-            if filters is None:
-                await self.bot.say('Invalid filters or multiple filters for the same field were selected.')
-                return
-        sort_keys = []
-        if args['s']:
-            sort_keys = standardize(args, 's')
-            if sort_keys is None:
-                await self.bot.say('Invalid fields to sort by were selected.')
-                return
         try:
-            heroes = get_heroes_list()
-        except urllib.error.HTTPError as err:
-            if err.code >= 500:
-                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                return
+            if args:
+                if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args) or (args[0] not in ['-r', '-f', '-s']):
+                    await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
+                    return
 
-        for f in filters:
-            if f != 'Threshold':
-                heroes = list(filter(lambda h:h[f] in filters[f], heroes))
-            else:
-                for t in filters[f]:
-                    heroes = list(filter(lambda h:t[0](list(itertools.accumulate([h[field] for field in t[1]]))[-1], t[2]), heroes))
-        if not heroes:
-            await self.bot.say('No results found for selected filters.')
-            return
-        await self.bot.say('Results found: %d' % len(heroes))
-        for key in reversed(sort_keys):
-            heroes = sorted(heroes,
-                            key=lambda h:
-                                list(
-                                    itertools.accumulate([h[field] for field in key] if isinstance(key, tuple) else [h[key]]))[-1],
-                                    reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r']
-                                    )
-        list_string = ', '.join([
-            h['Name'] + (
-                (' ('+','.join([
-                    str(
-                        list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
-                        ) for k in sort_keys if k != 'Name'
-                    ])+')' if sort_keys else '')
-                if len(sort_keys) != 1 or sort_keys[0] != 'Name' else ''
-                ) for h in heroes
-            ])
-        while len(list_string) > 2000:
+            # set up argument parser
+            parser = argparse.ArgumentParser(description='Process arguments for heroes list.')
+            parser.add_argument('-f', nargs='*')
+            parser.add_argument('-s', nargs='*')
+            parser.add_argument('-r', action='store_const', const=False, default=True)
+            args = vars(parser.parse_args(args=args))
+            filters = {}
+            if args['f']:
+                filters = standardize(args, 'f')
+                if filters is None:
+                    await self.bot.say('Invalid filters or multiple filters for the same field were selected.')
+                    return
+            sort_keys = []
+            if args['s']:
+                sort_keys = standardize(args, 's')
+                if sort_keys is None:
+                    await self.bot.say('Invalid fields to sort by were selected.')
+                    return
+            try:
+                heroes = get_heroes_list()
+            except urllib.error.HTTPError as err:
+                if err.code >= 500:
+                    await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                    return
+
+            for f in filters:
+                if f != 'Threshold':
+                    heroes = list(filter(lambda h:h[f] in filters[f], heroes))
+                else:
+                    for t in filters[f]:
+                        heroes = list(filter(lambda h:t[0](list(itertools.accumulate([h[field] for field in t[1]]))[-1], t[2]), heroes))
+            if not heroes:
+                await self.bot.say('No results found for selected filters.')
+                return
+            await self.bot.say('Results found: %d' % len(heroes))
+            for key in reversed(sort_keys):
+                heroes = sorted(heroes,
+                                key=lambda h:
+                                    list(
+                                        itertools.accumulate([h[field] for field in key] if isinstance(key, tuple) else [h[key]]))[-1],
+                                        reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r']
+                                        )
             list_string = ', '.join([
                 h['Name'] + (
                     (' ('+','.join([
@@ -708,10 +724,22 @@ Example: !list -f red sword infantry -s attack hp
                     if len(sort_keys) != 1 or sort_keys[0] != 'Name' else ''
                     ) for h in heroes
                 ])
-            heroes = heroes[:-1]
-        message = list_string
-        await self.bot.say(message)
-
+            while len(list_string) > 2000:
+                list_string = ', '.join([
+                    h['Name'] + (
+                        (' ('+','.join([
+                            str(
+                                list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
+                                ) for k in sort_keys if k != 'Name'
+                            ])+')' if sort_keys else '')
+                        if len(sort_keys) != 1 or sort_keys[0] != 'Name' else ''
+                        ) for h in heroes
+                    ])
+                heroes = heroes[:-1]
+            message = list_string
+            await self.bot.say(message)
+        except timeout:
+            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
 def setup(bot):
     bot.add_cog(MagikarpJump(bot))

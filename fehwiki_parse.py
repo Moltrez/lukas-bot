@@ -1,4 +1,5 @@
 import urllib.request, urllib.parse, json, io, operator
+from socket import timeout
 from bs4 import BeautifulSoup as BSoup
 from feh_alias import *
 
@@ -16,7 +17,7 @@ def get_page(url, revprop='', prop='', cache=True):
             # get revid and compare
             rev_url = url+'&prop='+revprop+'&format=json'
             request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0'})
-            response = urllib.request.urlopen(request)
+            response = urllib.request.urlopen(request, timeout=15)
             print('Checking revids...')
             info = json.load(response)
             if revprop == 'revisions':
@@ -29,9 +30,13 @@ def get_page(url, revprop='', prop='', cache=True):
             print(err)
             print('Serving cache...')
             return page_cache[url]['info']
+        except timeout:
+            print(err)
+            print('Timed out, serving cache...')
+            return page_cache[url]['info']
     query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request)
+    response = urllib.request.urlopen(request, timeout=15)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:
@@ -120,7 +125,14 @@ def get_infobox(html):
 
 
 def get_heroes_stats_tables(html):
-    return [extract_table(a) for a in html.find_all("table", attrs={"class":"wikitable"})[1:3]]
+    tables = html.find_all("table", attrs={"class":"wikitable"})
+    if len(tables) < 4:
+        return [None, None]
+    elif 'skills-table' in tables[1]['class']:
+        return [None, None]
+    else:
+        tables = tables[1:3]
+    return [extract_table(a) for a in tables]
 
 
 def extract_table(table_html):
