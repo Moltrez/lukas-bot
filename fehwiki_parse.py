@@ -10,36 +10,39 @@ page_cache = {}
 
 def get_page(url, revprop='', prop='', cache=True):
     print(url)
-    if url in page_cache and cache:
-        # get revid and compare
-        rev_url = url+'&prop='+revprop+'&format=xml'
-        request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0',
-                                                           'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                                                           'Accept-Encoding':'gzip, deflate, br'
-                                                           })
-        response = urllib.request.urlopen(request)
-        soup = BSoup(response, "lxml")
-        if revprop == 'revisions':
-            revid = soup.revisions.rev['revid']
-        elif revprop == 'revid':
-            revid = soup.parse['revid']
-        if revid == page_cache[url]['revid']:
-            return page_cache[url]['soup']
+    # if url in page_cache and cache:
+    #     # get revid and compare
+    #     rev_url = url+'&prop='+revprop+'&format=xml'
+    #     request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0',
+    #                                                        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    #                                                        'Accept-Encoding':'gzip, deflate, br'
+    #                                                        })
+    #     response = urllib.request.urlopen(request)
+    #     soup = BSoup(response, "lxml")
+    #     if revprop == 'revisions':
+    #         revid = soup.revisions.rev['revid']
+    #     elif revprop == 'revid':
+    #         revid = soup.parse['revid']
+    #     if revid == page_cache[url]['revid']:
+    #         return page_cache[url]['soup']
     query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=xml'
-    request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
+    request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0',
+                                                       'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                                                       'Accept-Encoding':'gzip, deflate, br'
+                                                       })
     response = urllib.request.urlopen(request)
     text = response.read().decode('utf-8')
     soup = BSoup(text, "lxml")
-    if cache:
-        if revprop == 'revisions':
-            if not soup.revisions:
-                return None
-            revid = soup.revisions.rev['revid']
-        elif revprop == 'revid':
-            if not soup.parse:
-                return None
-            revid = soup.parse['revid']
-        page_cache[url] = {'revid':revid, 'soup':soup}
+    # if cache:
+    #     if revprop == 'revisions':
+    #         if not soup.revisions:
+    #             return None
+    #         revid = soup.revisions.rev['revid']
+    #     elif revprop == 'revid':
+    #         if not soup.parse:
+    #             return None
+    #         revid = soup.parse['revid']
+    #     page_cache[url] = {'revid':revid, 'soup':soup}
     return soup
 
 
@@ -67,7 +70,7 @@ def find_name(arg, sender = None):
 
 
 def get_heroes_list():
-    html = get_page_html('Stats Table')
+    categories, html = get_page_html('Stats Table')
     table = html.find('table')
     heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
