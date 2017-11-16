@@ -1,4 +1,4 @@
-import urllib.request, urllib.parse, io, operator
+import urllib.request, urllib.parse, json, io, operator
 from bs4 import BeautifulSoup as BSoup
 from feh_alias import *
 
@@ -10,40 +10,39 @@ page_cache = {}
 
 def get_page(url, revprop='', prop='', cache=True):
     print(url)
-    # if url in page_cache and cache:
-    #     # get revid and compare
-    #     rev_url = url+'&prop='+revprop+'&format=xml'
-    #     request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0',
-    #                                                        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    #                                                        'Accept-Encoding':'gzip, deflate, br'
-    #                                                        })
-    #     response = urllib.request.urlopen(request)
-    #     soup = BSoup(response, "lxml")
-    #     if revprop == 'revisions':
-    #         revid = soup.revisions.rev['revid']
-    #     elif revprop == 'revid':
-    #         revid = soup.parse['revid']
-    #     if revid == page_cache[url]['revid']:
-    #         return page_cache[url]['soup']
-    query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=xml'
-    request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0',
-                                                       'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                                                       'Accept-Encoding':'gzip, deflate, br'
-                                                       })
+    if url in page_cache and cache:
+        print('Cached copy found.')
+        try:
+            # get revid and compare
+            rev_url = url+'&prop='+revprop+'&format=json'
+            request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0'})
+            response = urllib.request.urlopen(request)
+            print('Checking revids...')
+            info = json.load(response)
+            if revprop == 'revisions':
+                revid = info['query']['pages'][next(iter(info['query']['pages']))]['revisions'][0]['revid']
+            elif revprop == 'revid':
+                revid = info['parse']['revid']
+            if revid == page_cache[url]['revid']:
+                return page_cache[url]['info']
+        except urllib.error.HTTPError as err:
+            print(err)
+            print('Serving cache...')
+            return page_cache[url]['info']
+    query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=json'
+    request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
     response = urllib.request.urlopen(request)
-    text = response.read().decode('utf-8')
-    soup = BSoup(text, "lxml")
-    # if cache:
-    #     if revprop == 'revisions':
-    #         if not soup.revisions:
-    #             return None
-    #         revid = soup.revisions.rev['revid']
-    #     elif revprop == 'revid':
-    #         if not soup.parse:
-    #             return None
-    #         revid = soup.parse['revid']
-    #     page_cache[url] = {'revid':revid, 'soup':soup}
-    return soup
+    print('Loading JSON...')
+    info = json.load(response)
+    if 'error' in info:
+        return None
+    if cache:
+        if revprop == 'revisions':
+            revid = info['query']['pages'][next(iter(info['query']['pages']))]['revisions'][0]['revid']
+        elif revprop == 'revid':
+            revid = info['parse']['revid']
+        page_cache[url] = {'revid':revid, 'info':info}
+    return info
 
 
 def find_name(arg, sender = None):
@@ -56,16 +55,15 @@ def find_name(arg, sender = None):
     if arg.lower() in aliases:
         return aliases[arg.lower()]
 
-    arg = arg.title().replace('Hp', 'HP').replace('Atk', 'Attack').replace('Spd', 'Speed').replace(' Def', ' Defense').replace(' Res', 'Resistance').\
-        replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
+    arg = arg.title().replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
         replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')
 
     redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve" % (urllib.parse.quote(arg))
     info = get_page(redirect, cache=False)
-    if info.item:
-        return info.item.text.split('http')[0]
-    else:
+    if not info[1] or not info[1][0]:
         return INVALID_HERO
+    else:
+        return info[1][0]
     return arg
 
 
@@ -97,18 +95,19 @@ def get_icon(arg, prefix=""):
           "api.php?action=query&titles=File:%s%s.png" %\
           (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '')))
     info = get_page(url, 'revisions', 'imageinfo&iiprop=url')
-    if info:
-        return info.ii['url']
-    else:
+    if '-1' in info['query']['pages']:
         return None
+    else:
+        icon = info['query']['pages'][next(iter(info['query']['pages']))]['imageinfo'][0]['url']
+        return icon
 
 
 def get_page_html(arg):
     url = feh_source % "api.php?action=parse&page=%s" % (urllib.parse.quote(arg))
     info = get_page(url, 'revid', 'text|categories')
     if info:
-        categories = (list(map(lambda x:' '.join(x.text.split('_')), info.categories.find_all('cl')))) if info.categories else []
-        soup = BSoup(info.text, "lxml")
+        categories = [' '.join(k['*'].split('_')) for k in info['parse']['categories']]
+        soup = BSoup(info['parse']['text']['*'], "lxml")
         return categories, soup
     else:
         return None, None

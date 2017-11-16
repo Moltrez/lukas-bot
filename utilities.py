@@ -197,20 +197,23 @@ class FireEmblemHeroes:
         if arg[-1] in ['1','2','3']:
             passive_level = int(arg[-1])
             arg = arg[:-1].strip()
+
         try:
             arg = find_name(arg, sender = str(ctx.message.author))
+            if arg == INVALID_HERO:
+                if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+                    await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
+                else:
+                    await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
+                return
+
+            categories, html = get_page_html(arg)
         except urllib.error.HTTPError as err:
+            print(err)
             if err.code >= 500:
                 await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                 return
-        if arg == INVALID_HERO:
-            if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
-                await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
-            else:
-                await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
-            return
 
-        categories, html = get_page_html(arg)
         if html is None:
             await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
             return
@@ -392,13 +395,14 @@ class FireEmblemHeroes:
                         message.set_thumbnail(url=icon)
                 except urllib.error.HTTPError as err:
                     print(err)
+                slot = stats_table.th.text[-2]
                 message.add_field(
-                name="Slot",
-                value=stats_table.th.text.lstrip('Type ') + '/S' if 'Sacred Seal' in categories else ''
+                    name="Slot",
+                    value=slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')
                 )
                 message.add_field(
-                name="SP Cost",
-                value=stats[0]
+                    name="SP Cost",
+                    value=stats[0]
                 )
             else:
                 if 'Specials' in categories:
