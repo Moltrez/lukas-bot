@@ -1,6 +1,5 @@
 import discord, os, re, random
 from discord.ext import commands
-import numpy as np
 
 import utilities, fehwiki_parse
 
@@ -21,9 +20,12 @@ async def on_message(message):
     if message.author == bot.user:
         return
     if str(message.author) == 'monkeybard#3663' and message.content == '?cache':
-        curr_cache = np.array_split(np.array(['<'+str(k)+'>' for k in fehwiki_parse.page_cache]), 20)
-        for c in curr_cache:
-            await bot.send_message(message.author, '\n'.join(c))
+        curr_cache = ['<'+str(k)+'>' for k in fehwiki_parse.page_cache]
+        c = ''
+        for i in range(len(curr_cache)):
+            c += curr_cache[i] + '\n'
+            if i+1 % 20 == 0 or i+1 == len(curr_cache):
+                await bot.send_message(message.author, c)
         return
     luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
     if luke_pattern.match(message.content):
