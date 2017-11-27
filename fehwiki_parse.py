@@ -9,45 +9,172 @@ INVALID_HERO = 'no'
 GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
 page_cache = {}
+weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
+passive_colours = {1:0xcd914c, 2:0xa8b0b0, 3:0xd8b956}
 
-def get_page(url, revprop='', prop='', cache=True):
-    print(url)
-    if url in page_cache and cache:
-        print('Cached copy found.')
+def get_data(arg, passive_level, cache=None):
+    categories, html = get_page_html(arg)
+    if html is None:
+        return None, None
+    data = {}
+    data['Embed Info'] = {'Title':arg, 'Icon':None}
+    if 'Heroes' in categories:
+        stats = get_infobox(html)
+        base_stats_table, max_stats_table = get_heroes_stats_tables(html)
+        colour = weapon_colours['Colourless']
+        if 'Red' in stats['Weapon Type']:
+            colour = weapon_colours['Red']
+        if 'Blue' in stats['Weapon Type']:
+            colour = weapon_colours['Blue']
+        if 'Green' in stats['Weapon Type']:
+            colour = weapon_colours['Green']
+        data['Embed Info']['Colour'] = colour
+        data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         try:
-            # get revid and compare
-            rev_url = url+'&prop='+revprop+'&format=json'
-            request = urllib.request.Request(rev_url, headers={'User-Agent': 'Mozilla/5.0'})
-            response = urllib.request.urlopen(request, timeout=5)
-            print('Checking revids...')
-            info = json.load(response)
-            if revprop == 'revisions':
-                revid = info['query']['pages'][next(iter(info['query']['pages']))]['revisions'][0]['revid']
-            elif revprop == 'revid':
-                revid = info['parse']['revid']
-            if revid == page_cache[url]['revid']:
-                return page_cache[url]['info']
+            icon = get_icon(arg, "Icon_Portrait_")
+            if not icon is None:
+                data['Embed Info']['Icon'] = icon
         except urllib.error.HTTPError as err:
             print(err)
-            print('Serving cache...')
-            return page_cache[url]['info']
         except timeout:
+            print('Timed out on icon, skip.')
+        rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
+        data['0Rarities'] = (rarity if rarity else 'N/A'), True
+        data['1BST'] = get_bst(max_stats_table), True
+        data['2Weapon Type'] = stats['Weapon Type'], True
+        data['3Move Type'] = stats['Move Type'], True
+        data['4Base Stats'] = base_stats_table, False
+        data['5Max Level Stats'] = max_stats_table, False
+        skill_tables = html.find_all("table", attrs={"class":"skills-table"})
+        skills = ''
+        for table in skill_tables:
+            headings = [a.get_text().strip() for a in table.find_all("th")]
+            if 'Might' in headings:
+                # weapons
+                skills += '**Weapons:** '
+            elif 'Range' in headings:
+                # assists
+                skills += '**Assists:** '
+            elif 'Cooldown' in headings:
+                # specials
+                skills += '**Specials:** '
+            last_learned = None
+            for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
+                slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
+                if not slot is None:
+                    skills = skills.rstrip(', ')
+                    if not last_learned is None:
+                        skills += last_learned
+                    skills += '\n**' + slot.get_text() + '**: '
+                skills += row.find("td").get_text().strip()
+                if 'Type': # if we're in passives, get learned levels
+                     last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
+                skills += ', '
+            skills = skills.rstrip(', ') + last_learned + '\n'
+        data['6Learnable Skills'] = skills, False
+    elif 'Weapons' in categories:
+        colour = weapon_colours['Null'] # for dragonstones, which are any colour
+        if any(i in ['Swords', 'Red Tomes'] for i in categories):
+            colour = weapon_colours['Red']
+        elif any(i in ['Lances', 'Blue Tomes'] for i in categories):
+            colour = weapon_colours['Blue']
+        elif any(i in ['Axes', 'Green Tomes'] for i in categories):
+            colour = weapon_colours['Green']
+        elif any(i in ['Staves', 'Daggers', 'Bows'] for i in categories):
+            colour = weapon_colours['Colourless']
+        data['Embed Info']['Colour'] = colour
+        data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
+        try:
+            icon = get_icon(arg, "Weapon_")
+            if not icon is None:
+                data['Embed Info']['Icon'] = icon
+        except urllib.error.HTTPError as err:
             print(err)
-            print('Timed out, serving cache...')
-            return page_cache[url]['info']
-    query_url = url+('&prop='+revprop+'|'+prop if prop else '')+'&format=json'
+        except timeout:
+            print('Timed out on icon, skip.')
+        stats = get_infobox(html)
+        data['0Might'] = stats['Might'], True
+        data['1Range'] = stats['Range'], True
+        data['2SP Cost'] = stats['SP Cost'], True
+        data['3Exclusive?'] = stats['Exclusive?'], True
+        if 'Special Effect' in stats:
+            data['4Special Effect'] = stats[None], False
+        learners_table = html.find("table", attrs={"class":"sortable"})
+        learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
+        if learners:
+            data['5Heroes with ' + arg] = ', '.join(learners), False
+    elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
+        stats_table = html.find("table", attrs={"class": "sortable"})
+        # get the data from the appropriate row dictated by passive_level (if it exists)
+        # append the inherit restriction (and slot)
+        stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")] + \
+                [a.get_text().strip() for a in
+                 stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
+        stats = [a if a else 'N/A' for a in stats]
+        data['Embed Info']['Colour'] = 0xe8e1c9
+        if 'Specials' in categories:
+            data['Embed Info']['Colour'] = 0xf499fe
+        elif 'Assists' in categories:
+            data['Embed Info']['Colour'] = 0x1fe2c3
+
+        skill_name = stats[1 if 'Passives' in categories else 0]
+
+        # use learners table to figure out seal colour
+        if 'Seal Exclusive Skills' not in categories:
+            learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
+            skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
+            if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
+                data['Embed Info']['Colour'] = passive_colours[skill_chain_position]
+        else:
+            if skill_name[-1] in ['1', '2', '3']:
+                data['Embed Info']['Colour'] = passive_colours[int(skill_name[-1])]
+        data['Embed Info']['Title'] = skill_name
+        data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
+
+        if 'Passives' in categories:
+            try:
+                icon = get_icon(stats[1])
+                if not icon is None:
+                    data['Embed Info']['Icon'] = icon
+            except urllib.error.HTTPError as err:
+                print(err)
+            except timeout:
+                print('Timed out on icon, skip.')
+            slot = stats_table.th.text[-2]
+            data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
+            data['1SP Cost'] = stats[0], True
+        else:
+            if 'Specials' in categories:
+                data['0Cooldown'] = stats[1], True
+            elif 'Assists' in categories:
+                data['0Range'] = stats[1], True
+            data['1SP Cost'] = stats[3], True
+        data['2Effect'] = stats[2], False
+
+        if 'Passives' in categories:
+            inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
+        else:
+            inherit_r = 'Only, '.join(stats[-2].split('Only'))[:(-2 if 'Only' in stats[-2] else None)]
+        data['3Inherit Restrictions'] = inherit_r, True
+        if 'Seal Exclusive Skills' not in categories and learners:
+            if 'Sacred Seals' in categories:
+                learners = 'Available as Sacred Seal\n' + learners
+            data['4Heroes with ' + arg] = learners, False
+    else:
+        data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
+        data['Embed Info']['Colour'] = weapon_colours['Null']
+    cache.add_data(data, categories)
+    return categories, data
+
+def get_page(url, prop=''):
+    print(url)
+    query_url = url+('&prop='+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
     response = urllib.request.urlopen(request, timeout=5)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:
         return None
-    if cache:
-        if revprop == 'revisions':
-            revid = info['query']['pages'][next(iter(info['query']['pages']))]['revisions'][0]['revid']
-        elif revprop == 'revid':
-            revid = info['parse']['revid']
-        page_cache[url] = {'revid':revid, 'info':info}
     return info
 
 
@@ -57,6 +184,8 @@ def find_name(arg, sender = None):
             return sons[sender]
         elif sender in waifus and arg.lower() in ['waifu', 'my waifu']:
             return waifus[sender]
+    elif arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+        return INVALID_HERO
     # extra cases for common aliases
     if arg.lower() in aliases:
         return aliases[arg.lower()]
@@ -65,7 +194,7 @@ def find_name(arg, sender = None):
         replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')
 
     redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve" % (urllib.parse.quote(arg))
-    info = get_page(redirect, cache=False)
+    info = get_page(redirect)
     if not info[1] or not info[1][0]:
         return INVALID_HERO
     else:
@@ -100,7 +229,7 @@ def get_icon(arg, prefix=""):
     url = feh_source %\
           "api.php?action=query&titles=File:%s%s.png" %\
           (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '')))
-    info = get_page(url, 'revisions', 'imageinfo&iiprop=url')
+    info = get_page(url, 'imageinfo&iiprop=url')
     if '-1' in info['query']['pages']:
         return None
     else:
@@ -110,7 +239,7 @@ def get_icon(arg, prefix=""):
 
 def get_page_html(arg):
     url = feh_source % "api.php?action=parse&page=%s" % (urllib.parse.quote(arg))
-    info = get_page(url, 'revid', 'text|categories')
+    info = get_page(url, 'text|categories')
     if info:
         categories = [' '.join(k['*'].split('_')) for k in info['parse']['categories']]
         soup = BSoup(info['parse']['text']['*'], "lxml")
@@ -151,10 +280,11 @@ def format_stats_table(table):
     if len(table) == 0:
         return None
     ivs = {'HP':'', 'ATK':'', 'SPD':'', 'DEF':'', 'RES':'', 'Total':''}
+    keys = ['Rarity', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'Total']
     rows = ''
     for set in table:
         rows += '\n`'
-        for key in set:
+        for key in keys:
             if key == 'Rarity':
                 rows += '|' + set[key] + '★|'
                 continue
@@ -175,7 +305,7 @@ def format_stats_table(table):
                             ivs[key] = '-'
             rows += format % neutral + '|'
         rows += '`'
-    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in table[0]][:-1]) + '|`'
+    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in keys][:-1]) + '|`'
     ret = header + rows
     if '+' in list(ivs.values()) or '-' in list(ivs.values()):
         ret += "\n\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._"
@@ -202,6 +332,7 @@ def get_learners(learners_table, categories, skill_name):
                 skill_chain_position = i
                 learned_level = int(text[-1])
                 learners[learned_level].append(l_data[0].find_all("a")[1].get_text())
+                break
     learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
     return skill_chain_position, learners
 

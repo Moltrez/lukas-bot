@@ -5,3 +5,4 @@ chardet
 beautifulsoup4
 lxml
 numpy
+jsonpickle
