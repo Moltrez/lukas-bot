@@ -23,7 +23,7 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 
-def get_unit_stats(args, default_rarity=None, sender=None):
+def get_unit_stats(args, cache, default_rarity=None, sender=None):
     # convert to lower case
     args = list(map(lambda x:x.lower(), args))
     try:
@@ -67,16 +67,25 @@ def get_unit_stats(args, default_rarity=None, sender=None):
         else:
             modifiers = None
         args = ' '.join(args)
-        unit = find_name(args, sender=sender)
-        if unit == INVALID_HERO:
-            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
+        if args in cache.aliases:
+            unit = cache.aliases[args]
+        else:
+            unit = find_name(args, sender=sender)
+            if unit == INVALID_HERO:
+                return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
+            cache.add_alias(args, unit)
         # actually fetch the unit's information
-        categories, html = get_page_html(unit)
-        if html is None:
-            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
+        if unit in cache.data:
+            categories = cache.categories[unit]
+            data = cache.data[unit]
+        else:
+            categories, data = get_data(unit, cache=cache)
+            if data is None:
+                return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
-        base_stats_table, max_stats_table = get_heroes_stats_tables(html)
+        base_stats_table = data['4Base Stats'][0]
+        max_stats_table = data['5Max Level Stats'][0]
         if base_stats_table is None or max_stats_table is None:
             return 'This hero does not appear to have stats.'
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
@@ -105,7 +114,7 @@ def get_unit_stats(args, default_rarity=None, sender=None):
                 if any(base_stats[i]):
                     base_stats[i] += modifiers
                     max_stats[i] += modifiers
-        return (unit, base_stats, max_stats)
+        return (data['Embed Info'], base_stats, max_stats)
     except ValueError as err:
         return err.args[0]
     except urllib.error.HTTPError as err:
@@ -130,6 +139,7 @@ def find_arg(args, param_list, return_list, param_type, remove=True):
 def table_to_array(table, boon, bane, rarity):
     #convert dictionary format to numpy arrays, accounting for boons banes and rarity
     array = np.zeros((5,5), dtype=np.int32)
+    keys = ['Rarity', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'Total']
     for i in range(len(table)):
         row = table[i]
         row_rarity = int(row['Rarity'])
@@ -137,7 +147,7 @@ def table_to_array(table, boon, bane, rarity):
             continue
         else:
             row_rarity -= 1
-        for key in row:
+        for key in keys:
             if key in ['Rarity','Total']:
                 continue
             stat = row[key].split('/')
@@ -196,14 +206,25 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
+        self.cache.update()
+
+        ignore_cache = False
+        if str(ctx.message.author) == 'monkeybard#3663':
+            if arg.startswith('-i '):
+                arg = arg[3:]
+                ignore_cache = True
+            elif arg.startswith('-d '):
+                arg = arg[3:]
+                self.cache.delete_alias(arg)
+                return
+        passive_level = 3
+        if arg[-1] in ['1','2','3']:
+            passive_level = int(arg[-1])
+            arg = arg[:-1].strip()
+        original_arg = arg
         try:
-            passive_level = 3
-            if arg[-1] in ['1','2','3']:
-                passive_level = int(arg[-1])
-                arg = arg[:-1].strip()
-            original_arg = arg
             try:
-                if arg in self.cache.aliases:
+                if arg in self.cache.aliases and not ignore_cache:
                     arg = self.cache.aliases[arg]
                 else:
                     arg = find_name(arg, sender = str(ctx.message.author))
@@ -214,13 +235,12 @@ class FireEmblemHeroes:
                             await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
                         return
                     self.cache.add_alias(original_arg, arg)
-                if arg in self.cache.data:
-                    categories = self.cache.categories[arg]
+                if arg in self.cache.data and not ignore_cache:
                     data = self.cache.data[arg]
                 else:
                     categories, data = get_data(arg, passive_level, cache=self.cache)
                     if data is None:
-                        await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
+                        await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
                         return
             except urllib.error.HTTPError as err:
                 print(err)
@@ -281,25 +301,21 @@ Possible Parameters (all optional):
 Example usage:
 ?stats lukas 5* +10 s +def -spd 0/14 0/-3/0/5
 will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summoner S Support and an additional 14 attack (presumably from a Slaying Lance+) as well as -3 attack and +5 defense (presumably from Fortress Defense)."""
+        self.cache.update()
+
         try:
-            unit_stats = get_unit_stats(args, sender=str(ctx.message.author))
+            unit_stats = get_unit_stats(args, self.cache, sender=str(ctx.message.author))
             if isinstance(unit_stats, tuple):
-                unit, base, max = unit_stats
+                embed_info, base, max = unit_stats
                 base = array_to_table(base)
                 max = array_to_table(max)
                 message = discord.Embed(
-                    title=unit,
-                    url=feh_source % (urllib.parse.quote(unit)),
-                    color=0x222222
+                    title=embed_info['Title'],
+                    url=embed_info['URL'],
+                    color=embed_info['Colour']
                 )
-                try:
-                    icon = get_icon(unit, "Icon_Portrait_")
-                    if not icon is None:
-                        message.set_thumbnail(url=icon)
-                except urllib.error.HTTPError as err:
-                    print(err)
-                except timeout:
-                    print('Timed out on icon, skip.')
+                if not embed_info['Icon'] is None:
+                    message.set_thumbnail(url=embed_info['Icon'])
                 message.add_field(
                     name="BST",
                     value=max[-1]['Total'],
@@ -327,6 +343,8 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
 Please reference ?help fehstats for the kinds of accepted parameters.
 Simply type in unit builds as you would with ?fehstats and add a v or vs between the units. Use -q to only show the difference.
 Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default."""
+        self.cache.update()
+
         try:
             args = list(map(lambda a:a.lower(), args))
             separators = ['v', 'vs', '-v', '&', '|']
@@ -346,11 +364,11 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 args.remove('-q')
             unit1_args = args[:args.index(separator)]
             unit2_args = args[args.index(separator)+1:]
-            unit1_stats = get_unit_stats(unit1_args, default_rarity=5, sender=str(ctx.message.author))
+            unit1_stats = get_unit_stats(unit1_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
             if not isinstance(unit1_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
                 return
-            unit2_stats = get_unit_stats(unit2_args, default_rarity=5, sender=str(ctx.message.author))
+            unit2_stats = get_unit_stats(unit2_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
             if not isinstance(unit2_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
                 return
@@ -361,18 +379,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 base1_table = array_to_table(base1)
                 max1_table = array_to_table(max1)
                 message1 = discord.Embed(
-                    title=unit1,
-                    url=feh_source % (urllib.parse.quote(unit1)),
-                    color=0x222222
+                    title=unit1['Title'],
+                    url=unit1['URL'],
+                    color=unit1['Colour']
                 )
-                try:
-                    icon = get_icon(unit1, "Icon_Portrait_")
-                    if not icon is None:
-                        message1.set_thumbnail(url=icon)
-                except urllib.error.HTTPError as err:
-                    print(err)
-                except timeout:
-                    print('Timed out on icon, skip.')
+                if not unit1['Icon'] is None:
+                    message1.set_thumbnail(url=unit1['Icon'])
                 message1.add_field(
                     name="BST",
                     value=max1_table[-1]['Total'],
@@ -391,18 +403,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 base2_table = array_to_table(base2)
                 max2_table = array_to_table(max2)
                 message2 = discord.Embed(
-                    title=unit2,
-                    url=feh_source % (urllib.parse.quote(unit2)),
-                    color=0x222222
+                    title=unit2['Title'],
+                    url=unit2['URL'],
+                    color=unit2['Colour']
                 )
-                try:
-                    icon = get_icon(unit2, "Icon_Portrait_")
-                    if not icon is None:
-                        message2.set_thumbnail(url=icon)
-                except urllib.error.HTTPError as err:
-                    print(err)
-                except timeout:
-                    print('Timed out on icon, skip.')
+                if not unit2['Icon'] is None:
+                    message2.set_thumbnail(url=unit2['Icon'])
                 message2.add_field(
                     name="BST",
                     value=max2_table[-1]['Total'],
@@ -426,7 +432,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             bst_diff = difference.sum()
             if any(difference):
                 await self.bot.say("%s compared to %s: %s%s" %\
-                 (unit1, unit2, ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
+                 (unit1['Title'], unit2['Title'], ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
             else:
                 await self.bot.say("There appears to be no difference between these units!")
         except timeout:
@@ -450,6 +456,8 @@ Example: !list -f red sword infantry -s attack hp
          is the same as
          !list -f r sw in -s atk hp
          and will produce a list of units that are Red, wield Swords and are Infantry sorted by Attack and then by HP."""
+        self.cache.update()
+
         try:
             if args:
                 if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args) or (args[0] not in ['-r', '-f', '-s']):
@@ -475,7 +483,7 @@ Example: !list -f red sword infantry -s attack hp
                     await self.bot.say('Invalid fields to sort by were selected.')
                     return
             try:
-                heroes = get_heroes_list()
+                heroes = get_heroes_list(cache=self.cache)
             except urllib.error.HTTPError as err:
                 if err.code >= 500:
                     await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")

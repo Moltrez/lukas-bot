@@ -12,7 +12,7 @@ page_cache = {}
 weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
 passive_colours = {1:0xcd914c, 2:0xa8b0b0, 3:0xd8b956}
 
-def get_data(arg, passive_level, cache=None):
+def get_data(arg, passive_level=3, cache=None):
     categories, html = get_page_html(arg)
     if html is None:
         return None, None
@@ -30,14 +30,9 @@ def get_data(arg, passive_level, cache=None):
             colour = weapon_colours['Green']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
-        try:
-            icon = get_icon(arg, "Icon_Portrait_")
-            if not icon is None:
-                data['Embed Info']['Icon'] = icon
-        except urllib.error.HTTPError as err:
-            print(err)
-        except timeout:
-            print('Timed out on icon, skip.')
+        icon = get_icon(arg, "Icon_Portrait_")
+        if not icon is None:
+            data['Embed Info']['Icon'] = icon
         rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
         data['0Rarities'] = (rarity if rarity else 'N/A'), True
         data['1BST'] = get_bst(max_stats_table), True
@@ -84,14 +79,9 @@ def get_data(arg, passive_level, cache=None):
             colour = weapon_colours['Colourless']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
-        try:
-            icon = get_icon(arg, "Weapon_")
-            if not icon is None:
-                data['Embed Info']['Icon'] = icon
-        except urllib.error.HTTPError as err:
-            print(err)
-        except timeout:
-            print('Timed out on icon, skip.')
+        icon = get_icon(arg, "Weapon_")
+        if not icon is None:
+            data['Embed Info']['Icon'] = icon
         stats = get_infobox(html)
         data['0Might'] = stats['Might'], True
         data['1Range'] = stats['Range'], True
@@ -132,22 +122,18 @@ def get_data(arg, passive_level, cache=None):
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
 
         if 'Passives' in categories:
-            try:
-                icon = get_icon(stats[1])
-                if not icon is None:
-                    data['Embed Info']['Icon'] = icon
-            except urllib.error.HTTPError as err:
-                print(err)
-            except timeout:
-                print('Timed out on icon, skip.')
+            icon = get_icon(stats[1])
+            if not icon is None:
+                data['Embed Info']['Icon'] = icon
             slot = stats_table.th.text[-2]
             data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
-            data['1SP Cost'] = stats[0], True
+            data['1SP Cost'] = stats[0].lstrip('30px'), True
         else:
             if 'Specials' in categories:
                 data['0Cooldown'] = stats[1], True
             elif 'Assists' in categories:
                 data['0Range'] = stats[1], True
+
             data['1SP Cost'] = stats[3], True
         data['2Effect'] = stats[2], False
 
@@ -184,7 +170,7 @@ def find_name(arg, sender = None):
             return sons[sender]
         elif sender in waifus and arg.lower() in ['waifu', 'my waifu']:
             return waifus[sender]
-    elif arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+    if arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
         return INVALID_HERO
     # extra cases for common aliases
     if arg.lower() in aliases:
@@ -202,11 +188,17 @@ def find_name(arg, sender = None):
     return arg
 
 
-def get_heroes_list():
+def get_heroes_list(cache=None):
+    if cache:
+        heroes_list = cache.get_list
+        if heroes_list:
+            return heroes_list
     categories, html = get_page_html('Stats Table')
     table = html.find('table')
     heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
+    if cache:
+        cache.set_list(heroes_list)
     return heroes_list
 
 
