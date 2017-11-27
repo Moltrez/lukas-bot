@@ -73,7 +73,6 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
             unit = find_name(args, sender=sender)
             if unit == INVALID_HERO:
                 return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
-            cache.add_alias(args, unit)
         # actually fetch the unit's information
         if unit in cache.data:
             categories = cache.categories[unit]
@@ -82,6 +81,7 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
             categories, data = get_data(unit, cache=cache)
             if data is None:
                 return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
+        cache.add_alias(args, data['Embed Info']['Title'])
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
         base_stats_table = data['4Base Stats'][0]
@@ -215,17 +215,21 @@ class FireEmblemHeroes:
                 ignore_cache = True
             elif arg.startswith('-d '):
                 arg = arg[3:]
+                if arg in self.cache.aliases:
+                    title = self.cache.aliases[arg]
+                    self.cache.delete_data(arg)
                 self.cache.delete_alias(arg)
                 return
+
+        original_arg = arg
         passive_level = 3
         if arg[-1] in ['1','2','3']:
             passive_level = int(arg[-1])
             arg = arg[:-1].strip()
-        original_arg = arg
         try:
             try:
-                if arg in self.cache.aliases and not ignore_cache:
-                    arg = self.cache.aliases[arg]
+                if original_arg in self.cache.aliases and not ignore_cache:
+                    arg = self.cache.aliases[original_arg]
                 else:
                     arg = find_name(arg, sender = str(ctx.message.author))
                     if arg == INVALID_HERO:
@@ -234,14 +238,17 @@ class FireEmblemHeroes:
                         else:
                             await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
                         return
-                    self.cache.add_alias(original_arg, arg)
                 if arg in self.cache.data and not ignore_cache:
-                    data = self.cache.data[arg]
+                    if arg + ' ' + str(passive_level) in self.cache.data:
+                        data = self.cache.data[arg+' '+str(passive_level)]
+                    else:
+                        data = self.cache.data[arg]
                 else:
                     categories, data = get_data(arg, passive_level, cache=self.cache)
                     if data is None:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
                         return
+                self.cache.add_alias(original_arg, data['Embed Info']['Title'])
             except urllib.error.HTTPError as err:
                 print(err)
                 if err.code >= 500:
