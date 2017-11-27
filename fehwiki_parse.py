@@ -2,6 +2,7 @@ import urllib.request, urllib.parse, json, io, operator
 from socket import timeout
 from bs4 import BeautifulSoup as BSoup
 from feh_alias import *
+from feh_personal import *
 
 feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'

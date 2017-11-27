@@ -2,7 +2,6 @@ import discord, random, argparse, os.path, itertools
 import numpy as np
 from socket import timeout
 from discord.ext import commands as bot
-from feh_alias import *
 from fehwiki_parse import *
 
 class MagikarpJump:
