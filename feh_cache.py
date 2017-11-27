@@ -3,6 +3,9 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 jsonpickle_numpy.register_handlers()
 from feh_alias import *
 from fehwiki_parse import get_page
+from collections import deque
+
+cache_log = deque([], 20)
 
 filename = './data_cache.json'
 
@@ -78,22 +81,24 @@ class FehCache(object):
             return
         self.aliases[alias] = name
         self.save()
+        cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
 
     def delete_alias(self, alias):
         if alias in self.aliases:
+            cache_log.appendleft('Deleted alias: %s -> %s' % (alias, self.aliases[alias]))
             del self.aliases[alias]
-            print('Delete the alias ' + alias)
         self.save()
 
     def add_data(self, data, categories):
         self.data[data['Embed Info']['Title']] = data
         self.categories[data['Embed Info']['Title']] = categories
         self.save()
+        cache_log.appendleft('Added data for: %s' % data['Embed Info']['Title'])
 
     def delete_data(self, title):
         if title in self.data:
             del self.data[title]
-            print('Deleted the data for ' + title)
+            cache_log.appendleft('Deleted data for: %s' % title)
         if title in self.categories:
             del self.categories[title]
         self.save()

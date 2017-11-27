@@ -2,6 +2,7 @@ import discord, os, re, random
 from discord.ext import commands
 
 import utilities, fehwiki_parse
+from feh_cache import cache_log
 
 bot = commands.Bot(command_prefix=['?', '? ', 'lukas ', 'Lukas ', 'lukas, ', 'Lukas, '], description='I am here to serve. I will try to respond to messages that start with `?` or `lukas `.')
 
@@ -17,6 +18,11 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     # we do not want the bot to reply to itself
+    while cache_log:
+        log_message = cache_log.pop()
+        for ch in bot.private_channels:
+            if ch.recipients[0].name == 'monkeybard' and str(ch.recipients[0].discriminator) == '3663':
+                await bot.send_message(ch, log_message)
     if message.author == bot.user:
         return
     if str(message.author) == 'monkeybard#3663' and message.content == '?cache':

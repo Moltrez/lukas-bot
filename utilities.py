@@ -220,7 +220,11 @@ class FireEmblemHeroes:
                     self.cache.delete_data(arg)
                 self.cache.delete_alias(arg)
                 return
-
+            elif arg.startswith('-a '):
+                arg = arg[3:]
+                alias, title = list(map(lambda x: ' '.join(x.split('_')), arg.split(' ', 1)))
+                self.cache.add_alias(alias, title)
+                return
         original_arg = arg
         passive_level = 3
         if arg[-1] in ['1','2','3']:
