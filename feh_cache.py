@@ -67,7 +67,7 @@ class FehCache(object):
 
     def get_list(self):
         self.save()
-        return list
+        return self.list
 
     def set_list(self, list):
         self.list = list
