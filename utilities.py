@@ -238,7 +238,7 @@ class FireEmblemHeroes:
                         else:
                             await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
                         return
-                if arg in self.cache.data and not ignore_cache:
+                if arg in self.cache.data and not ignore_cache or arg + ' ' + str(passive_level) in self.cache.data:
                     if arg + ' ' + str(passive_level) in self.cache.data:
                         data = self.cache.data[arg+' '+str(passive_level)]
                     else:
