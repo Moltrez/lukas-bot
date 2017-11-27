@@ -79,6 +79,8 @@ class FehCache(object):
     def add_alias(self, alias, name):
         if alias.lower() in ['son', 'my son', 'waifu', 'my waifu']:
             return
+        if alias in self.aliases:
+            return
         self.aliases[alias] = name
         self.save()
         cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
