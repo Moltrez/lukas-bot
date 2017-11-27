@@ -190,7 +190,7 @@ def find_name(arg, sender = None):
 
 def get_heroes_list(cache=None):
     if cache:
-        heroes_list = cache.get_list
+        heroes_list = cache.get_list()
         if heroes_list:
             return heroes_list
     categories, html = get_page_html('Stats Table')
