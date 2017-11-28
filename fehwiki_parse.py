@@ -166,7 +166,7 @@ def get_page(url, prop=''):
     return info
 
 
-def find_name(arg, sender = None):
+def find_name(arg, sender = None, aliases = aliases):
     if sender:
         if sender in sons and arg.lower() in ['son', 'my son']:
             return sons[sender]

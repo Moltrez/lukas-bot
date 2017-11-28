@@ -70,7 +70,7 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
         if args in cache.aliases:
             unit = cache.aliases[args]
         else:
-            unit = find_name(args, sender=sender)
+            unit = find_name(args, sender=sender, aliases=cache.aliases)
             if unit == INVALID_HERO:
                 return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
         # actually fetch the unit's information
@@ -235,7 +235,7 @@ class FireEmblemHeroes:
                 if original_arg in self.cache.aliases and not ignore_cache:
                     arg = self.cache.aliases[original_arg]
                 else:
-                    arg = find_name(arg, sender = str(ctx.message.author))
+                    arg = find_name(arg, sender = str(ctx.message.author), aliases = self.cache.aliases)
                     if arg == INVALID_HERO:
                         if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
                             await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
