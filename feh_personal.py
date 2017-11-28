@@ -35,7 +35,7 @@ flaunt = {
     'ErrantDShepherd#8839':'https://media.discordapp.net/attachments/367370320962650113/373499088857202688/Screenshot_20171025-184714.png',
     'bookofholsety#2235':'https://media.discordapp.net/attachments/369523314126749706/370042437411930112/2017-10-18_13.54.58.png',
     'Dr. Letha#0629':'https://media.discordapp.net/attachments/369523314126749706/370042170209468426/Screenshot_20171010-093438.png',
-    'Datagne#6415':'https://media.discordapp.net/attachments/369523314126749706/370107115513315329/Screenshot_20171018-081321-058.png',
+    'Datagne#6415':'https://media.discordapp.net/attachments/369523314126749706/385097330539495424/Screenshot_20171128-155855-596.png',
     'Mr.Pepsi™#8225':'https://media.discordapp.net/attachments/346817775873949698/379172051753107456/Screenshot_2017-11-12-15-33-24.png',
     'Zylphe#7994':'https://media.discordapp.net/attachments/369522639955296268/376689763891150849/Screenshot_2017-11-05-18-10-27-55.png',
     'Zmr56 is Bored#0800':'https://media.discordapp.net/attachments/369522639955296268/370362796400967701/Screenshot_2017-09-16-17-28-35.png',
