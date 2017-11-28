@@ -166,17 +166,17 @@ def get_page(url, prop=''):
     return info
 
 
-def find_name(arg, sender = None, aliases = aliases):
+def find_name(arg, cache, sender = None):
     if sender:
         if sender in sons and arg.lower() in ['son', 'my son']:
-            return sons[sender]
+            return cache.sons[sender]
         elif sender in waifus and arg.lower() in ['waifu', 'my waifu']:
-            return waifus[sender]
+            return cache.waifus[sender]
     if arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
         return INVALID_HERO
     # extra cases for common aliases
-    if arg.lower() in aliases:
-        return aliases[arg.lower()]
+    if arg.lower() in cache.aliases:
+        return cache.aliases[arg.lower()]
 
     arg = arg.title().replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
         replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')

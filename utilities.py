@@ -70,7 +70,7 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
         if args in cache.aliases:
             unit = cache.aliases[args]
         else:
-            unit = find_name(args, sender=sender, aliases=cache.aliases)
+            unit = find_name(args, cache, sender=sender)
             if unit == INVALID_HERO:
                 return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
         # actually fetch the unit's information
@@ -223,6 +223,12 @@ class FireEmblemHeroes:
             elif arg.startswith('-a '):
                 arg = arg[3:]
                 alias, title = list(map(lambda x: ' '.join(x.split('_')), arg.split(' ', 1)))
+                if alias == 'son':
+
+                    return
+                if alias == 'waifu':
+
+                    return
                 self.cache.add_alias(alias, title)
                 return
         original_arg = arg
@@ -235,7 +241,7 @@ class FireEmblemHeroes:
                 if original_arg in self.cache.aliases and not ignore_cache:
                     arg = self.cache.aliases[original_arg]
                 else:
-                    arg = find_name(arg, sender = str(ctx.message.author), aliases = self.cache.aliases)
+                    arg = find_name(arg, self.cache, sender = str(ctx.message.author))
                     if arg == INVALID_HERO:
                         if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
                             await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
@@ -280,21 +286,26 @@ class FireEmblemHeroes:
     flaunt_cache = {}
 
     @bot.command(pass_context=True, aliases=['flaunt', 'Flaunt', 'Fehflaunt', 'FEHFlaunt'])
-    async def fehflaunt(self, ctx):
+    async def fehflaunt(self, ctx, *args):
         """Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author)
-        if user in flaunt:
+        if len(args) == 3 and user == 'monkeybard#3663' and args[0] == '-a':
+            self.cache.set_flaunt(args[1], args[2])
+            if args[1] in self.flaunt_cache:
+                del self.flaunt_cache[args[1]]
+            return
+        if user in self.cache.flaunts:
             if user in self.flaunt_cache:
                 f = self.flaunt_cache[user]
             else:
                 print("Downloading flaunt for "+user)
-                request = urllib.request.Request(flaunt[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
+                request = urllib.request.Request(self.cache.flaunts[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
                 response = urllib.request.urlopen(request)
                 f = response.read()
                 self.flaunt_cache[user] = f
             f = io.BytesIO(f)
-            f.name = os.path.basename(flaunt[user])
+            f.name = os.path.basename(self.cache.flaunts[user])
             print("Uploading flaunt for "+user)
             await self.bot.upload(f)
         else:

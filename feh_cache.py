@@ -2,6 +2,7 @@ import os, jsonpickle, json, numpy, cloudinary, cloudinary.uploader, cloudinary.
 import jsonpickle.ext.numpy as jsonpickle_numpy
 jsonpickle_numpy.register_handlers()
 from feh_alias import *
+from feh_personal import *
 from fehwiki_parse import get_page
 from collections import deque
 
@@ -30,6 +31,9 @@ class FehCache(object):
                     return
         "Starting new cache..."
         self.aliases = aliases
+        self.sons = sons
+        self.waifus = waifus
+        self.flaunts = flaunt
         self.data = {}
         self.categories = {}
         self.list = []
@@ -37,14 +41,14 @@ class FehCache(object):
         self.save()
 
     def copy(self, other):
-        self.aliases = other.aliases
-        self.data = other.data
-        self.categories = other.categories
-        self.list = other.list
-        if 'last_update' not in dir(other):
-            self.last_update = '2017-11-27T00:00:00Z'
-        else:
-            self.last_update = other.last_update
+        self.aliases = aliases if 'aliases' not in dir(other) else other.aliases
+        self.sons = sons if 'sons' not in dir(other) else other.sons
+        self.waifus = waifus if 'waifus' not in dir(other) else other.waifus
+        self.flaunts = flaunt if 'flaunts' not in dir(other) else other.flaunts
+        self.data = {} if 'data' not in dir(other) else other.data
+        self.categories = {} if 'categories' not in dir(other) else other.categories
+        self.list = [] if 'data' not in dir(other) else other.list
+        self.last_update = '2017-11-27T00:00:00Z' if 'last_update' not in dir(other) else other.last_update
         self.save()
 
     def update(self):
@@ -67,6 +71,10 @@ class FehCache(object):
             json.dump(jsonpickle.encode(self), save_to)
             save_to.close()
             result = cloudinary.uploader.upload(filename, resource_type='raw', public_id=filename[2:], invalidate=True)
+
+    def set_flaunt(self, user, url):
+        self.flaunts[user] = url
+        self.save()
 
     def set_list(self, list):
         self.list = list

@@ -22,6 +22,7 @@ aliases = {
     'qp':'Quickened Pulse',
     'dd':'Distant Defense',
     'dc':'Distant Counter',
+    'attactic':'Attack Tactic',
     'siglud':'Sigurd',
     'zigludo':'Sigurd',
     'zigludo-chan-san-sama-senpai-san-sama-san-senpai-chan':'Sigurd',
@@ -36,6 +37,7 @@ aliases = {
     'fluff chiken':'Fae',
     'scorn':'Corrin (F) (Nohrian Summer)',
     'scam':'Camilla (Spring Festival)',
+    'scamilla':'Camilla (Spring Festival)',
     'nowitch':'Nowi (Trick or Defeat!)',
     'floof':'Genny',
     'fluff':'Genny',
@@ -74,5 +76,6 @@ aliases = {
     'axura':'Azura (Performing Arts)',
     'doga':'Draug',
     'dohga':'Draug',
-    'pointchoker':'Draug'
+    'pointchoker':'Draug',
+    'taco':'Takumi'
 }
