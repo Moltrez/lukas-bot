@@ -12,7 +12,7 @@ page_cache = {}
 weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
 passive_colours = {1:0xcd914c, 2:0xa8b0b0, 3:0xd8b956}
 
-def get_data(arg, passive_level=3, cache=None):
+def get_data(arg, passive_level=3, cache=None, save=True):
     categories, html = get_page_html(arg)
     if html is None:
         return None, None
@@ -109,12 +109,14 @@ def get_data(arg, passive_level=3, cache=None):
 
         skill_name = stats[1 if 'Passives' in categories else 0]
 
+        learners = None
         # use learners table to figure out seal colour
         if 'Seal Exclusive Skills' not in categories:
             learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
-            skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
-            if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
-                data['Embed Info']['Colour'] = passive_colours[skill_chain_position]
+            if learners_table != stats_table:
+                skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
+                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
+                    data['Embed Info']['Colour'] = passive_colours[skill_chain_position]
         else:
             if skill_name[-1] in ['1', '2', '3']:
                 data['Embed Info']['Colour'] = passive_colours[int(skill_name[-1])]
@@ -142,14 +144,14 @@ def get_data(arg, passive_level=3, cache=None):
         else:
             inherit_r = 'Only, '.join(stats[-2].split('Only'))[:(-2 if 'Only' in stats[-2] else None)]
         data['3Inherit Restrictions'] = inherit_r, True
-        if 'Seal Exclusive Skills' not in categories and learners:
+        if learners:
             if 'Sacred Seals' in categories:
                 learners = 'Available as Sacred Seal\n' + learners
             data['4Heroes with ' + arg] = learners, False
     else:
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
-    cache.add_data(data, categories)
+    cache.add_data(data, categories, save=save)
     return categories, data
 
 def get_page(url, prop=''):
@@ -313,6 +315,7 @@ def get_bst(stats_table):
 
 
 def get_learners(learners_table, categories, skill_name):
+    print(learners_table)
     learners = {i+1:[] for i in range(5)}
     # l_data is one row in a 2D array representing the learners table
     skill_chain_position = -1

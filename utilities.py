@@ -78,7 +78,7 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
             categories = cache.categories[unit]
             data = cache.data[unit]
         else:
-            categories, data = get_data(unit, cache=cache)
+            categories, data = get_data(unit, cache=cache, save=False)
             if data is None:
                 return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
         cache.add_alias(args, data['Embed Info']['Title'])
@@ -248,7 +248,7 @@ class FireEmblemHeroes:
                     else:
                         data = self.cache.data[arg]
                 else:
-                    categories, data = get_data(arg, passive_level, cache=self.cache)
+                    categories, data = get_data(arg, passive_level, cache=self.cache, save=False)
                     if data is None:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
                         return

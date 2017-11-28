@@ -49,7 +49,7 @@ class FehCache(object):
 
     def update(self):
         try:
-            changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=50&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
+            changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=100&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
             if changes:
                 self.last_update = changes[0]['timestamp']
                 for change in changes:
@@ -58,12 +58,13 @@ class FehCache(object):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
                         if title == 'Stats Table':
                             self.list = []
-                    self.delete_data(title)
+                    self.delete_data(title, save=False)
                 self.save()
         except Exception as ex:
             print(ex)
 
     def save(self):
+        print("Saving cache and uploading to cloud...")
         with open(filename, 'w+') as save_to:
             json.dump(jsonpickle.encode(self), save_to)
             save_to.close()
@@ -77,31 +78,35 @@ class FehCache(object):
         self.list = list
         self.save()
 
-    def add_alias(self, alias, name):
+    def add_alias(self, alias, name, save=True):
         if alias.lower() in ['son', 'my son', 'waifu', 'my waifu']:
             return
         if alias in self.aliases:
             return
         self.aliases[alias] = name
-        self.save()
+        if save:
+            self.save()
         cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
 
-    def delete_alias(self, alias):
+    def delete_alias(self, alias, save=True):
         if alias in self.aliases:
             cache_log.appendleft('Deleted alias: %s -> %s' % (alias, self.aliases[alias]))
             del self.aliases[alias]
-        self.save()
+        if save:
+            self.save()
 
-    def add_data(self, data, categories):
+    def add_data(self, data, categories, save=True):
         self.data[data['Embed Info']['Title']] = data
         self.categories[data['Embed Info']['Title']] = categories
-        self.save()
+        if save:
+            self.save()
         cache_log.appendleft('Added data for: %s' % data['Embed Info']['Title'])
 
-    def delete_data(self, title):
+    def delete_data(self, title, save=True):
         if title in self.data:
             del self.data[title]
             cache_log.appendleft('Deleted data for: %s' % title)
         if title in self.categories:
             del self.categories[title]
-        self.save()
+        if save:
+            self.save()
