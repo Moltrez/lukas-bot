@@ -56,9 +56,10 @@ class FehCache(object):
                     title = change['title']
                     if title.startswith('File:'):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
-                        self.delete_data(title)
                         if title == 'Stats Table':
                             self.list = []
+                    self.delete_data(title)
+                self.save()
         except Exception as ex:
             print(ex)
 
