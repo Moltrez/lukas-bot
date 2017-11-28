@@ -315,7 +315,6 @@ def get_bst(stats_table):
 
 
 def get_learners(learners_table, categories, skill_name):
-    print(learners_table)
     learners = {i+1:[] for i in range(5)}
     # l_data is one row in a 2D array representing the learners table
     skill_chain_position = -1
