@@ -494,12 +494,18 @@ Example: !list -f red sword infantry -s attack hp
                     await self.bot.say('Invalid fields to sort by were selected.')
                     return
             try:
-                heroes = get_heroes_list(cache=self.cache)
+                heroes = get_heroes_list()
+                self.cache.set_list(heroes)
             except urllib.error.HTTPError as err:
                 if err.code >= 500:
-                    await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                    return
-
+                    if self.cache.list:
+                        heroes = self.cache.list
+                    else:
+                        await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                        return
+            except timeout:
+                if self.cache.list:
+                    heroes = self.cache.list
             for f in filters:
                 if f != 'Threshold':
                     heroes = list(filter(lambda h:h[f] in filters[f], heroes))

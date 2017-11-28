@@ -56,8 +56,6 @@ class FehCache(object):
                     title = change['title']
                     if title.startswith('File:'):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
-                        if title == 'Stats Table':
-                            self.list = []
                     self.delete_data(title, save=False)
                 self.save()
         except Exception as ex:
@@ -69,10 +67,6 @@ class FehCache(object):
             json.dump(jsonpickle.encode(self), save_to)
             save_to.close()
             result = cloudinary.uploader.upload(filename, resource_type='raw', public_id=filename[2:], invalidate=True)
-
-    def get_list(self):
-        self.save()
-        return self.list
 
     def set_list(self, list):
         self.list = list

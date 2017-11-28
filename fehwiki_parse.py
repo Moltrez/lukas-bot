@@ -190,17 +190,11 @@ def find_name(arg, sender = None):
     return arg
 
 
-def get_heroes_list(cache=None):
-    if cache:
-        heroes_list = cache.get_list()
-        if heroes_list:
-            return heroes_list
+def get_heroes_list():
     categories, html = get_page_html('Stats Table')
     table = html.find('table')
     heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
-    if cache:
-        cache.set_list(heroes_list)
     return heroes_list
 
 
