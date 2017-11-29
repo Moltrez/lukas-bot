@@ -168,9 +168,9 @@ def get_page(url, prop=''):
 
 def find_name(arg, cache, sender = None):
     if sender:
-        if sender in sons and arg.lower() in ['son', 'my son']:
+        if sender in cache.sons and arg.lower() in ['son', 'my son']:
             return cache.sons[sender]
-        elif sender in waifus and arg.lower() in ['waifu', 'my waifu']:
+        elif sender in cache.waifus and arg.lower() in ['waifu', 'my waifu']:
             return cache.waifus[sender]
     if arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
         return INVALID_HERO
@@ -216,7 +216,7 @@ def list_row_to_dict(row):
 def get_icon(arg, prefix=""):
     url = feh_source %\
           "api.php?action=query&titles=File:%s%s.png" %\
-          (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '')))
+          (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '_Plus')))
     info = get_page(url, 'imageinfo&iiprop=url')
     if '-1' in info['query']['pages']:
         return None

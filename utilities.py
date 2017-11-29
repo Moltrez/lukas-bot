@@ -67,12 +67,12 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
         else:
             modifiers = None
         args = ' '.join(args)
-        if args in cache.aliases:
-            unit = cache.aliases[args]
-        else:
-            unit = find_name(args, cache, sender=sender)
-            if unit == INVALID_HERO:
-                return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
+        # if args in cache.aliases:
+        #     unit = cache.aliases[args]
+        # else:
+        unit = find_name(args, cache, sender=sender)
+        if unit == INVALID_HERO:
+            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
         # actually fetch the unit's information
         if unit in cache.data:
             categories = cache.categories[unit]
@@ -203,6 +203,20 @@ class FireEmblemHeroes:
         message += '```'
         await self.bot.say(message)
 
+    @bot.command(pass_context=True)
+    async def setson(self, ctx, son):
+        """Set your son so you can find their information easily with `?feh son`!"""
+        true_son = find_name(son, self.cache)
+        self.cache.set_fam('son', str(ctx.message.author), true_son)
+        await self.bot.say('Successfully set your son to %s (%s). You can now search for that unit with `?feh son`!' % (son, true_son))
+
+    @bot.command(pass_context=True)
+    async def setwaifu(self, ctx, waifu):
+        """Set your waifu so you can find their information easily with `?feh waifu`!"""
+        true_waifu = find_name(waifu, self.cache)
+        self.cache.set_fam('waifu', str(ctx.message.author), true_waifu)
+        await self.bot.say('Successfully set your waifu to %s. You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
+
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
@@ -223,13 +237,18 @@ class FireEmblemHeroes:
             elif arg.startswith('-a '):
                 arg = arg[3:]
                 alias, title = list(map(lambda x: ' '.join(x.split('_')), arg.split(' ', 1)))
-                if alias == 'son':
-
-                    return
-                if alias == 'waifu':
-
-                    return
                 self.cache.add_alias(alias, title)
+                return
+            elif arg.startswith('-aliases'):
+                lofaliases = sorted([key + ' -> ' + self.cache.aliases[key] + '\n' for key in self.cache.aliases])
+                message = ''
+                for l in lofaliases:
+                    if len(message) + len(l) >= 2000:
+                        await self.bot.say(message)
+                        message = ''
+                    message += l
+                if message:
+                    await self.bot.say(message)
                 return
         original_arg = arg
         passive_level = 3
@@ -238,16 +257,16 @@ class FireEmblemHeroes:
             arg = arg[:-1].strip()
         try:
             try:
-                if original_arg in self.cache.aliases and not ignore_cache:
-                    arg = self.cache.aliases[original_arg]
-                else:
-                    arg = find_name(arg, self.cache, sender = str(ctx.message.author))
-                    if arg == INVALID_HERO:
-                        if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
-                            await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
-                        else:
-                            await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
-                        return
+                # if original_arg in self.cache.aliases and not ignore_cache:
+                #     arg = self.cache.aliases[original_arg]
+                # else:
+                arg = find_name(arg, self.cache, sender = str(ctx.message.author))
+                if arg == INVALID_HERO:
+                    if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+                        await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
+                    else:
+                        await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
+                    return
                 if arg in self.cache.data and not ignore_cache or arg + ' ' + str(passive_level) in self.cache.data:
                     if arg + ' ' + str(passive_level) in self.cache.data:
                         data = self.cache.data[arg+' '+str(passive_level)]

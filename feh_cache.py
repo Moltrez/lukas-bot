@@ -55,13 +55,16 @@ class FehCache(object):
         try:
             changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=100&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
             if changes:
+                deleted = False
                 self.last_update = changes[0]['timestamp']
                 for change in changes:
                     title = change['title']
                     if title.startswith('File:'):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
-                    self.delete_data(title, save=False)
-                self.save()
+                    if self.delete_data(title, save=False):
+                        deleted = True
+                if deleted:
+                    self.save()
         except Exception as ex:
             print(ex)
 
@@ -72,6 +75,13 @@ class FehCache(object):
             save_to.close()
             result = cloudinary.uploader.upload(filename, resource_type='raw', public_id=filename[2:], invalidate=True)
 
+    def set_fam(self, type, user, title):
+        if type == 'son':
+            self.sons[user] = title
+        if type == 'waifu':
+            self.waifus[user] = title
+        self.save()
+
     def set_flaunt(self, user, url):
         self.flaunts[user] = url
         self.save()
@@ -81,7 +91,8 @@ class FehCache(object):
         self.save()
 
     def add_alias(self, alias, name, save=True):
-        if alias.lower() not in ['son', 'my son', 'waifu', 'my waifu'] and alias not in self.aliases and '/' not in alias:
+        alias = alias.lower()
+        if alias not in ['son', 'my son', 'waifu', 'my waifu'] and alias not in self.aliases and '/' not in alias:
             self.aliases[alias] = name
             cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
         if save:
@@ -102,10 +113,12 @@ class FehCache(object):
         cache_log.appendleft('Added data for: %s' % data['Embed Info']['Title'])
 
     def delete_data(self, title, save=True):
+        deleted = False
         if title in self.data:
             del self.data[title]
-            cache_log.appendleft('Deleted data for: %s' % title)
-        if title in self.categories:
             del self.categories[title]
+            cache_log.appendleft('Deleted data for: %s' % title)
+            deleted = True
         if save:
             self.save()
+        return deleted
