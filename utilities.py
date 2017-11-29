@@ -67,9 +67,6 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
         else:
             modifiers = None
         args = ' '.join(args)
-        # if args in cache.aliases:
-        #     unit = cache.aliases[args]
-        # else:
         unit = find_name(args, cache, sender=sender)
         if unit == INVALID_HERO:
             return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
@@ -257,9 +254,6 @@ class FireEmblemHeroes:
             arg = arg[:-1].strip()
         try:
             try:
-                # if original_arg in self.cache.aliases and not ignore_cache:
-                #     arg = self.cache.aliases[original_arg]
-                # else:
                 arg = find_name(arg, self.cache, sender = str(ctx.message.author))
                 if arg == INVALID_HERO:
                     if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
@@ -299,6 +293,109 @@ class FireEmblemHeroes:
                         inline=data[key][1]
                     )
             await self.bot.say(embed=message)
+        except timeout:
+            print("Timed out.")
+            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+
+    @bot.command(aliases=['refine', 'Refine', 'Fehrefine', 'FEHRefine'])
+    async def fehrefine(self, *, args):
+        """View the refinery options for a weapon."""
+        self.cache.update()
+        try:
+            weapon = find_name(args, self.cache)
+            if weapon == INVALID_HERO:
+                await self.bot.say('Could not find the weapon %s.' % args)
+                return
+            # actually fetch the unit's information
+            if weapon in self.cache.data:
+                categories = self.cache.categories[weapon]
+                data = self.cache.data[weapon]
+            else:
+                categories, data = get_data(weapon, cache=self.cache, save=False)
+                if data is None:
+                    await self.bot.say('Could not find the weapon %s.' % weapon)
+                    return
+            self.cache.add_alias(args, data['Embed Info']['Title'])
+            if 'Weapons' not in categories:
+                await self.bot.say('%s does not seem to be a weapon.' % (weapon))
+                return
+            if 'Refinery Cost' not in data:
+                await self.bot.say('It appears that %s cannot be refined.' % (weapon))
+                return
+            # initial weapon message
+            message1 = discord.Embed(
+                title= data['Embed Info']['Title'],
+                url= data['Embed Info']['URL'],
+                color= data['Embed Info']['Colour']
+            )
+            if data['Embed Info']['Icon']:
+                message1.set_thumbnail(url=data['Embed Info']['Icon'])
+            for key in sorted(data.keys()):
+                if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Exclusive?'] and 'Heroes with' not in key:
+                    message1.add_field(
+                        name=key[1:],
+                        value=data[key][0],
+                        inline=data[key][1]
+                    )
+            message1.add_field(
+                name='Refinery Cost',
+                value=data['Refinery Cost'],
+                inline=False
+            )
+            if 'Refine' in data:
+                message2 = discord.Embed(
+                    title= 'Refinery Options',
+                    url= data['Embed Info']['URL'],
+                    color= 0xD6BD53
+                )
+                for r in data['Refine']:
+                    value = ''
+                    if r['Stats'] != '+0 HP':
+                        value += r['Stats'] + '\n'
+                    effect = r['Effect'].replace((data['4Special Effect'][0] if '4Special Effect' in data else ''),'')
+                    if effect:
+                        value += effect.strip()
+                    message2.add_field(
+                        name=r['Type'],
+                        value=value.strip(),
+                        inline=False
+                    )
+                await self.bot.say(embed=message1)
+                await self.bot.say(embed=message2)
+            else:
+                # weapon evolves
+                args = data['4Weapon Refinery Evolution'][0]
+                weapon = find_name(args, self.cache)
+                if weapon == INVALID_HERO:
+                    await self.bot.say('Could not find the weapon %s.' % args)
+                    return
+                # actually fetch the unit's information
+                if weapon in self.cache.data:
+                    categories = self.cache.categories[weapon]
+                    data = self.cache.data[weapon]
+                else:
+                    categories, data = get_data(weapon, cache=self.cache, save=False)
+                    if data is None:
+                        await self.bot.say('Could not find the weapon %s.' % weapon)
+                        return
+                self.cache.add_alias(args, data['Embed Info']['Title'])
+                # evolved weapon message
+                message2 = discord.Embed(
+                    title= data['Embed Info']['Title'],
+                    url= data['Embed Info']['URL'],
+                    color= data['Embed Info']['Colour']
+                )
+                if data['Embed Info']['Icon']:
+                    message2.set_thumbnail(url=data['Embed Info']['Icon'])
+                for key in sorted(data.keys()):
+                    if key not in ['Embed Info', 'Refine', 'Refinery Cost', '4Weapon Refinery Evolution', 'Exclusive?'] and 'Heroes with' not in key:
+                        message2.add_field(
+                            name=key[1:],
+                            value=data[key][0],
+                            inline=data[key][1]
+                        )
+                await self.bot.say(embed=message1)
+                await self.bot.say(embed=message2)
         except timeout:
             print("Timed out.")
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')

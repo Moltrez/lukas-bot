@@ -120,7 +120,6 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                     cost = ', '.join(cost)
                     data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
                     data['Refinery Cost'] = cost
-                print(data['Refine'])
     elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
         stats_table = html.find("table", attrs={"class": "sortable"})
         # get the data from the appropriate row dictated by passive_level (if it exists)
