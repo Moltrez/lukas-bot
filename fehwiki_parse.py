@@ -93,6 +93,34 @@ def get_data(arg, passive_level=3, cache=None, save=True):
         learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
         if learners:
             data['5Heroes with ' + arg] = ', '.join(learners), False
+        refinery_table = html.find("table", attrs={"class":"wikitable default"})
+        refinery_table = extract_table(refinery_table, True)
+        if refinery_table:
+            if 'Image' in refinery_table[0]:
+                cost = refinery_table[0]['Cost'].split('|')
+                cost_materials = cost[1:]
+                cost = cost[0].split()
+                cost[0] += ' SP'
+                cost[1] = cost[1].lstrip('SP') + ' ' + cost_materials[0] + 's'
+                cost[2] += ' ' + cost_materials[1] + 's'
+                cost = ', '.join(cost)
+                data['4Weapon Refinery Evolution'] = refinery_table[0]['Name'].split('|')[0], False
+                data['Refinery Cost'] = cost
+            elif 'Type' in refinery_table[0]:
+                data['Refine'] = []
+                for r in refinery_table:
+                    t = r['Type'].split('|')[1].rstrip(' W')
+                    s = r['Stats'].split('|')[0]
+                    e = r['Effect'].split('|')[0]
+                    cost = r['Cost'].split('|')
+                    cost_materials = cost[1:]
+                    cost = cost[0].split(', ')
+                    cost[1] += ' ' + cost_materials[0] + 's'
+                    cost[2] += ' ' + cost_materials[1] + 's'
+                    cost = ', '.join(cost)
+                    data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
+                    data['Refinery Cost'] = cost
+                print(data['Refine'])
     elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
         stats_table = html.find("table", attrs={"class": "sortable"})
         # get the data from the appropriate row dictated by passive_level (if it exists)
@@ -253,13 +281,19 @@ def get_heroes_stats_tables(html):
     return [extract_table(a) for a in tables]
 
 
-def extract_table(table_html):
+def extract_table(table_html, get_image_url=False):
     table = []
-    headings = [a.get_text() for a in table_html.find_all("th")]
+    headings = [a.get_text().strip() for a in table_html.find_all("th")]
     for learner in table_html.find_all("tr"):
         if len(learner.find_all("td")) == 0:
             continue
-        data = [a.get_text() for a in learner.find_all("td")]
+        data = [
+            a.get_text().strip() +
+            ('|' + (('|'.join([b['alt'].strip().rstrip('.png') for b in a.find_all('img')])) if a.find_all('img')
+            else (a.a['title'].lstrip('File:').rstrip('.png') if a.a else '')) + '|'
+            if get_image_url else '')
+            for a in learner.find_all("td")
+        ]
         table.append({headings[a]: data[a] for a in range(0, len(headings))})
     return table
 

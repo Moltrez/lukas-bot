@@ -291,10 +291,11 @@ class FireEmblemHeroes:
             if data['Embed Info']['Icon']:
                 message.set_thumbnail(url=data['Embed Info']['Icon'])
             for key in sorted(data.keys()):
-                if key != 'Embed Info':
+                if key not in ['Embed Info', 'Refine', 'Refinery Cost']:
                     message.add_field(
                         name=key[1:],
-                        value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
+                        value=(data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]))
+                            if key != '4Weapon Refinery Evolution' else data[key][0] + ' (' + data['Refinery Cost'] + ')',
                         inline=data[key][1]
                     )
             await self.bot.say(embed=message)
