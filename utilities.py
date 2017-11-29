@@ -222,7 +222,7 @@ class FireEmblemHeroes:
         if true_waifu is None:
             await self.bot.say('You no longer have a waifu.')
         else:
-            await self.bot.say('Successfully set your waifu to %s. You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
+            await self.bot.say('Successfully set your waifu to %s (%s). You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
 
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
