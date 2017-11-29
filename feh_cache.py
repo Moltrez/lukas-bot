@@ -105,6 +105,15 @@ class FehCache(object):
         if save:
             self.save()
 
+    def clear_category(self, category):
+        to_delete = []
+        for title in self.categories.keys():
+            if category in self.categories[title]:
+                to_delete.append(title)
+        for title in to_delete:
+            self.delete_data(title, save=False)
+        self.save()
+
     def add_data(self, data, categories, save=True):
         self.data[data['Embed Info']['Title']] = data
         self.categories[data['Embed Info']['Title']] = categories

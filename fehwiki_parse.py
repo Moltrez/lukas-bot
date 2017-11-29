@@ -85,14 +85,14 @@ def get_data(arg, passive_level=3, cache=None, save=True):
         stats = get_infobox(html)
         data['0Might'] = stats['Might'], True
         data['1Range'] = stats['Range'], True
-        data['2SP Cost'] = stats['SP Cost'], True
+        data['2SP Cost'] = stats['SP Cost'], False
         data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Special Effect' in stats:
-            data['4Special Effect'] = stats[None], False
+            data['5Special Effect'] = stats[None], False
         learners_table = html.find("table", attrs={"class":"sortable"})
         learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
         if learners:
-            data['5Heroes with ' + arg] = ', '.join(learners), False
+            data['6Heroes with ' + arg] = ', '.join(learners), False
         refinery_table = html.find("table", attrs={"class":"wikitable default"})
         refinery_table = extract_table(refinery_table, True)
         if refinery_table:
@@ -104,7 +104,7 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                 cost[1] = cost[1].lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
                 cost[2] += ' ' + cost_materials[1].strip() + 's'
                 cost = ', '.join(cost)
-                data['4Weapon Refinery Evolution'] = refinery_table[0]['Name'].split('|')[0], False
+                data['Evolution'] = refinery_table[0]['Name'].split('|')[0], False
                 data['Refinery Cost'] = cost
             elif 'Type' in refinery_table[0]:
                 data['Refine'] = []

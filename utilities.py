@@ -247,6 +247,10 @@ class FireEmblemHeroes:
                 if message:
                     await self.bot.say(message)
                 return
+            elif arg.startswith('-clearcategory '):
+                    arg = arg[len('-clearcategory '):]
+                    self.cache.clear_category(arg)
+                    return
         original_arg = arg
         passive_level = 3
         if arg[-1] in ['1','2','3']:
@@ -285,13 +289,24 @@ class FireEmblemHeroes:
             if data['Embed Info']['Icon']:
                 message.set_thumbnail(url=data['Embed Info']['Icon'])
             for key in sorted(data.keys()):
-                if key not in ['Embed Info', 'Refine', 'Refinery Cost']:
+                if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Evolution']:
                     message.add_field(
                         name=key[1:],
-                        value=(data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]))
-                            if key != '4Weapon Refinery Evolution' else data[key][0] + ' (' + data['Refinery Cost'] + ')',
+                        value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
                         inline=data[key][1]
                     )
+                    if 'Exclusive?' in key:
+                        if 'Evolution' in data:
+                            refinable = 'Evolves'
+                        elif 'Refinery Cost' in data:
+                            refinable = 'Yes'
+                        else:
+                            refinable = 'No'
+                        message.add_field(
+                            name='Refinable?',
+                            value= refinable,
+                            inline=True
+                        )
             await self.bot.say(embed=message)
         except timeout:
             print("Timed out.")
@@ -331,7 +346,7 @@ class FireEmblemHeroes:
             if data['Embed Info']['Icon']:
                 message1.set_thumbnail(url=data['Embed Info']['Icon'])
             for key in sorted(data.keys()):
-                if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Exclusive?'] and 'Heroes with' not in key:
+                if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Evolution', '3Exclusive?'] and 'Heroes with' not in key:
                     message1.add_field(
                         name=key[1:],
                         value=data[key][0],
@@ -352,7 +367,7 @@ class FireEmblemHeroes:
                     value = ''
                     if r['Stats'] != '+0 HP':
                         value += r['Stats'] + '\n'
-                    effect = r['Effect'].replace((data['4Special Effect'][0] if '4Special Effect' in data else ''),'')
+                    effect = r['Effect'].replace((data['5Special Effect'][0] if '5Special Effect' in data else ''),'')
                     if effect:
                         value += effect.strip()
                     message2.add_field(
@@ -364,7 +379,7 @@ class FireEmblemHeroes:
                 await self.bot.say(embed=message2)
             else:
                 # weapon evolves
-                args = data['4Weapon Refinery Evolution'][0]
+                args = data['Evolution'][0]
                 weapon = find_name(args, self.cache)
                 if weapon == INVALID_HERO:
                     await self.bot.say('Could not find the weapon %s.' % args)
@@ -388,7 +403,7 @@ class FireEmblemHeroes:
                 if data['Embed Info']['Icon']:
                     message2.set_thumbnail(url=data['Embed Info']['Icon'])
                 for key in sorted(data.keys()):
-                    if key not in ['Embed Info', 'Refine', 'Refinery Cost', '4Weapon Refinery Evolution', 'Exclusive?'] and 'Heroes with' not in key:
+                    if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Evolution', '3Exclusive?'] and 'Heroes with' not in key:
                         message2.add_field(
                             name=key[1:],
                             value=data[key][0],
