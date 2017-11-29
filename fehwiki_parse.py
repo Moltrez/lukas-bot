@@ -147,7 +147,11 @@ def get_data(arg, passive_level=3, cache=None, save=True):
         else:
             if skill_name[-1] in ['1', '2', '3']:
                 data['Embed Info']['Colour'] = passive_colours[int(skill_name[-1])]
-        data['Embed Info']['Title'] = skill_name
+        if skill_name[-1] not in ['1', '2', '3']:
+            title = arg
+        else:
+            title = arg + ' ' + skill_name[-1]
+        data['Embed Info']['Title'] = title
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
 
         if 'Passives' in categories:
@@ -201,7 +205,7 @@ def find_name(arg, cache, sender = None):
             return cache.waifus[sender]
     if arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
         return INVALID_HERO
-    # extra cases for common aliases
+    # check cached aliases
     if arg.lower() in cache.aliases:
         return cache.aliases[arg.lower()]
 

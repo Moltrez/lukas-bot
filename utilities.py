@@ -226,15 +226,17 @@ class FireEmblemHeroes:
                 ignore_cache = True
             elif arg.startswith('-d '):
                 arg = arg[3:]
-                if arg in self.cache.aliases:
-                    title = self.cache.aliases[arg]
-                    self.cache.delete_data(arg)
-                self.cache.delete_alias(arg)
+                args = arg.split('|')
+                for arg in args:
+                    self.cache.delete_alias(arg, save=False)
+                self.cache.save()
+                await self.bot.say("Deleted!")
                 return
             elif arg.startswith('-a '):
                 arg = arg[3:]
                 alias, title = list(map(lambda x: ' '.join(x.split('_')), arg.split(' ', 1)))
                 self.cache.add_alias(alias, title)
+                await self.boy.say("Added!")
                 return
             elif arg.startswith('-aliases'):
                 lofaliases = sorted([key + ' -> ' + self.cache.aliases[key] + '\n' for key in self.cache.aliases])
@@ -250,6 +252,7 @@ class FireEmblemHeroes:
             elif arg.startswith('-clearcategory '):
                     arg = arg[len('-clearcategory '):]
                     self.cache.clear_category(arg)
+                    await self.bot.say("Cleared!")
                     return
         original_arg = arg
         passive_level = 3
@@ -275,7 +278,7 @@ class FireEmblemHeroes:
                     if data is None:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
                         return
-                self.cache.add_alias(original_arg, data['Embed Info']['Title'])
+                self.cache.add_alias(original_arg, arg)
             except urllib.error.HTTPError as err:
                 print(err)
                 if err.code >= 500:
