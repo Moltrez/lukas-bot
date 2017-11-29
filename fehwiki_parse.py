@@ -142,7 +142,7 @@ def get_data(arg, passive_level=3, cache=None, save=True):
             learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
             if learners_table != stats_table:
                 skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
-                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3'] and skill_chain_position:
+                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3'] and skill_chain_position > 0:
                     data['Embed Info']['Colour'] = passive_colours[skill_chain_position]
         else:
             if skill_name[-1] in ['1', '2', '3']:
