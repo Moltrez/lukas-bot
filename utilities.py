@@ -201,18 +201,28 @@ class FireEmblemHeroes:
         await self.bot.say(message)
 
     @bot.command(pass_context=True)
-    async def setson(self, ctx, son):
-        """Set your son so you can find their information easily with `?feh son`!"""
-        true_son = find_name(son, self.cache)
+    async def setson(self, ctx, *, son):
+        """Set your son so you can find their information easily with `?feh son`! Unset your son with `?setson none`."""
+        true_son = None if son == 'none' else find_name(son, self.cache)
+        if true_son == INVALID_HERO:
+            true_son = son
         self.cache.set_fam('son', str(ctx.message.author), true_son)
-        await self.bot.say('Successfully set your son to %s (%s). You can now search for that unit with `?feh son`!' % (son, true_son))
+        if true_son is None:
+            await self.bot.say('You no longer have a son.')
+        else:
+            await self.bot.say('Successfully set your son to %s (%s). You can now search for that unit with `?feh son`!' % (son, true_son))
 
     @bot.command(pass_context=True)
-    async def setwaifu(self, ctx, waifu):
-        """Set your waifu so you can find their information easily with `?feh waifu`!"""
-        true_waifu = find_name(waifu, self.cache)
+    async def setwaifu(self, ctx, *, waifu):
+        """Set your waifu so you can find their information easily with `?feh waifu`! Unset your waifu with `?setwaifu none`."""
+        true_waifu = None if waifu == 'none' else find_name(waifu, self.cache)
+        if true_waifu == INVALID_HERO:
+            true_waifu = waifu
         self.cache.set_fam('waifu', str(ctx.message.author), true_waifu)
-        await self.bot.say('Successfully set your waifu to %s. You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
+        if true_waifu is None:
+            await self.bot.say('You no longer have a waifu.')
+        else:
+            await self.bot.say('Successfully set your waifu to %s. You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
 
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
@@ -263,8 +273,10 @@ class FireEmblemHeroes:
             try:
                 arg = find_name(arg, self.cache, sender = str(ctx.message.author))
                 if arg == INVALID_HERO:
-                    if original_arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
-                        await self.bot.say("I was not aware you had one. If you want me to associate you with one, please contact monkeybard.")
+                    if original_arg.lower() in ['son', 'my son']:
+                        await self.bot.say("I was not aware you had one. If you want me to associate you with one, use the setson command.")
+                    elif original_arg.lower() in ['waifu', 'my waifu']:
+                        await self.bot.say("I was not aware you had one. If you want me to associate you with one, use the setwaifu command.")
                     else:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
                     return

@@ -77,9 +77,15 @@ class FehCache(object):
 
     def set_fam(self, type, user, title):
         if type == 'son':
-            self.sons[user] = title
+            if title is None and user in self.sons:
+                del self.sons[user]
+            else:
+                self.sons[user] = title
         if type == 'waifu':
-            self.waifus[user] = title
+            if title is None and user in self.waifus:
+                del self.waifus[user]
+            else:
+                self.waifus[user] = title
         self.save()
 
     def set_flaunt(self, user, url):
