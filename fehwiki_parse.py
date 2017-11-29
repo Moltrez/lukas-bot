@@ -101,8 +101,8 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                 cost_materials = cost[1:]
                 cost = cost[0].split()
                 cost[0] += ' SP'
-                cost[1] = cost[1].lstrip('SP') + ' ' + cost_materials[0] + 's'
-                cost[2] += ' ' + cost_materials[1] + 's'
+                cost[1] = cost[1].lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
+                cost[2] += ' ' + cost_materials[1].strip() + 's'
                 cost = ', '.join(cost)
                 data['4Weapon Refinery Evolution'] = refinery_table[0]['Name'].split('|')[0], False
                 data['Refinery Cost'] = cost
@@ -115,8 +115,8 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                     cost = r['Cost'].split('|')
                     cost_materials = cost[1:]
                     cost = cost[0].split(', ')
-                    cost[1] += ' ' + cost_materials[0] + 's'
-                    cost[2] += ' ' + cost_materials[1] + 's'
+                    cost[1] += ' ' + cost_materials[0].strip() + 's'
+                    cost[2] += ' ' + cost_materials[1].strip() + 's'
                     cost = ', '.join(cost)
                     data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
                     data['Refinery Cost'] = cost
