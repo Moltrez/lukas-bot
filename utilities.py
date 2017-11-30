@@ -629,10 +629,10 @@ Example: !list -f red sword infantry -s attack hp
 
         try:
             if args:
-                if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or
-                ('-r' not in args and '-f' not in args and '-s' not in args) or
-                (args[0] not in ['-r', '-f', '-s']) or
-                ('-r' in args and args[-1] != '-r' and args[args.index('-r')+1] not in ['-f', '-s']):
+                if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or\
+                    ('-r' not in args and '-f' not in args and '-s' not in args) or\
+                    (args[0] not in ['-r', '-f', '-s']) or\
+                    ('-r' in args and args[-1] != '-r' and args[args.index('-r')+1] not in ['-f', '-s']):
                     await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
                     return
 
