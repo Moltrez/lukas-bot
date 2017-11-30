@@ -409,9 +409,9 @@ def standardize(d, k):
             l[i] = 'Tome'
         if l[i] == 'In':
             l[i] = 'Infantry'
-        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse', 'Cav']:
+        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse', 'Cav', 'Cavalier']:
             l[i] = 'Cavalry'
-        if l[i] in ['Ar', 'Armoured', 'Knight']:
+        if l[i] in ['Ar', 'Armoured', 'Knight', 'Armour', 'Armor']:
             l[i] = 'Armored'
         if l[i] == 'Fl':
             l[i] = 'Flying'
