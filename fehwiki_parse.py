@@ -416,7 +416,7 @@ def standardize(d, k):
         if l[i] == 'Fl':
             l[i] = 'Flying'
         if l[i] in ['Hp', 'Atk', 'Spd', 'Def', 'Re', 'Bst']:
-            l[i] = l[i].upper() + 's' if l[i] == 'Re'
+            l[i] = l[i].upper() + 's' if l[i] == 'Re' else ''
         if l[i] == 'Attack':
             l[i] = 'ATK'
         if l[i] == 'Speed':
