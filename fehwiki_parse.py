@@ -415,7 +415,7 @@ def standardize(d, k):
             l[i] = 'Armored'
         if l[i] == 'Fl':
             l[i] = 'Flying'
-        if l[i] in ['Hp', 'Atk', 'Spd', 'Def', 'Bst']:
+        if l[i] in ['Hp', 'Atk', 'Spd', 'Def', 'Res', 'Bst']:
             l[i] = l[i].upper()
         if l[i] == 'Attack':
             l[i] = 'ATK'
