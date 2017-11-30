@@ -384,7 +384,7 @@ def standardize(d, k):
     for i in range(len(l)):
         l[i] = l[i].title().rstrip('s')
         print(l[i])
-        if l[i] in ['R', 'Re']:
+        if l[i] == 'R':
             l[i] = 'Red'
         if l[i] in ['B', 'Bl']:
             l[i] = 'Blue'
