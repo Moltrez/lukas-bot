@@ -382,14 +382,14 @@ def standardize(d, k):
     valid_filters = ['Red', 'Blue', 'Green', 'Neutral', 'Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Breath', 'Tome', 'Dagger', 'Infantry', 'Cavalry', 'Armored', 'Flying']
     valid_sorts = ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST', 'Name', 'Colour', 'Weapon', 'Movement']
     for i in range(len(l)):
-        l[i] = l[i].title()
+        l[i] = l[i].title().rstrip(s)
         if l[i] in ['R', 'Re']:
             l[i] = 'Red'
         if l[i] in ['B', 'Bl']:
             l[i] = 'Blue'
         if l[i] in ['G', 'Gr']:
             l[i] = 'Green'
-        if l[i] in ['C', 'Colourless', 'Colorless', 'Ne', 'N']:
+        if l[i] in ['C', 'Colourles', 'Colorles', 'Ne', 'N']:
             l[i] = 'Neutral'
         if l[i] == 'Sw':
             l[i] = 'Sword'
@@ -399,24 +399,24 @@ def standardize(d, k):
             l[i] = 'Axe'
         if l[i] == 'Bo':
             l[i] = 'Bow'
-        if l[i] == 'St':
+        if l[i] in ['St', 'Stave']:
             l[i] = 'Staff'
         if l[i] == 'Br':
             l[i] = 'Breath'
-        if l[i] == 'Da':
+        if l[i] in ['Da', 'Knife', 'Knive', 'Kn']:
             l[i] = 'Dagger'
         if l[i] == 'To':
             l[i] = 'Tome'
         if l[i] == 'In':
             l[i] = 'Infantry'
-        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse']:
+        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse', 'Cav']:
             l[i] = 'Cavalry'
-        if l[i] in ['Ar', 'Armoured']:
+        if l[i] in ['Ar', 'Armoured', 'Knight']:
             l[i] = 'Armored'
         if l[i] == 'Fl':
             l[i] = 'Flying'
-        if l[i] in ['Hp', 'Atk', 'Spd', 'Def', 'Res', 'Bst']:
-            l[i] = l[i].upper()
+        if l[i] in ['Hp', 'Atk', 'Spd', 'Def', 'Re', 'Bst']:
+            l[i] = l[i].upper() + 's' if l[i] == 'Re'
         if l[i] == 'Attack':
             l[i] = 'ATK'
         if l[i] == 'Speed':
@@ -425,7 +425,7 @@ def standardize(d, k):
             l[i] = 'DEF'
         if l[i] == 'Resistance':
             l[i] = 'RES'
-        if l[i] in ['Total', 'Stats', 'Stat']:
+        if l[i] in ['Total', 'Stat']:
             l[i] = 'BST'
         if l[i] == 'Na':
             l[i] = 'Name'
