@@ -382,7 +382,7 @@ def standardize(d, k):
     valid_filters = ['Red', 'Blue', 'Green', 'Neutral', 'Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Breath', 'Tome', 'Dagger', 'Infantry', 'Cavalry', 'Armored', 'Flying']
     valid_sorts = ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST', 'Name', 'Colour', 'Weapon', 'Movement']
     for i in range(len(l)):
-        l[i] = l[i].title().rstrip(s)
+        l[i] = l[i].title().rstrip('s')
         if l[i] in ['R', 'Re']:
             l[i] = 'Red'
         if l[i] in ['B', 'Bl']:
