@@ -222,7 +222,7 @@ class FireEmblemHeroes:
         if true_waifu is None:
             await self.bot.say('You no longer have a waifu.')
         else:
-            await self.bot.say('Successfully set your waifu to %s. You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
+            await self.bot.say('Successfully set your waifu to %s (%s). You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
 
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
@@ -280,7 +280,7 @@ class FireEmblemHeroes:
                     else:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
                     return
-                if arg in self.cache.data and not ignore_cache or arg + ' ' + str(passive_level) in self.cache.data:
+                if (arg in self.cache.data or arg + ' ' + str(passive_level) in self.cache.data) and not ignore_cache:
                     if arg + ' ' + str(passive_level) in self.cache.data:
                         data = self.cache.data[arg+' '+str(passive_level)]
                     else:
@@ -629,7 +629,10 @@ Example: !list -f red sword infantry -s attack hp
 
         try:
             if args:
-                if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or ('-r' not in args and '-f' not in args and '-s' not in args) or (args[0] not in ['-r', '-f', '-s']):
+                if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or\
+                    ('-r' not in args and '-f' not in args and '-s' not in args) or\
+                    (args[0] not in ['-r', '-f', '-s']) or\
+                    ('-r' in args and args[-1] != '-r' and args[args.index('-r')+1] not in ['-f', '-s']):
                     await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
                     return
 

@@ -129,11 +129,13 @@ class FehCache(object):
 
     def delete_data(self, title, save=True):
         deleted = False
-        if title in self.data:
-            del self.data[title]
-            del self.categories[title]
-            cache_log.appendleft('Deleted data for: %s' % title)
-            deleted = True
+        for suffix in ['', ' 1', ' 2', ' 3']:
+            t = title + suffix
+            if t in self.data:
+                del self.data[t]
+                del self.categories[t]
+                cache_log.appendleft('Deleted data for: %s' % t)
+                deleted = True
         if save:
             self.save()
         return deleted

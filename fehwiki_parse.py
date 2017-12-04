@@ -101,8 +101,8 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                 cost_materials = cost[1:]
                 cost = cost[0].split()
                 cost[0] += ' SP'
-                cost[1] = cost[1].lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
-                cost[2] += ' ' + cost_materials[1].strip() + 's'
+                cost[1] = cost[1].strip().lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
+                cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
                 cost = ', '.join(cost)
                 data['Evolution'] = refinery_table[0]['Name'].split('|')[0], False
                 data['Refinery Cost'] = cost
@@ -115,8 +115,8 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                     cost = r['Cost'].split('|')
                     cost_materials = cost[1:]
                     cost = cost[0].split(', ')
-                    cost[1] += ' ' + cost_materials[0].strip() + 's'
-                    cost[2] += ' ' + cost_materials[1].strip() + 's'
+                    cost[1] = cost[1].strip() + ' ' + cost_materials[0].strip() + 's'
+                    cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
                     cost = ', '.join(cost)
                     data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
                     data['Refinery Cost'] = cost
@@ -142,7 +142,7 @@ def get_data(arg, passive_level=3, cache=None, save=True):
             learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
             if learners_table != stats_table:
                 skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
-                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3']:
+                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3'] and skill_chain_position > 0:
                     data['Embed Info']['Colour'] = passive_colours[skill_chain_position]
         else:
             if skill_name[-1] in ['1', '2', '3']:
@@ -382,8 +382,8 @@ def standardize(d, k):
     valid_filters = ['Red', 'Blue', 'Green', 'Neutral', 'Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Breath', 'Tome', 'Dagger', 'Infantry', 'Cavalry', 'Armored', 'Flying']
     valid_sorts = ['HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST', 'Name', 'Colour', 'Weapon', 'Movement']
     for i in range(len(l)):
-        l[i] = l[i].title()
-        if l[i] in ['R', 'Re']:
+        l[i] = l[i].title().rstrip('s') if (l[i].title() not in ['Colourless', 'Colorless'] and not l[i].lower().endswith('res')) else l[i].title()
+        if l[i] == ['R', 'Re']:
             l[i] = 'Red'
         if l[i] in ['B', 'Bl']:
             l[i] = 'Blue'
@@ -399,19 +399,19 @@ def standardize(d, k):
             l[i] = 'Axe'
         if l[i] == 'Bo':
             l[i] = 'Bow'
-        if l[i] == 'St':
+        if l[i] in ['St', 'Stave']:
             l[i] = 'Staff'
         if l[i] == 'Br':
             l[i] = 'Breath'
-        if l[i] == 'Da':
+        if l[i] in ['Da', 'Knife', 'Knive', 'Kn']:
             l[i] = 'Dagger'
         if l[i] == 'To':
             l[i] = 'Tome'
         if l[i] == 'In':
             l[i] = 'Infantry'
-        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse']:
+        if l[i] in ['Ca', 'Mo', 'Mounted', 'Horse', 'Cav', 'Cavalier']:
             l[i] = 'Cavalry'
-        if l[i] in ['Ar', 'Armoured']:
+        if l[i] in ['Ar', 'Armoured', 'Knight', 'Armour', 'Armor']:
             l[i] = 'Armored'
         if l[i] == 'Fl':
             l[i] = 'Flying'
@@ -425,7 +425,7 @@ def standardize(d, k):
             l[i] = 'DEF'
         if l[i] == 'Resistance':
             l[i] = 'RES'
-        if l[i] in ['Total', 'Stats', 'Stat']:
+        if l[i] in ['Total', 'Stat']:
             l[i] = 'BST'
         if l[i] == 'Na':
             l[i] = 'Name'
