@@ -89,7 +89,7 @@ def get_data(arg, passive_level=3, cache=None, save=True):
         data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Special Effect' in stats:
             data['5Special Effect'] = stats[None], False
-        learners_table = html.find("table", attrs={"class":"sortable"})
+        learners_table = html.find_all("table", attrs={"class":"sortable"})[-1]
         learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
         if learners:
             data['6Heroes with ' + arg] = ', '.join(learners), False
