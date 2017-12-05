@@ -270,7 +270,7 @@ class FireEmblemHeroes:
                 update_category(self.cache, arg)
                 await self.bot.say("Updated!")
                 return
-                
+
         original_arg = arg
         passive_level = 3
         if arg[-1] in ['1','2','3']:
@@ -287,6 +287,7 @@ class FireEmblemHeroes:
                     else:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
                     return
+                data = None
                 if (arg in self.cache.data or arg + ' ' + str(passive_level) in self.cache.data) and not ignore_cache:
                     if arg + ' ' + str(passive_level) in self.cache.data:
                         data = self.cache.data[arg+' '+str(passive_level)]
@@ -299,7 +300,7 @@ class FireEmblemHeroes:
                             if check['Embed Info']['Colour'] == passive_colours[3]:
                                 data = check
                                 break
-                else:
+                if data is None:
                     categories, data = get_data(arg, passive_level, cache=self.cache, save=False)
                     if data is None:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
