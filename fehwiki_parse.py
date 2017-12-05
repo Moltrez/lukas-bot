@@ -189,7 +189,7 @@ def get_page(url, prop=''):
     print(url)
     query_url = url+('&prop='+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request, timeout=5)
+    response = urllib.request.urlopen(request)#, timeout=5)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:

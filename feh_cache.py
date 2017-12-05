@@ -6,7 +6,7 @@ from feh_personal import *
 from fehwiki_parse import get_page
 from collections import deque
 
-cache_log = deque([], 20)
+cache_log = deque([], 500)
 
 filename = './data_cache.json'
 
@@ -53,7 +53,7 @@ class FehCache(object):
 
     def update(self):
         try:
-            changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=100&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
+            changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=1000&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
             if changes:
                 deleted = False
                 self.last_update = changes[0]['timestamp']
@@ -61,8 +61,9 @@ class FehCache(object):
                     title = change['title']
                     if title.startswith('File:'):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
-                    if self.delete_data(title, save=False):
-                        deleted = True
+                    for suff in ['', ' 1', ' 2', ' 3']:
+                        if self.delete_data(title+suff, save=False):
+                            deleted = True
                 if deleted:
                     self.save()
         except Exception as ex:

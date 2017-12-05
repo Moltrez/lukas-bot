@@ -3,6 +3,7 @@ import numpy as np
 from socket import timeout
 from discord.ext import commands as bot
 from fehwiki_parse import *
+from full_update import update_category
 
 import feh_cache
 
@@ -260,10 +261,16 @@ class FireEmblemHeroes:
                     await self.bot.say(message)
                 return
             elif arg.startswith('-clearcategory '):
-                    arg = arg[len('-clearcategory '):]
-                    self.cache.clear_category(arg)
-                    await self.bot.say("Cleared!")
-                    return
+                arg = arg[len('-clearcategory '):]
+                self.cache.clear_category(arg)
+                await self.bot.say("Cleared!")
+                return
+            elif arg.startswith('-update '):
+                arg = arg[len('-update '):]
+                update_category(self.cache, arg)
+                await self.bot.say("Updated!")
+                return
+                
         original_arg = arg
         passive_level = 3
         if arg[-1] in ['1','2','3']:
@@ -285,6 +292,13 @@ class FireEmblemHeroes:
                         data = self.cache.data[arg+' '+str(passive_level)]
                     else:
                         data = self.cache.data[arg]
+                elif passive_level == 3:
+                    for suff in [' 1', ' 2']:
+                        if arg+suff in self.cache.data:
+                            check = self.cache.data[arg+suff]
+                            if check['Embed Info']['Colour'] == passive_colours[3]:
+                                data = check
+                                break
                 else:
                     categories, data = get_data(arg, passive_level, cache=self.cache, save=False)
                     if data is None:
