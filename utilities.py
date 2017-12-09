@@ -678,8 +678,12 @@ Example: !list -f red sword infantry -s attack hp
                         heroes = self.cache.list
                     else:
                         await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                        return
+                        return                
             except timeout:
+                if self.cache.list:
+                    heroes = self.cache.list
+            except AttributeError:
+                print('Source had an error')
                 if self.cache.list:
                     heroes = self.cache.list
             for f in filters:
