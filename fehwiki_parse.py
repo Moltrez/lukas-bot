@@ -162,14 +162,12 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                 data['Embed Info']['Icon'] = icon
             slot = stats_table.th.text[-2]
             data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
-            print(stats)
             data['1SP Cost'] = stats[0][4 if stats[0].startswith('30px') else 0:], True
         else:
             if 'Specials' in categories:
                 data['0Cooldown'] = stats[1], True
             elif 'Assists' in categories:
                 data['0Range'] = stats[1], True
-
             data['1SP Cost'] = stats[3], True
         data['2Effect'] = stats[2], False
 
