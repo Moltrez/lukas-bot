@@ -93,8 +93,8 @@ def get_data(arg, passive_level=3, cache=None, save=True):
         if learners_table:
             learners_table = learners_table[-1]
             learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
-        if learners:
-            data['6Heroes with ' + arg] = ', '.join(learners), False
+            if learners:
+                data['6Heroes with ' + arg] = ', '.join(learners), False
         refinery_table = html.find("table", attrs={"class":"wikitable default"})
         refinery_table = extract_table(refinery_table, True)
         if refinery_table:
@@ -163,7 +163,7 @@ def get_data(arg, passive_level=3, cache=None, save=True):
             slot = stats_table.th.text[-2]
             data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
             print(stats)
-            data['1SP Cost'] = stats[0].lstrip('30px'), True
+            data['1SP Cost'] = stats[0][4 if stats[0].startswith('30px') else 0:], True
         else:
             if 'Specials' in categories:
                 data['0Cooldown'] = stats[1], True
