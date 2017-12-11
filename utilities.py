@@ -247,7 +247,7 @@ class FireEmblemHeroes:
                 arg = arg[3:]
                 alias, title = list(map(lambda x: ' '.join(x.split('_')), arg.split(' ', 1)))
                 self.cache.add_alias(alias, title)
-                await self.boy.say("Added!")
+                await self.bot.say("Added!")
                 return
             elif arg.startswith('-aliases'):
                 lofaliases = sorted([key + ' -> ' + self.cache.aliases[key] + '\n' for key in self.cache.aliases])
