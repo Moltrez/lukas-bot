@@ -24,7 +24,7 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 
-def get_unit_stats(args, cache, default_rarity=None, sender=None):
+def get_unit_stats(args, cache, default_rarity=None, sender=None, save=True):
     # convert to lower case
     args = list(map(lambda x:x.lower(), args))
     try:
@@ -79,7 +79,7 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None):
             categories, data = get_data(unit, cache=cache, save=False)
             if data is None:
                 return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
-        cache.add_alias(args, data['Embed Info']['Title'])
+        cache.add_alias(args, data['Embed Info']['Title'], save=save)
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
         base_stats_table = data['4Base Stats'][0]
@@ -346,26 +346,33 @@ class FireEmblemHeroes:
         """View the refinery options for a weapon."""
         self.cache.update()
         try:
-            weapon = find_name(args, self.cache)
-            if weapon == INVALID_HERO:
-                await self.bot.say('Could not find the weapon %s.' % args)
-                return
-            # actually fetch the unit's information
-            if weapon in self.cache.data:
-                categories = self.cache.categories[weapon]
-                data = self.cache.data[weapon]
-            else:
-                categories, data = get_data(weapon, cache=self.cache, save=False)
-                if data is None:
-                    await self.bot.say('Could not find the weapon %s.' % weapon)
+            while (True):
+                weapon = find_name(args, self.cache)
+                if weapon == INVALID_HERO:
+                    await self.bot.say('Could not find the weapon %s.' % args)
                     return
-            self.cache.add_alias(args, data['Embed Info']['Title'])
-            if 'Weapons' not in categories:
-                await self.bot.say('%s does not seem to be a weapon.' % (weapon))
-                return
-            if 'Refinery Cost' not in data:
-                await self.bot.say('It appears that %s cannot be refined.' % (weapon))
-                return
+                # actually fetch the unit's information
+                if weapon in self.cache.data:
+                    categories = self.cache.categories[weapon]
+                    data = self.cache.data[weapon]
+                else:
+                    categories, data = get_data(weapon, cache=self.cache, save=False)
+                    if data is None:
+                        await self.bot.say('Could not find the weapon %s.' % weapon)
+                        return
+                self.cache.add_alias(args, data['Embed Info']['Title'], save=False)
+                if 'Weapons' not in categories:
+                    await self.bot.say('%s does not seem to be a weapon.' % (weapon))
+                    return
+                if 'Refinery Cost' not in data:
+                    if data['3Exclusive?'][0] == ('No') and not weapon.endswith('+'):
+                        args = weapon + '+'
+                    else:
+                        await self.bot.say('It appears that %s cannot be refined.' % (weapon))
+                        self.cache.save()
+                        return
+                else:
+                    break
             # initial weapon message
             message1 = discord.Embed(
                 title= data['Embed Info']['Title'],
@@ -404,8 +411,6 @@ class FireEmblemHeroes:
                         value=value.strip(),
                         inline=False
                     )
-                await self.bot.say(embed=message1)
-                await self.bot.say(embed=message2)
             else:
                 # weapon evolves
                 args = data['Evolution'][0]
@@ -422,7 +427,7 @@ class FireEmblemHeroes:
                     if data is None:
                         await self.bot.say('Could not find the weapon %s.' % weapon)
                         return
-                self.cache.add_alias(args, data['Embed Info']['Title'])
+                self.cache.add_alias(args, data['Embed Info']['Title'], save=False)
                 # evolved weapon message
                 message2 = discord.Embed(
                     title= data['Embed Info']['Title'],
@@ -438,10 +443,12 @@ class FireEmblemHeroes:
                             value=data[key][0],
                             inline=data[key][1]
                         )
-                await self.bot.say(embed=message1)
-                await self.bot.say(embed=message2)
+            await self.bot.say(embed=message1)
+            await self.bot.say(embed=message2)
+            self.cache.save()
         except timeout:
             print("Timed out.")
+            self.cache.save()
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
     flaunt_cache = {}
@@ -563,15 +570,15 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 args.remove('-q')
             unit1_args = args[:args.index(separator)]
             unit2_args = args[args.index(separator)+1:]
-            unit1_stats = get_unit_stats(unit1_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
+            unit1_stats = get_unit_stats(unit1_args, self.cache, default_rarity=5, sender=str(ctx.message.author), save=False)
             if not isinstance(unit1_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
                 return
-            unit2_stats = get_unit_stats(unit2_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
+            unit2_stats = get_unit_stats(unit2_args, self.cache, default_rarity=5, sender=str(ctx.message.author), save=False)
             if not isinstance(unit2_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
                 return
-
+            self.cache.save()
             unit1, base1, max1 = unit1_stats
             unit2, base2, max2 = unit2_stats
             if not quiet_mode:
