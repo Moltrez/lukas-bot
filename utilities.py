@@ -452,7 +452,7 @@ class FireEmblemHeroes:
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
         user = str(ctx.message.author.id)
         username = str(ctx.message.author)
-        if len(args) == 3 and user in ['192820409937297418'] and args[0] == '-a':
+        if len(args) == 3 and user in ['192820409937297418', '70087410221842432', '69620122100183040'] and args[0] == '-a':
             img_url = args[2].strip('<>')
             self.cache.set_flaunt(args[1], img_url)
             if args[1] in self.flaunt_cache:
@@ -469,7 +469,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard.
                 f = False
                 img_url = self.cache.flaunts[username]
                 del self.cache.flaunts[username]
-                self.cache.flaunts[user] = img_url
+                self.cache.set_flaunt(user, img_url)
                 if username in self.flaunt_cache:
                     f = self.flaunt_cache[username]
                     del self.flaunt_cache[username]

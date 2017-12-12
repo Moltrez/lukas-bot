@@ -20,6 +20,8 @@ def get_data(arg, passive_level=3, cache=None, save=True):
     data['Embed Info'] = {'Title':arg, 'Icon':None}
     if 'Heroes' in categories:
         stats = get_infobox(html)
+        stats = stats[None].split('\n\n\n\n')
+        stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats]}
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         colour = weapon_colours['Colourless']
         if 'Red' in stats['Weapon Type']:
