@@ -268,7 +268,6 @@ class FireEmblemHeroes:
             elif arg.startswith('-update '):
                 arg = arg[len('-update '):]
                 update_category(self.cache, arg)
-                await self.bot.say("Updated!")
                 return
 
         original_arg = arg
@@ -451,27 +450,43 @@ class FireEmblemHeroes:
     async def fehflaunt(self, ctx, *args):
         """Use this command to show off your prized units.
 If you want to add a flaunt please send a screenshot of your unit to monkeybard."""
-        user = str(ctx.message.author)
-        if len(args) == 3 and user == 'monkeybard#3663' and args[0] == '-a':
-            self.cache.set_flaunt(args[1], args[2])
+        user = str(ctx.message.author.id)
+        username = str(ctx.message.author)
+        if len(args) == 3 and user in ['192820409937297418'] and args[0] == '-a':
+            img_url = args[2].strip('<>')
+            self.cache.set_flaunt(args[1], img_url)
             if args[1] in self.flaunt_cache:
                 del self.flaunt_cache[args[1]]
             return
+        f = None
         if user in self.cache.flaunts:
+            f = False
             if user in self.flaunt_cache:
                 f = self.flaunt_cache[user]
-            else:
-                print("Downloading flaunt for "+user)
-                request = urllib.request.Request(self.cache.flaunts[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
-                response = urllib.request.urlopen(request)
-                f = response.read()
-                self.flaunt_cache[user] = f
-            f = io.BytesIO(f)
-            f.name = os.path.basename(self.cache.flaunts[user])
-            print("Uploading flaunt for "+user)
-            await self.bot.upload(f)
         else:
+            # update name to id
+            if username in self.cache.flaunts:
+                f = False
+                img_url = self.cache.flaunts[username]
+                del self.cache.flaunts[username]
+                self.cache.flaunts[user] = img_url
+                if username in self.flaunt_cache:
+                    f = self.flaunt_cache[username]
+                    del self.flaunt_cache[username]
+                    self.flaunt_cache[user] = f
+        if f is not None and not f:
+            print("Downloading flaunt for "+username)
+            request = urllib.request.Request(self.cache.flaunts[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
+            response = urllib.request.urlopen(request)
+            f = response.read()
+            self.flaunt_cache[user] = f
+        elif f is None:
             await self.bot.say("I'm afraid you have nothing to flaunt.")
+            return
+        f = io.BytesIO(f)
+        f.name = os.path.basename(self.cache.flaunts[user])
+        print("Uploading flaunt for "+username)
+        await self.bot.upload(f)
 
     @bot.command(pass_context=True, aliases=['stats', 'stat', 'fehstat', 'Stats', 'Stat', 'Fehstat', 'Fehstats', 'FEHstat', 'FEHStat', 'FEHstats', 'FEHStats'])
     async def fehstats(self, ctx, *args):
@@ -678,7 +693,7 @@ Example: !list -f red sword infantry -s attack hp
                         heroes = self.cache.list
                     else:
                         await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                        return                
+                        return
             except timeout:
                 if self.cache.list:
                     heroes = self.cache.list

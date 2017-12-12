@@ -25,6 +25,7 @@ async def on_message(message):
                 await bot.send_message(ch, log_message)
     if message.author == bot.user:
         return
+    print(message.author.id)
     if str(message.author) == 'monkeybard#3663' and message.content == '?cache':
         await bot.send_file(message.author, './data_cache.json')
         return
