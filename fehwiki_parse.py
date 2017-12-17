@@ -130,7 +130,6 @@ def get_data(arg, passive_level=3, cache=None, save=True):
         # append the inherit restriction (and slot)
         stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")]
         stats = [a if a else 'N/A' for a in stats]
-        print(stats)
         data['Embed Info']['Colour'] = 0xe8e1c9
         if 'Specials' in categories:
             data['Embed Info']['Colour'] = 0xf499fe
@@ -191,7 +190,7 @@ def get_page(url, prop=''):
     print(url)
     query_url = url+('&prop='+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request)#, timeout=5)
+    response = urllib.request.urlopen(request, timeout=5)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:
