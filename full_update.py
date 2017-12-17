@@ -12,10 +12,13 @@ def update_category(cache, category):
             for member in members:
                 if not member.startswith('Category:') and not any([m in cache.data for m in [member, member+' 1', member+' 2', member+' 3']]):
                     print("Getting data for " + member)
-                    categories, data = get_data(member, 3, cache, False)
-                    print("Adding alias from " + member.lower() + " to " + member)
-                    cache.add_alias(member.lower(), member, False)
-                    count += 1
+                    try:
+                        categories, data = get_data(member, 3, cache, False)
+                        print("Adding alias from " + member.lower() + " to " + member)
+                        cache.add_alias(member.lower(), member, False)
+                        count += 1
+                    except IndexError:
+                        print("This one poopoo'd")
     except timeout:
         print("Timed out")
     finally:

@@ -128,10 +128,9 @@ def get_data(arg, passive_level=3, cache=None, save=True):
         stats_table = html.find("table", attrs={"class": "sortable"})
         # get the data from the appropriate row dictated by passive_level (if it exists)
         # append the inherit restriction (and slot)
-        stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")] + \
-                [a.get_text().strip() for a in
-                 stats_table.find_all("tr")[1].find_all("td")[(-2 if 'Passives' in categories else -1):]]
+        stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")]
         stats = [a if a else 'N/A' for a in stats]
+        print(stats)
         data['Embed Info']['Colour'] = 0xe8e1c9
         if 'Specials' in categories:
             data['Embed Info']['Colour'] = 0xf499fe
@@ -139,7 +138,6 @@ def get_data(arg, passive_level=3, cache=None, save=True):
             data['Embed Info']['Colour'] = 0x1fe2c3
 
         skill_name = stats[1 if 'Passives' in categories else 0]
-
         learners = None
         # use learners table to figure out seal colour
         if 'Seal Exclusive Skills' not in categories:
@@ -164,19 +162,20 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                 data['Embed Info']['Icon'] = icon
             slot = stats_table.th.text[-2]
             data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
-            data['1SP Cost'] = stats[0][4 if stats[0].startswith('30px') else 0:], True
+            data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
+            data['2Effect'] = stats[3], False
         else:
             if 'Specials' in categories:
                 data['0Cooldown'] = stats[1], True
             elif 'Assists' in categories:
                 data['0Range'] = stats[1], True
             data['1SP Cost'] = stats[3], True
-        data['2Effect'] = stats[2], False
+            data['2Effect'] = stats[2], False
 
         if 'Passives' in categories:
             inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
         else:
-            inherit_r = 'Only, '.join(stats[-2].split('Only'))[:(-2 if 'Only' in stats[-2] else None)]
+            inherit_r = 'Only, '.join(stats[-1].split('Only'))[:(-2 if 'Only' in stats[-1] else None)]
         data['3Inherit Restrictions'] = inherit_r, True
         if learners:
             if 'Sacred Seals' in categories:
@@ -192,7 +191,7 @@ def get_page(url, prop=''):
     print(url)
     query_url = url+('&prop='+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request, timeout=5)
+    response = urllib.request.urlopen(request)#, timeout=5)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:

@@ -310,6 +310,9 @@ class FireEmblemHeroes:
                 if err.code >= 500:
                     await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                     return
+            except IndexError:
+                await self.bot.say('It appears the data I have is incomplete. Please try again later.')
+                return
             message = discord.Embed(
                 title= data['Embed Info']['Title'],
                 url= data['Embed Info']['URL'],
@@ -483,7 +486,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard,
                     self.flaunt_cache[user] = f
         if f is not None and not f:
             print("Downloading flaunt for "+username)
-            request = urllib.request.Request(self.cache.flaunts[user] + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
+            request = urllib.request.Request(self.cache.flaunts[user].replace('cdn.discordapp.com', 'media.discordapp.net') + '?width=384&height=683', headers={'User-Agent': 'Mozilla/5.0'})
             response = urllib.request.urlopen(request)
             f = response.read()
             self.flaunt_cache[user] = f
