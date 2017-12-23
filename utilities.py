@@ -228,7 +228,6 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
-        self.cache.update()
 
         ignore_cache = False
         if str(ctx.message.author) == 'monkeybard#3663':
@@ -269,7 +268,12 @@ class FireEmblemHeroes:
                 arg = arg[len('-update '):]
                 update_category(self.cache, arg)
                 return
+            elif arg.startswith('-reload'):
+                self.cache.load()
+                await self.bot.say("Reloaded!")
+                return
 
+        self.cache.update()
         original_arg = arg
         passive_level = 3
         if arg[-1] in ['1','2','3']:

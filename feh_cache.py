@@ -12,23 +12,7 @@ filename = './data_cache.json'
 
 class FehCache(object):
     def __init__(self):
-        urllib3.disable_warnings()
-        cloudinary.config()
-        try:
-            web_copy = cloudinary.api.resource(filename[2:], resource_type='raw')['url']
-            response = urllib.request.urlopen(web_copy)
-            print("Loaded from the internet.")
-            loaded = jsonpickle.decode(json.load(response))
-            self.copy(loaded)
-            return
-        except Exception as ex:
-            print(ex)
-            if os.path.exists(filename):
-                print("Loaded from local.")
-                with open(filename, 'r') as to_load:
-                    loaded = jsonpickle.decode(json.load(to_load))
-                    self.copy(loaded)
-                    return
+        self.load()
         "Starting new cache..."
         self.aliases = aliases
         self.sons = sons
@@ -50,6 +34,25 @@ class FehCache(object):
         self.list = [] if 'data' not in dir(other) else other.list
         self.last_update = '2017-11-27T00:00:00Z' if 'last_update' not in dir(other) else other.last_update
         self.save()
+
+    def load(self):
+        urllib3.disable_warnings()
+        cloudinary.config()
+        try:
+            web_copy = cloudinary.api.resource(filename[2:], resource_type='raw')['url']
+            response = urllib.request.urlopen(web_copy)
+            print("Loaded from the internet.")
+            loaded = jsonpickle.decode(json.load(response))
+            self.copy(loaded)
+            return
+        except Exception as ex:
+            print(ex)
+            if os.path.exists(filename):
+                print("Loaded from local.")
+                with open(filename, 'r') as to_load:
+                    loaded = jsonpickle.decode(json.load(to_load))
+                    self.copy(loaded)
+                    return
 
     def update(self):
         try:
