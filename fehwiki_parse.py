@@ -227,6 +227,7 @@ def get_heroes_list():
     table = html.find('table')
     heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
+    heroes_list = {r['Name']: r for r in heroes_list}
     return heroes_list
 
 
@@ -350,7 +351,7 @@ def get_learners(learners_table, categories, skill_name):
     learners = {i+1:[] for i in range(5)}
     # l_data is one row in a 2D array representing the learners table
     skill_chain_position = -1
-    for l_data in [a.find_all("td") for a in learners_table.find_all("tr")[(1 if 'Passives' in categories else 0):]]:
+    for l_data in [a.find_all("td") for a in learners_table.find_all("tr")]:
         # append a name to the appropriate level
         for i in range(len(l_data)):
             text = l_data[i].get_text()

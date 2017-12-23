@@ -94,7 +94,10 @@ class FehCache(object):
         self.save()
 
     def set_list(self, list):
-        self.list = list
+        if isinstance(self.list, dict):
+            self.list.update(list)
+        else:
+            self.list = list
         self.save()
 
     def add_alias(self, alias, name, save=True):

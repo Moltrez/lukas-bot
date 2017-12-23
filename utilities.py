@@ -711,6 +711,8 @@ Example: !list -f red sword infantry -s attack hp
                 print('Source had an error')
                 if self.cache.list:
                     heroes = self.cache.list
+            # convert from dict to list for easy manipulation
+            heroes = [heroes[h] for h in heroes]
             for f in filters:
                 if f != 'Threshold':
                     heroes = list(filter(lambda h:h[f] in filters[f], heroes))
@@ -720,7 +722,7 @@ Example: !list -f red sword infantry -s attack hp
             if not heroes:
                 await self.bot.say('No results found for selected filters.')
                 return
-            await self.bot.say('Results found: %d' % len(heroes))
+            num_results = len(heroes)
             for key in reversed(sort_keys):
                 heroes = sorted(heroes,
                                 key=lambda h:
@@ -750,6 +752,7 @@ Example: !list -f red sword infantry -s attack hp
                         ) for h in heroes
                     ])
                 heroes = heroes[:-1]
+            await self.bot.say('Results found: %d\nResults shown: %d' % (num_results, len(heroes)))
             message = list_string
             await self.bot.say(message)
         except timeout:
