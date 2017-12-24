@@ -270,6 +270,7 @@ class FireEmblemHeroes:
                 return
             elif arg.startswith('-reload'):
                 self.cache.load()
+                self.cache.save()
                 await self.bot.say("Reloaded!")
                 return
 

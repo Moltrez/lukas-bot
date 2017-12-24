@@ -19,6 +19,8 @@ def update_category(cache, category):
                         count += 1
                     except IndexError:
                         print("This one poopoo'd")
+                    except TypeError:
+                        print("This one poopoo'd")
     except timeout:
         print("Timed out")
     finally:

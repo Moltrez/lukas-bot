@@ -12,16 +12,17 @@ filename = './data_cache.json'
 
 class FehCache(object):
     def __init__(self):
-        self.load()
-        "Starting new cache..."
-        self.aliases = aliases
-        self.sons = sons
-        self.waifus = waifus
-        self.flaunts = flaunt
-        self.data = {}
-        self.categories = {}
-        self.list = []
-        self.last_update = '2017-11-27T00:00:00Z'
+        if not self.load():
+            "Starting new cache..."
+            self.aliases = aliases
+            self.sons = sons
+            self.waifus = waifus
+            self.flaunts = flaunt
+            self.data = {}
+            self.categories = {}
+            self.list = []
+            self.last_update = '2017-11-27T00:00:00Z'
+        self.aliases.update(aliases)
         self.save()
 
     def copy(self, other):
@@ -33,7 +34,6 @@ class FehCache(object):
         self.categories = {} if 'categories' not in dir(other) else other.categories
         self.list = [] if 'data' not in dir(other) else other.list
         self.last_update = '2017-11-27T00:00:00Z' if 'last_update' not in dir(other) else other.last_update
-        self.save()
 
     def load(self):
         urllib3.disable_warnings()
@@ -44,7 +44,7 @@ class FehCache(object):
             print("Loaded from the internet.")
             loaded = jsonpickle.decode(json.load(response))
             self.copy(loaded)
-            return
+            return True
         except Exception as ex:
             print(ex)
             if os.path.exists(filename):
@@ -52,7 +52,10 @@ class FehCache(object):
                 with open(filename, 'r') as to_load:
                     loaded = jsonpickle.decode(json.load(to_load))
                     self.copy(loaded)
-                    return
+                    return True
+            else:
+                return False
+
 
     def update(self):
         try:
