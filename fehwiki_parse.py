@@ -188,11 +188,12 @@ def get_data(arg, passive_level=3, cache=None, save=True):
     cache.add_data(data, categories, save=save)
     return categories, data
 
+
 def get_page(url, prop=''):
     print(url)
     query_url = url+('&prop='+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request)#, timeout=5)
+    response = urllib.request.urlopen(request, timeout=5)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:
@@ -227,7 +228,12 @@ def find_name(arg, cache, sender = None):
 def get_heroes_list():
     categories, html = get_page_html('Stats Table')
     table = html.find('table')
-    heroes_list = [list_row_to_dict(row) for row in table.find_all('tr')]
+    heroes_list = []
+    for row in table.find_all('tr'):
+        try:
+            heroes_list.add(list_row_to_dict(row))
+        except KeyError:
+            continue
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
     heroes_list = {r['Name']: r for r in heroes_list}
     return heroes_list
@@ -405,7 +411,7 @@ def standardize(d, k):
             l[i] = 'Bow'
         if l[i] in ['St', 'Stave']:
             l[i] = 'Staff'
-        if l[i] == 'Br':
+        if l[i] in ['Br', 'Dragon']:
             l[i] = 'Breath'
         if l[i] in ['Da', 'Knife', 'Knive', 'Kn']:
             l[i] = 'Dagger'

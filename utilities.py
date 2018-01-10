@@ -271,7 +271,7 @@ class FireEmblemHeroes:
             elif arg.startswith('-reload'):
                 self.cache.load()
                 self.cache.save()
-                await self.bot.say("Reloaded!")
+                await self.bot.say("Reloaded!\n" + self.cache.last_update)
                 return
 
         self.cache.update()
@@ -710,10 +710,10 @@ Example: !list -f red sword infantry -s attack hp
                         await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                         return
             except timeout:
-                if self.cache.list:
-                    heroes = self.cache.list
+                print('Timed out')
             except AttributeError:
                 print('Source had an error')
+            finally:
                 if self.cache.list:
                     heroes = self.cache.list
             # convert from dict to list for easy manipulation
