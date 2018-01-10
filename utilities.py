@@ -86,6 +86,8 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None, save=True):
         max_stats_table = data['5Max Level Stats'][0]
         if base_stats_table is None or max_stats_table is None:
             return 'This hero does not appear to have stats.'
+        if boon is None and bane is None and rarity is None and merge is None and support is None and modifiers is None:
+            return data['Embed Info'], base_stats_table, max_stats_table
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
         max_stats = table_to_array(max_stats_table, boon, bane, rarity)
         # check if empty
@@ -112,7 +114,7 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None, save=True):
                 if any(base_stats[i]):
                     base_stats[i] += modifiers
                     max_stats[i] += modifiers
-        return (data['Embed Info'], base_stats, max_stats)
+        return data['Embed Info'], base_stats, max_stats
     except ValueError as err:
         return err.args[0]
     except urllib.error.HTTPError as err:
@@ -163,6 +165,8 @@ def table_to_array(table, boon, bane, rarity):
 
 def array_to_table(array):
     # convert numpy array back to dictionary format
+    if isinstance(array, list):
+        return array
     ret = []
     for i in range(len(array)):
         # skip empty rows
