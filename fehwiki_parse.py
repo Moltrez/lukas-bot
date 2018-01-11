@@ -70,7 +70,8 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                      last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
                 skills += ', '
             skills = skills.rstrip(', ') + last_learned + '\n'
-        data['6Learnable Skills'] = skills, False
+        if skills:
+            data['6Learnable Skills'] = skills, False
     elif 'Weapons' in categories:
         colour = weapon_colours['Null'] # for dragonstones, which are any colour
         if any(i in ['Swords', 'Red Tomes'] for i in categories):
@@ -193,7 +194,7 @@ def get_page(url, prop=''):
     print(url)
     query_url = url+('&prop='+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request, timeout=5)
+    response = urllib.request.urlopen(request)#, timeout=5)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:
@@ -330,7 +331,7 @@ def format_stats_table(table):
             format = '%4s'
             if len(stats) == 3:
                 neutral = stats[1]
-                if neutral.isdigit():
+                if neutral.isdigit() and len(list(filter(lambda x:x.isdigit(), stats))) == 3:
                     if int(stats[2]) - int(stats[1]) == 4:
                         ivs[key] = '+'
                     if int(stats[1]) - int(stats[0]) == 4:

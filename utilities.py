@@ -322,6 +322,7 @@ class FireEmblemHeroes:
             except IndexError:
                 await self.bot.say('It appears the data I have is incomplete. Please try again later.')
                 return
+
             message = discord.Embed(
                 title= data['Embed Info']['Title'],
                 url= data['Embed Info']['URL'],
