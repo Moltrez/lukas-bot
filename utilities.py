@@ -211,7 +211,7 @@ class FireEmblemHeroes:
         true_son = None if son == 'none' else find_name(son, self.cache)
         if true_son == INVALID_HERO:
             true_son = son
-        self.cache.set_fam('son', str(ctx.message.author), true_son)
+        self.cache.set_fam('son', str(ctx.message.author.id), true_son)
         if true_son is None:
             await self.bot.say('You no longer have a son.')
         else:
@@ -223,7 +223,7 @@ class FireEmblemHeroes:
         true_waifu = None if waifu == 'none' else find_name(waifu, self.cache)
         if true_waifu == INVALID_HERO:
             true_waifu = waifu
-        self.cache.set_fam('waifu', str(ctx.message.author), true_waifu)
+        self.cache.set_fam('waifu', str(ctx.message.author.id), true_waifu)
         if true_waifu is None:
             await self.bot.say('You no longer have a waifu.')
         else:
@@ -286,7 +286,7 @@ class FireEmblemHeroes:
             arg = arg[:-1].strip()
         try:
             try:
-                arg = find_name(arg, self.cache, sender = str(ctx.message.author))
+                arg = find_name(arg, self.cache, sender = ctx.message.author)
                 if arg == INVALID_HERO:
                     if original_arg.lower() in ['son', 'my son']:
                         await self.bot.say("I was not aware you had one. If you want me to associate you with one, use the setson command.")

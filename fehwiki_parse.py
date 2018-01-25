@@ -203,20 +203,32 @@ def get_page(url, prop=''):
 
 
 def find_name(arg, cache, sender = None):
+    # check if the arg is son or waifu and sees if the user has one
     if sender:
-        if sender in cache.sons and arg.lower() in ['son', 'my son']:
-            return cache.sons[sender]
-        elif sender in cache.waifus and arg.lower() in ['waifu', 'my waifu']:
-            return cache.waifus[sender]
-    if arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
-        return INVALID_HERO
-    # check cached aliases
-    if arg.lower() in cache.aliases:
-        return cache.aliases[arg.lower()]
+        if arg.lower() in ['son', 'my son']:
+            if str(sender) in cache.sons:
+                cache.set_fam('son', str(sender.id), cache.sons[str(sender)])
+                del cache.sons[str(sender)]
+            return cache.sons[str(sender.id)]
+        elif arg.lower() in ['waifu', 'my waifu']:
+            if str(sender) in cache.waifus:
+                cache.set_fam('waifu', str(sender.id), cache.waifus[str(sender)])
+                del cache.waifus[str(sender)]
+            return cache.waifus[str(sender.id)]
 
+    elif arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+        return INVALID_HERO
+
+    # check cached aliases
+    if arg.lower().replace(' ', '') in cache.aliases:
+        return cache.aliases[arg.lower().replace(' ', '')]
+
+    # basic quick stat aliasing without needing manual input
+    # enough to be vaguely useful without messing with some other skills
     arg = arg.title().replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
         replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')
 
+    # resolve webpage
     redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve" % (urllib.parse.quote(arg))
     info = get_page(redirect)
     if not info[1] or not info[1][0]:
@@ -227,14 +239,17 @@ def find_name(arg, cache, sender = None):
 
 
 def get_heroes_list():
+    # get table from html
     categories, html = get_page_html('Stats Table')
     table = html.find('table')
     heroes_list = []
+    # add all the rows that fit the format to current list
     for row in table.find_all('tr'):
         try:
             heroes_list.add(list_row_to_dict(row))
         except KeyError:
             continue
+    # take out all the ones with incomplete data
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
     heroes_list = {r['Name']: r for r in heroes_list}
     return heroes_list
