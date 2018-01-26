@@ -24,103 +24,6 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 
-def get_unit_stats(args, cache, default_rarity=None, sender=None):
-    # convert to lower case
-    args = list(map(lambda x:x.lower(), args))
-    try:
-        # get IV information
-        boons = ['+'+s.lower() for s in stats]
-        banes = ['-'+s.lower() for s in stats]
-        boon, args = find_arg(args, boons, stats, 'boons')
-        bane, args = find_arg(args, banes, stats, 'banes')
-        if (boon and not bane) or (bane and not boon):
-            return 'Only boon or only bane specified.'
-        if boon is not None and bane is not None:
-            if (boon == bane):
-                return 'Boon is the same as bane.'
-        # get merge number
-        merges = ['+'+str(i) for i in range(1,11)]
-        merge, args = find_arg(args, merges, range(1,11), 'merge levels')
-        # get summoner support level
-        supports = ['c', 'b', 'a', 's']
-        support, args = find_arg(args, supports, supports, 'summoner support levels')
-        # get rarity
-        rarities = [str(i)+'*' for i in range(1,6)]
-        rarity, args = find_arg(args, rarities, range(1,6), 'rarities')
-        if rarity is None:
-            rarity = default_rarity
-        # check for manual stat modifiers as well
-        modifiers = [a for a in args if '/' in a]
-        if modifiers:
-            for i in range(len(modifiers)):
-                modifier = modifiers[i]
-                args.remove(modifier)
-                # check that each modifier is valid
-                modifier = modifier.split('/')
-                if len(modifier) > 5:
-                    return 'Too many stat modifiers specified.'
-                if not all([m[0] in ['-','+']+list(map(str, range(10))) and (m[1:].isdigit() or m[1:] == '') for m in modifier]):
-                    return 'Stat modifiers in wrong format (-number or +number).'
-                modifier_array = np.zeros(5, dtype=np.int32)
-                modifier_array[:len(modifier)] = list(map(int, modifier))
-                modifiers[i] = modifier_array
-            modifiers = np.array(modifiers).sum(axis=0)
-        else:
-            modifiers = None
-        args = ' '.join(args)
-        unit = find_name(args, cache, sender=sender)
-        if unit == INVALID_HERO:
-            return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % args
-        # actually fetch the unit's information
-        if unit in cache.data:
-            categories = cache.categories[unit]
-            data = cache.data[unit]
-        else:
-            categories, data = get_data(unit)
-            if data is None:
-                return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
-        cache.add_alias(args, data['Embed Info']['Title'])
-        if 'Heroes' not in categories:
-            return '%s does not seem to be a hero.' % (unit)
-        base_stats_table = data['4Base Stats'][0]
-        max_stats_table = data['5Max Level Stats'][0]
-        if base_stats_table is None or max_stats_table is None:
-            return 'This hero does not appear to have stats.'
-        if boon is None and bane is None and rarity is None and merge is None and support is None and modifiers is None:
-            return data['Embed Info'], base_stats_table, max_stats_table
-        base_stats = table_to_array(base_stats_table, boon, bane, rarity)
-        max_stats = table_to_array(max_stats_table, boon, bane, rarity)
-        # check if empty
-        if not any([any(r) for r in base_stats]):
-            return 'This hero does not appear to be available at the specified rarity.'
-        # calculate merge bonuses
-        if merge is not None:
-            for i in range(5):
-                if any(base_stats[i]):
-                    ordered_stats = (-base_stats[i]).argsort()
-                    bonuses = np.zeros(5, dtype=np.int32)
-                    bonuses[ordered_stats] = merge_bonuses[merge]
-                    base_stats[i] += bonuses
-                    max_stats[i] += bonuses
-        # summoner bonuses
-        if support is not None:
-            for i in range(5):
-                if any(base_stats[i]):
-                    base_stats[i] += summoner_bonuses[support]
-                    max_stats[i] += summoner_bonuses[support]
-        # add flat modifiers
-        if modifiers is not None:
-            for i in range(5):
-                if any(base_stats[i]):
-                    base_stats[i] += modifiers
-                    max_stats[i] += modifiers
-        return data['Embed Info'], base_stats, max_stats
-    except ValueError as err:
-        return err.args[0]
-    except urllib.error.HTTPError as err:
-        if err.code >= 500:
-            return "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
-
 
 def find_arg(args, param_list, return_list, param_type, remove=True):
     """Finds arguments that exist in param_list and return the corresponding value from return_list."""
@@ -186,6 +89,124 @@ class FireEmblemHeroes:
         self.bot = bot
         self.cache = feh_cache.FehCache()
 
+    def find_data(self, arg, original_arg, ctx=None, ignore_cache=False):
+        try:
+            arg = find_name(arg, self.cache, ctx=ctx)
+            if arg == INVALID_HERO:
+                if ctx:
+                    if original_arg.lower() in ['son', 'my son']:
+                        return False, False,\
+                            "I was not aware you had one. If you want me to associate you with one, use the setson command."
+                    elif original_arg.lower() in ['waifu', 'my waifu']:
+                        return False, False,\
+                            "I was not aware you had one. If you want me to associate you with one, use the setwaifu command."
+                else:
+                    return False, False, "I'm afraid I couldn't find information on %s." % original_arg
+
+            data = None
+            if arg in self.cache.data and not ignore_cache:
+                categories = self.cache.categories[arg]
+                data = self.cache.data[arg]
+            if data is None:
+                categories, data = get_data(arg)
+                if data is None:
+                    return False, False, "I'm afraid I couldn't find information on %s." % arg
+            return arg, categories, data
+        except urllib.error.HTTPError as err:
+            print(err)
+            if err.code >= 500:
+                return False, False,\
+                    "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
+        except IndexError:
+            return False, False, 'It appears the data I have is incomplete. Please try again later.'
+
+    def get_unit_stats(self, args, default_rarity=None, ctx=None):
+        # convert to lower case
+        args = list(map(lambda x: x.lower(), args))
+
+        # get IV information
+        boons = ['+' + s.lower() for s in stats]
+        banes = ['-' + s.lower() for s in stats]
+        boon, args = find_arg(args, boons, stats, 'boons')
+        bane, args = find_arg(args, banes, stats, 'banes')
+        if (boon and not bane) or (bane and not boon):
+            return 'Only boon or only bane specified.'
+        if boon is not None and bane is not None:
+            if (boon == bane):
+                return 'Boon is the same as bane.'
+        # get merge number
+        merges = ['+' + str(i) for i in range(1, 11)]
+        merge, args = find_arg(args, merges, range(1, 11), 'merge levels')
+        # get summoner support level
+        supports = ['c', 'b', 'a', 's']
+        support, args = find_arg(args, supports, supports, 'summoner support levels')
+        # get rarity
+        rarities = [str(i) + '*' for i in range(1, 6)]
+        rarity, args = find_arg(args, rarities, range(1, 6), 'rarities')
+        if rarity is None:
+            rarity = default_rarity
+        # check for manual stat modifiers as well
+        modifiers = [a for a in args if '/' in a]
+        if modifiers:
+            for i in range(len(modifiers)):
+                modifier = modifiers[i]
+                args.remove(modifier)
+                # check that each modifier is valid
+                modifier = modifier.split('/')
+                if len(modifier) > 5:
+                    return 'Too many stat modifiers specified.'
+                if not all([m[0] in ['-', '+'] + list(map(str, range(10))) and (m[1:].isdigit() or m[1:] == '') for m in
+                            modifier]):
+                    return 'Stat modifiers in wrong format (-number or +number).'
+                modifier_array = np.zeros(5, dtype=np.int32)
+                modifier_array[:len(modifier)] = list(map(int, modifier))
+                modifiers[i] = modifier_array
+            modifiers = np.array(modifiers).sum(axis=0)
+        else:
+            modifiers = None
+
+        # get the hero information
+        args = ' '.join(args)
+        unit, categories, data = self.find_data(args, args, ctx)
+        if not categories:
+            return data
+        if 'Heroes' not in categories:
+            return '%s does not seem to be a hero.' % (unit)
+
+        base_stats_table = data['4Base Stats'][0]
+        max_stats_table = data['5Max Level Stats'][0]
+        if base_stats_table is None or max_stats_table is None:
+            return 'This hero does not appear to have stats.'
+        if boon is None and bane is None and rarity is None and merge is None and support is None and modifiers is None:
+            return data['Embed Info'], base_stats_table, max_stats_table
+        base_stats = table_to_array(base_stats_table, boon, bane, rarity)
+        max_stats = table_to_array(max_stats_table, boon, bane, rarity)
+        # check if empty
+        if not any([any(r) for r in base_stats]):
+            return 'This hero does not appear to be available at the specified rarity.'
+        # calculate merge bonuses
+        if merge is not None:
+            for i in range(5):
+                if any(base_stats[i]):
+                    ordered_stats = (-base_stats[i]).argsort()
+                    bonuses = np.zeros(5, dtype=np.int32)
+                    bonuses[ordered_stats] = merge_bonuses[merge]
+                    base_stats[i] += bonuses
+                    max_stats[i] += bonuses
+        # summoner bonuses
+        if support is not None:
+            for i in range(5):
+                if any(base_stats[i]):
+                    base_stats[i] += summoner_bonuses[support]
+                    max_stats[i] += summoner_bonuses[support]
+        # add flat modifiers
+        if modifiers is not None:
+            for i in range(5):
+                if any(base_stats[i]):
+                    base_stats[i] += modifiers
+                    max_stats[i] += modifiers
+        return data['Embed Info'], base_stats, max_stats
+
     @bot.command(aliases=['gauntlet', 'Gauntlet', 'Fehgauntlet', 'FEHgauntlet', 'FEHGauntlet'])
     async def fehgauntlet(self):
         """I will tell you the current Voting Gauntlet score."""
@@ -232,7 +253,7 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
-
+        # admin controls
         ignore_cache = False
         if str(ctx.message.author) == 'monkeybard#3663':
             if arg.startswith('-i '):
@@ -285,32 +306,9 @@ class FireEmblemHeroes:
             passive_level = int(arg[-1])
             arg = arg[:-1].strip()
         try:
-            try:
-                arg = find_name(arg, self.cache, sender = ctx.message.author)
-                if arg == INVALID_HERO:
-                    if original_arg.lower() in ['son', 'my son']:
-                        await self.bot.say("I was not aware you had one. If you want me to associate you with one, use the setson command.")
-                    elif original_arg.lower() in ['waifu', 'my waifu']:
-                        await self.bot.say("I was not aware you had one. If you want me to associate you with one, use the setwaifu command.")
-                    else:
-                        await self.bot.say("I'm afraid I couldn't find information on %s." % original_arg)
-                    return
-                data = None
-                if (arg in self.cache.data or arg + ' ' + str(passive_level) in self.cache.data) and not ignore_cache:
-                    categories = self.cache.categories[arg]
-                    data = self.cache.data[arg]
-                if data is None:
-                    categories, data = get_data(arg)
-                    if data is None:
-                        await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
-                        return
-            except urllib.error.HTTPError as err:
-                print(err)
-                if err.code >= 500:
-                    await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
-                    return
-            except IndexError:
-                await self.bot.say('It appears the data I have is incomplete. Please try again later.')
+            arg, categories, data = self.find_data(arg, original_arg, ctx, ignore_cache)
+            if not categories:
+                await self.bot.say(data)
                 return
 
             if 'Passives' in categories:
@@ -356,20 +354,10 @@ class FireEmblemHeroes:
         self.cache.update()
         try:
             while (True):
-                weapon = find_name(args, self.cache)
-                if weapon == INVALID_HERO:
-                    await self.bot.say('Could not find the weapon %s.' % args)
+                weapon, categories, data = self.find_data(args, args)
+                if not categories:
+                    await self.bot.say(data)
                     return
-                # actually fetch the unit's information
-                if weapon in self.cache.data:
-                    categories = self.cache.categories[weapon]
-                    data = self.cache.data[weapon]
-                else:
-                    categories, data = get_data(weapon)
-                    if data is None:
-                        await self.bot.say('Could not find the weapon %s.' % weapon)
-                        return
-                self.cache.add_alias(args, data['Embed Info']['Title'])
                 if 'Weapons' not in categories:
                     await self.bot.say('%s does not seem to be a weapon.' % (weapon))
                     return
@@ -423,20 +411,10 @@ class FireEmblemHeroes:
             else:
                 # weapon evolves
                 args = data['Evolution'][0]
-                weapon = find_name(args, self.cache)
-                if weapon == INVALID_HERO:
-                    await self.bot.say('Could not find the weapon %s.' % args)
+                weapon, categories, data = self.find_data(args, args)
+                if not categories:
+                    await self.bot.say(data)
                     return
-                # actually fetch the unit's information
-                if weapon in self.cache.data:
-                    categories = self.cache.categories[weapon]
-                    data = self.cache.data[weapon]
-                else:
-                    categories, data = get_data(weapon)
-                    if data is None:
-                        await self.bot.say('Could not find the weapon %s.' % weapon)
-                        return
-                self.cache.add_alias(args, data['Embed Info']['Title'])
                 # evolved weapon message
                 message2 = discord.Embed(
                     title= data['Embed Info']['Title'],
@@ -454,10 +432,8 @@ class FireEmblemHeroes:
                         )
             await self.bot.say(embed=message1)
             await self.bot.say(embed=message2)
-            self.cache.save()
         except timeout:
             print("Timed out.")
-            self.cache.save()
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
     flaunt_cache = {}
@@ -519,7 +495,7 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
         self.cache.update()
 
         try:
-            unit_stats = get_unit_stats(args, self.cache, sender=str(ctx.message.author))
+            unit_stats = self.get_unit_stats(args, ctx=ctx)
             if isinstance(unit_stats, tuple):
                 embed_info, base, max = unit_stats
                 base = array_to_table(base)
@@ -579,11 +555,11 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 args.remove('-q')
             unit1_args = args[:args.index(separator)]
             unit2_args = args[args.index(separator)+1:]
-            unit1_stats = get_unit_stats(unit1_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
+            unit1_stats = self.get_unit_stats(unit1_args, default_rarity=5, ctx=ctx)
             if not isinstance(unit1_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
                 return
-            unit2_stats = get_unit_stats(unit2_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
+            unit2_stats = self.get_unit_stats(unit2_args, default_rarity=5, ctx=ctx)
             if not isinstance(unit2_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
                 return

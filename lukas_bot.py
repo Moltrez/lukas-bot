@@ -4,7 +4,7 @@ from discord.ext import commands
 import utilities, fehwiki_parse
 from feh_cache import cache_log
 
-bot = commands.Bot(command_prefix=['?', '? ', 'lukas ', 'Lukas ', 'lukas, ', 'Lukas, '], description='I am here to serve. I will try to respond to messages that start with `?` or `lukas `.')
+bot = commands.Bot(command_prefix=['?', '? ', 'lukas ', 'Lukas ', 'lukas, ', 'Lukas, ', 'f?'], description='I am here to serve. I will try to respond to messages that start with `?` or `lukas `.')
 
 @bot.event
 async def on_ready():

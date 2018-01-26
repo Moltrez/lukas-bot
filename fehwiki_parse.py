@@ -12,6 +12,7 @@ page_cache = {}
 weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
 passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956]
 
+
 def get_data(arg):
     categories, html = get_page_html(arg)
     if html is None:
@@ -166,7 +167,6 @@ def get_data(arg):
                 if 'Sacred Seals' in categories:
                     learners = 'Available as Sacred Seal\n' + learners
                 temp_data['4Heroes with ' + arg] = learners, False
-            print(temp_data)
             data['Data'].append(temp_data)
     elif 'Specials' in categories or 'Assists' in categories:
         stats_table = html.find("table", attrs={"class": "sortable"})
@@ -212,21 +212,24 @@ def get_page(url, prop=''):
     return info
 
 
-def find_name(arg, cache, sender = None):
+def find_name(arg, cache, ctx=None):
     # check if the arg is son or waifu and sees if the user has one
+    sender = ctx.message.author if ctx else None
     if sender:
         if arg.lower() in ['son', 'my son']:
             if str(sender) in cache.sons:
                 cache.set_fam('son', str(sender.id), cache.sons[str(sender)])
                 del cache.sons[str(sender)]
-            return cache.sons[str(sender.id)]
+            if str(sender.id) in cache.sons:
+                return cache.sons[str(sender.id)]
         elif arg.lower() in ['waifu', 'my waifu']:
             if str(sender) in cache.waifus:
                 cache.set_fam('waifu', str(sender.id), cache.waifus[str(sender)])
                 del cache.waifus[str(sender)]
-            return cache.waifus[str(sender.id)]
+            if str(sender.id) in cache.waifus:
+                return cache.waifus[str(sender.id)]
 
-    elif arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
+    if arg.lower() in ['son', 'my son', 'waifu', 'my waifu']:
         return INVALID_HERO
 
     # check cached aliases
