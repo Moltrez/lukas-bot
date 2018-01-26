@@ -176,7 +176,7 @@ class FireEmblemHeroes:
         # get the hero information
         args = ' '.join(args)
         unit, categories, data = self.find_data(args, args, ctx)
-        if not categories:
+        if not unit:
             return data
         self.cache.add_data(unit, data, categories, save=False)
         if 'Heroes' not in categories:
@@ -326,7 +326,7 @@ class FireEmblemHeroes:
             arg = arg[:-1].strip()
         try:
             arg, categories, original_data = self.find_data(arg, original_arg, ctx, ignore_cache)
-            if not categories:
+            if not arg:
                 await self.bot.say(original_data)
                 return
 
@@ -379,7 +379,7 @@ class FireEmblemHeroes:
         try:
             while (True):
                 weapon, categories, data = self.find_data(args, args)
-                if not categories:
+                if not weapon:
                     await self.bot.say(data)
                     return
                 if 'Weapons' not in categories:
@@ -436,7 +436,7 @@ class FireEmblemHeroes:
                 # weapon evolves
                 args2 = data['Evolution'][0]
                 weapon2, categories2, data2 = self.find_data(args2, args2)
-                if not categories2:
+                if not weapon2:
                     await self.bot.say(data2)
                     return
                 # evolved weapon message
