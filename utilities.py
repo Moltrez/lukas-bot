@@ -238,7 +238,7 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True)
     async def setson(self, ctx, *, son):
         """Set your son so you can find their information easily with `?feh son`! Unset your son with `?setson none`."""
-        true_son = None if son == 'none' else find_name(son, self.cache)
+        true_son = None if son.lower() == 'none' else find_name(son, self.cache)
         if true_son == INVALID_HERO:
             true_son = son
         self.cache.set_fam('son', str(ctx.message.author.id), true_son)
@@ -250,7 +250,7 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True)
     async def setwaifu(self, ctx, *, waifu):
         """Set your waifu so you can find their information easily with `?feh waifu`! Unset your waifu with `?setwaifu none`."""
-        true_waifu = None if waifu == 'none' else find_name(waifu, self.cache)
+        true_waifu = None if waifu.lower() == 'none' else find_name(waifu, self.cache)
         if true_waifu == INVALID_HERO:
             true_waifu = waifu
         self.cache.set_fam('waifu', str(ctx.message.author.id), true_waifu)
