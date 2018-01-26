@@ -18,6 +18,7 @@ class FehCache(object):
             self.sons = sons
             self.waifus = waifus
             self.flaunts = flaunt
+            self.replacement_list = []
             self.data = {}
             self.categories = {}
             self.list = []
@@ -30,6 +31,7 @@ class FehCache(object):
         self.sons = sons if 'sons' not in dir(other) else other.sons
         self.waifus = waifus if 'waifus' not in dir(other) else other.waifus
         self.flaunts = flaunt if 'flaunts' not in dir(other) else other.flaunts
+        self.replacement_list = [] if 'replacement_list' not in dir(other) else other.replacement_list
         self.data = {} if 'data' not in dir(other) else other.data
         self.categories = {} if 'categories' not in dir(other) else other.categories
         self.list = [] if 'data' not in dir(other) else other.list
@@ -59,6 +61,7 @@ class FehCache(object):
 
     def update(self):
         try:
+            old_replacement_list = self.replacement_list
             changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=1000&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
             if changes:
                 deleted = False
@@ -67,10 +70,9 @@ class FehCache(object):
                     title = change['title']
                     if title.startswith('File:'):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
-                    for suff in ['', ' 1', ' 2', ' 3']:
-                        if self.delete_data(title+suff, save=False):
-                            deleted = True
-                if deleted:
+                    if title in self.data:
+                        self.replacement_list.append(title)
+                if old_replacement_list == self.replacement_list:
                     self.save()
         except Exception as ex:
             print(ex)
@@ -106,16 +108,23 @@ class FehCache(object):
             self.list = list
         self.save()
 
-    def add_alias(self, alias, name):
+    def add_alias(self, alias, name, save=True):
         alias = alias.lower().replace(' ', '')
         if alias not in ['son', 'my son', 'waifu', 'my waifu'] and alias not in self.aliases and '/' not in alias:
             self.aliases[alias] = name
             cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
+            if save:
+                self.save()
+            else:
+                return True
+        return False
 
-    def delete_alias(self, alias):
+    def delete_alias(self, alias, save=True):
         if alias in self.aliases:
             cache_log.appendleft('Deleted alias: %s -> %s' % (alias, self.aliases[alias]))
             del self.aliases[alias]
+            if save:
+                self.save()
 
     def resolve_alias(self, alias):
         # replace old aliases to ones without spaces
@@ -123,7 +132,7 @@ class FehCache(object):
         if alias.lower() in self.aliases:
             result = self.aliases[alias]
             if ' ' in alias:
-                self.add_alias(alias.replace(' ', ''), result)
+                self.add_alias(alias.replace(' ', ''), result, save=False)
                 self.delete_alias(alias)
             return result
         alias = alias.replace(' ', '')
@@ -137,21 +146,32 @@ class FehCache(object):
             if category in self.categories[title]:
                 to_delete.append(title)
         for title in to_delete:
-            self.delete_data(title, save=False)
+            self.delete_data(title)
         self.save()
 
-    def add_data(self, data, categories, save=True):
-        self.data[data['Embed Info']['Title']] = data
-        self.categories[data['Embed Info']['Title']] = categories
-        cache_log.appendleft('Added data for: %s' % data['Embed Info']['Title'])
+    def add_data(self, alias, data, categories, save=True, force_save=False):
+        name = data['Embed Info']['Title']
+        will_save = self.add_alias(alias, name, save=False)
+        if name not in self.data:
+            will_save = True
+            self.data[data['Embed Info']['Title']] = data
+            cache_log.appendleft('Added data for: %s' % data['Embed Info']['Title'])
+        if name not in self.categories:
+            will_save = True
+            self.categories[data['Embed Info']['Title']] = categories
+        if force_save:
+            self.save()
+        else:
+            if will_save:
+                if save:
+                    self.save()
+            return will_save
 
-    def delete_data(self, title, save=True):
-        deleted = False
-        for suffix in ['', ' 1', ' 2', ' 3']:
-            t = title + suffix
-            if t in self.data:
-                del self.data[t]
-                del self.categories[t]
-                cache_log.appendleft('Deleted data for: %s' % t)
-                deleted = True
-        return deleted
+
+    def delete_data(self, title):
+        if title in self.data:
+            del self.data[t]
+            del self.categories[t]
+            cache_log.appendleft('Deleted data for: %s' % t)
+            return True
+        return False

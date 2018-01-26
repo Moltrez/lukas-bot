@@ -100,14 +100,13 @@ class FireEmblemHeroes:
                     elif original_arg.lower() in ['waifu', 'my waifu']:
                         return False, False,\
                             "I was not aware you had one. If you want me to associate you with one, use the setwaifu command."
-                else:
-                    return False, False, "I'm afraid I couldn't find information on %s." % original_arg
+                return False, False, "I'm afraid I couldn't find information on %s." % original_arg
 
             data = None
             if arg in self.cache.data and not ignore_cache:
                 categories = self.cache.categories[arg]
                 data = self.cache.data[arg]
-            if data is None:
+            if data is None or arg in self.cache.replacement_list:
                 categories, data = get_data(arg)
                 if data is None:
                     return False, False, "I'm afraid I couldn't find information on %s." % arg
@@ -170,6 +169,7 @@ class FireEmblemHeroes:
         unit, categories, data = self.find_data(args, args, ctx)
         if not categories:
             return data
+        self.cache.add_data(unit, data, categories, save=False)
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
 
@@ -306,16 +306,18 @@ class FireEmblemHeroes:
             passive_level = int(arg[-1])
             arg = arg[:-1].strip()
         try:
-            arg, categories, data = self.find_data(arg, original_arg, ctx, ignore_cache)
+            arg, categories, original_data = self.find_data(arg, original_arg, ctx, ignore_cache)
             if not categories:
-                await self.bot.say(data)
+                await self.bot.say(original_data)
                 return
 
             if 'Passives' in categories:
-                if passive_level <= len(data['Data']):
-                    data = data['Data'][passive_level-1]
+                if passive_level <= len(original_data['Data']):
+                    data = original_data['Data'][passive_level-1]
                 else:
-                    data = data['Data'][-1]
+                    data = original_data['Data'][-1]
+            else:
+                data = original_data
 
             message = discord.Embed(
                 title= data['Embed Info']['Title'],
@@ -344,6 +346,7 @@ class FireEmblemHeroes:
                             inline=True
                         )
             await self.bot.say(embed=message)
+            self.cache.add_data(arg, original_data, categories)
         except timeout:
             print("Timed out.")
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
@@ -410,28 +413,30 @@ class FireEmblemHeroes:
                     )
             else:
                 # weapon evolves
-                args = data['Evolution'][0]
-                weapon, categories, data = self.find_data(args, args)
-                if not categories:
-                    await self.bot.say(data)
+                args2 = data['Evolution'][0]
+                weapon2, categories2, data2 = self.find_data(args2, args2)
+                if not categories2:
+                    await self.bot.say(data2)
                     return
                 # evolved weapon message
                 message2 = discord.Embed(
-                    title= data['Embed Info']['Title'],
-                    url= data['Embed Info']['URL'],
-                    color= data['Embed Info']['Colour']
+                    title= data2['Embed Info']['Title'],
+                    url= data2['Embed Info']['URL'],
+                    color= data2['Embed Info']['Colour']
                 )
-                if data['Embed Info']['Icon']:
-                    message2.set_thumbnail(url=data['Embed Info']['Icon'])
-                for key in sorted(data.keys()):
+                if data2['Embed Info']['Icon']:
+                    message2.set_thumbnail(url=data2['Embed Info']['Icon'])
+                for key in sorted(data2.keys()):
                     if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Evolution', '3Exclusive?'] and 'Heroes with' not in key:
                         message2.add_field(
                             name=key[1:],
-                            value=data[key][0],
-                            inline=data[key][1]
+                            value=data2[key][0],
+                            inline=data2[key][1]
                         )
             await self.bot.say(embed=message1)
             await self.bot.say(embed=message2)
+            save = self.cache.add_data(weapon, data, categories, save=False)
+            self.cache.add_data(weapon2, data2, categories2, force_save=save)
         except timeout:
             print("Timed out.")
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
@@ -628,6 +633,8 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 await self.bot.say("There appears to be no difference between these units!")
         except timeout:
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+        finally:
+            self.save()
 
     @bot.command(aliases=['list', 'List', 'Fehlist', 'FEHlist', 'FEHList'])
     async def fehlist(self, *args):
