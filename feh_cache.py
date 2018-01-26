@@ -106,20 +106,30 @@ class FehCache(object):
             self.list = list
         self.save()
 
-    def add_alias(self, alias, name, save=True):
-        alias = alias.lower()
+    def add_alias(self, alias, name):
+        alias = alias.lower().replace(' ', '')
         if alias not in ['son', 'my son', 'waifu', 'my waifu'] and alias not in self.aliases and '/' not in alias:
             self.aliases[alias] = name
             cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
-        if save:
-            self.save()
 
-    def delete_alias(self, alias, save=True):
+    def delete_alias(self, alias):
         if alias in self.aliases:
             cache_log.appendleft('Deleted alias: %s -> %s' % (alias, self.aliases[alias]))
             del self.aliases[alias]
-        if save:
-            self.save()
+
+    def resolve_alias(self, alias):
+        # replace old aliases to ones without spaces
+        alias = alias.lower()
+        if alias.lower() in self.aliases:
+            result = self.aliases[alias]
+            if ' ' in alias:
+                self.add_alias(alias.replace(' ', ''), result)
+                self.delete_alias(alias)
+            return result
+        alias = alias.replace(' ', '')
+        if alias.lower() in self.aliases:
+            return self.aliases[alias]
+        return None
 
     def clear_category(self, category):
         to_delete = []
@@ -133,8 +143,6 @@ class FehCache(object):
     def add_data(self, data, categories, save=True):
         self.data[data['Embed Info']['Title']] = data
         self.categories[data['Embed Info']['Title']] = categories
-        if save:
-            self.save()
         cache_log.appendleft('Added data for: %s' % data['Embed Info']['Title'])
 
     def delete_data(self, title, save=True):
@@ -146,6 +154,4 @@ class FehCache(object):
                 del self.categories[t]
                 cache_log.appendleft('Deleted data for: %s' % t)
                 deleted = True
-        if save:
-            self.save()
         return deleted

@@ -10,14 +10,13 @@ GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
 page_cache = {}
 weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
-passive_colours = {1:0xcd914c, 2:0xa8b0b0, 3:0xd8b956}
+passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956]
 
-def get_data(arg, passive_level=3, cache=None, save=True):
+def get_data(arg):
     categories, html = get_page_html(arg)
     if html is None:
         return None, None
-    data = {}
-    data['Embed Info'] = {'Title':arg, 'Icon':None}
+    data = {'Embed Info': {'Title': arg, 'Icon': None}}
     if 'Heroes' in categories:
         stats = get_infobox(html)
         stats = stats[None].split('\n\n\n\n')
@@ -127,66 +126,77 @@ def get_data(arg, passive_level=3, cache=None, save=True):
                     cost = ', '.join(cost)
                     data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
                     data['Refinery Cost'] = cost
-    elif 'Passives' in categories or 'Specials' in categories or 'Assists' in categories:
+    elif 'Passives' in categories:
         stats_table = html.find("table", attrs={"class": "sortable"})
-        # get the data from the appropriate row dictated by passive_level (if it exists)
+        stat_rows = stats_table.find_all("tr")[1:]
+        data = {'Embed Info': {'Title': arg}, 'Data': []}
+        curr_row = 1 if len(stat_rows) == 2 else 0
+        for row in stat_rows:
+            temp_data = {'Embed Info': {'Title': arg, 'Icon': None}}
+
+            stats = [a.get_text().strip() for a in row.find_all("td")]
+            stats = [a if a else 'N/A' for a in stats]
+            temp_data['Embed Info']['Colour'] = 0xe8e1c9 if len(stat_rows) == 1\
+                                        else passive_colours[curr_row]
+            curr_row += 1
+            skill_name = stats[1]
+            learners = None
+            # use learners table to figure out seal colour
+            if 'Seal Exclusive Skills' not in categories:
+                learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
+                if learners_table != stats_table:
+                    skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
+            if skill_name[-1] not in ['1', '2', '3']:
+                title = arg
+            else:
+                title = arg + ' ' + skill_name[-1]
+            temp_data['Embed Info']['Title'] = title
+            temp_data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
+            icon = get_icon(stats[1])
+            if not icon is None:
+                temp_data['Embed Info']['Icon'] = icon
+            slot = stats_table.th.text[-2]
+            temp_data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
+            temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
+            temp_data['2Effect'] = stats[3], False
+
+            inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
+            temp_data['3Inherit Restrictions'] = inherit_r, True
+            if learners:
+                if 'Sacred Seals' in categories:
+                    learners = 'Available as Sacred Seal\n' + learners
+                temp_data['4Heroes with ' + arg] = learners, False
+            print(temp_data)
+            data['Data'].append(temp_data)
+    elif 'Specials' in categories or 'Assists' in categories:
+        stats_table = html.find("table", attrs={"class": "sortable"})
         # append the inherit restriction (and slot)
-        stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1 if len(stats_table.find_all("tr")) < (passive_level+1) else passive_level].find_all("td")]
+        stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")]
         stats = [a if a else 'N/A' for a in stats]
-        data['Embed Info']['Colour'] = 0xe8e1c9
         if 'Specials' in categories:
             data['Embed Info']['Colour'] = 0xf499fe
         elif 'Assists' in categories:
             data['Embed Info']['Colour'] = 0x1fe2c3
 
-        skill_name = stats[1 if 'Passives' in categories else 0]
+        skill_name = stats[0]
         learners = None
-        # use learners table to figure out seal colour
-        if 'Seal Exclusive Skills' not in categories:
-            learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
-            if learners_table != stats_table:
-                skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
-                if 'Passives' in categories and skill_name[-1] in ['1', '2', '3'] and skill_chain_position > 0:
-                    data['Embed Info']['Colour'] = passive_colours[skill_chain_position]
-        else:
-            if skill_name[-1] in ['1', '2', '3']:
-                data['Embed Info']['Colour'] = passive_colours[int(skill_name[-1])]
-        if skill_name[-1] not in ['1', '2', '3']:
-            title = arg
-        else:
-            title = arg + ' ' + skill_name[-1]
-        data['Embed Info']['Title'] = title
+        data['Embed Info']['Title'] = arg
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
 
-        if 'Passives' in categories:
-            icon = get_icon(stats[1])
-            if not icon is None:
-                data['Embed Info']['Icon'] = icon
-            slot = stats_table.th.text[-2]
-            data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
-            data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
-            data['2Effect'] = stats[3], False
-        else:
-            if 'Specials' in categories:
-                data['0Cooldown'] = stats[1], True
-            elif 'Assists' in categories:
-                data['0Range'] = stats[1], True
-            data['1SP Cost'] = stats[3], True
-            data['2Effect'] = stats[2], False
+        if 'Specials' in categories:
+            data['0Cooldown'] = stats[1], True
+        elif 'Assists' in categories:
+            data['0Range'] = stats[1], True
+        data['1SP Cost'] = stats[3], True
+        data['2Effect'] = stats[2], False
 
-        if 'Passives' in categories:
-            inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
-        else:
-            inherit_r = 'Only, '.join(stats[-1].split('Only'))[:(-2 if 'Only' in stats[-1] else None)]
+        inherit_r = 'Only, '.join(stats[-1].split('Only'))[:(-2 if 'Only' in stats[-1] else None)]
         data['3Inherit Restrictions'] = inherit_r, True
         if learners:
-            if 'Sacred Seals' in categories:
-                learners = 'Available as Sacred Seal\n' + learners
             data['4Heroes with ' + arg] = learners, False
     else:
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
-    cache.add_data(data, categories, save=save)
     return categories, data
 
 
@@ -220,8 +230,9 @@ def find_name(arg, cache, sender = None):
         return INVALID_HERO
 
     # check cached aliases
-    if arg.lower().replace(' ', '') in cache.aliases:
-        return cache.aliases[arg.lower().replace(' ', '')]
+    result = cache.resolve_alias(arg)
+    if result:
+        return result
 
     # basic quick stat aliasing without needing manual input
     # enough to be vaguely useful without messing with some other skills

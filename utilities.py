@@ -24,7 +24,7 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 
-def get_unit_stats(args, cache, default_rarity=None, sender=None, save=True):
+def get_unit_stats(args, cache, default_rarity=None, sender=None):
     # convert to lower case
     args = list(map(lambda x:x.lower(), args))
     try:
@@ -76,10 +76,10 @@ def get_unit_stats(args, cache, default_rarity=None, sender=None, save=True):
             categories = cache.categories[unit]
             data = cache.data[unit]
         else:
-            categories, data = get_data(unit, cache=cache, save=False)
+            categories, data = get_data(unit)
             if data is None:
                 return 'Could not find the hero %s. Perhaps I could not read one of your parameters properly.' % unit
-        cache.add_alias(args, data['Embed Info']['Title'], save=save)
+        cache.add_alias(args, data['Embed Info']['Title'])
         if 'Heroes' not in categories:
             return '%s does not seem to be a hero.' % (unit)
         base_stats_table = data['4Base Stats'][0]
@@ -242,7 +242,7 @@ class FireEmblemHeroes:
                 arg = arg[3:]
                 args = arg.split('|')
                 for arg in args:
-                    self.cache.delete_alias(arg, save=False)
+                    self.cache.delete_alias(arg)
                 self.cache.save()
                 await self.bot.say("Deleted!")
                 return
@@ -280,7 +280,7 @@ class FireEmblemHeroes:
 
         self.cache.update()
         original_arg = arg
-        passive_level = 3
+        passive_level = 0
         if arg[-1] in ['1','2','3']:
             passive_level = int(arg[-1])
             arg = arg[:-1].strip()
@@ -297,23 +297,13 @@ class FireEmblemHeroes:
                     return
                 data = None
                 if (arg in self.cache.data or arg + ' ' + str(passive_level) in self.cache.data) and not ignore_cache:
-                    if arg + ' ' + str(passive_level) in self.cache.data:
-                        data = self.cache.data[arg+' '+str(passive_level)]
-                    else:
-                        data = self.cache.data[arg]
-                elif passive_level == 3:
-                    for suff in [' 1', ' 2']:
-                        if arg+suff in self.cache.data:
-                            check = self.cache.data[arg+suff]
-                            if check['Embed Info']['Colour'] == passive_colours[3]:
-                                data = check
-                                break
+                    categories = self.cache.categories[arg]
+                    data = self.cache.data[arg]
                 if data is None:
-                    categories, data = get_data(arg, passive_level, cache=self.cache, save=False)
+                    categories, data = get_data(arg)
                     if data is None:
                         await self.bot.say("I'm afraid I couldn't find information on %s." % arg)
                         return
-                self.cache.add_alias(original_arg, arg)
             except urllib.error.HTTPError as err:
                 print(err)
                 if err.code >= 500:
@@ -322,6 +312,12 @@ class FireEmblemHeroes:
             except IndexError:
                 await self.bot.say('It appears the data I have is incomplete. Please try again later.')
                 return
+
+            if 'Passives' in categories:
+                if passive_level <= len(data['Data']):
+                    data = data['Data'][passive_level-1]
+                else:
+                    data = data['Data'][-1]
 
             message = discord.Embed(
                 title= data['Embed Info']['Title'],
@@ -369,11 +365,11 @@ class FireEmblemHeroes:
                     categories = self.cache.categories[weapon]
                     data = self.cache.data[weapon]
                 else:
-                    categories, data = get_data(weapon, cache=self.cache, save=False)
+                    categories, data = get_data(weapon)
                     if data is None:
                         await self.bot.say('Could not find the weapon %s.' % weapon)
                         return
-                self.cache.add_alias(args, data['Embed Info']['Title'], save=False)
+                self.cache.add_alias(args, data['Embed Info']['Title'])
                 if 'Weapons' not in categories:
                     await self.bot.say('%s does not seem to be a weapon.' % (weapon))
                     return
@@ -436,11 +432,11 @@ class FireEmblemHeroes:
                     categories = self.cache.categories[weapon]
                     data = self.cache.data[weapon]
                 else:
-                    categories, data = get_data(weapon, cache=self.cache, save=False)
+                    categories, data = get_data(weapon)
                     if data is None:
                         await self.bot.say('Could not find the weapon %s.' % weapon)
                         return
-                self.cache.add_alias(args, data['Embed Info']['Title'], save=False)
+                self.cache.add_alias(args, data['Embed Info']['Title'])
                 # evolved weapon message
                 message2 = discord.Embed(
                     title= data['Embed Info']['Title'],
@@ -583,11 +579,11 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 args.remove('-q')
             unit1_args = args[:args.index(separator)]
             unit2_args = args[args.index(separator)+1:]
-            unit1_stats = get_unit_stats(unit1_args, self.cache, default_rarity=5, sender=str(ctx.message.author), save=False)
+            unit1_stats = get_unit_stats(unit1_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
             if not isinstance(unit1_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
                 return
-            unit2_stats = get_unit_stats(unit2_args, self.cache, default_rarity=5, sender=str(ctx.message.author), save=False)
+            unit2_stats = get_unit_stats(unit2_args, self.cache, default_rarity=5, sender=str(ctx.message.author))
             if not isinstance(unit2_stats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
                 return
