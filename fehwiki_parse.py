@@ -147,11 +147,7 @@ def get_data(arg, timeout_dur=5):
                 learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
                 if learners_table != stats_table:
                     skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
-            if skill_name[-1] not in ['1', '2', '3']:
-                title = arg
-            else:
-                title = arg + ' ' + skill_name[-1]
-            temp_data['Embed Info']['Title'] = title
+            temp_data['Embed Info']['Title'] = skill_name
             temp_data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
             icon = get_icon(stats[1])
             if not icon is None:

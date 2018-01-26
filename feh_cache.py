@@ -70,7 +70,7 @@ class FehCache(object):
                     title = change['title']
                     if title.startswith('File:'):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
-                    if title in self.data:
+                    if title in self.data and title not in self.replacement_list:
                         self.replacement_list.append(title)
                         cache_log.appendleft('Set %s up for replacement.' % title)
                 if old_replacement_list == self.replacement_list:
@@ -153,13 +153,13 @@ class FehCache(object):
     def add_data(self, alias, data, categories, save=True, force_save=False):
         name = data['Embed Info']['Title']
         will_save = self.add_alias(alias, name, save=False)
-        if name not in self.data:
+        if name not in self.data or self.data[name] != data:
             will_save = True
-            self.data[data['Embed Info']['Title']] = data
+            self.data[name] = data
             cache_log.appendleft('Added data for: %s' % data['Embed Info']['Title'])
-        if name not in self.categories:
+        if name not in self.categories or self.categories[name] != categories:
             will_save = True
-            self.categories[data['Embed Info']['Title']] = categories
+            self.categories[name] = categories
         if force_save:
             self.save()
         else:

@@ -113,7 +113,8 @@ class FireEmblemHeroes:
                 else:
                     categories = new_categories
                     data = new_data
-                    self.cache.replacement_list.remove(arg)
+                    if arg in self.cache.replacement_list:
+                        self.cache.replacement_list.remove(arg)
             return arg, categories, data
         except urllib.error.HTTPError as err:
             if arg and categories and data:
@@ -306,12 +307,22 @@ class FireEmblemHeroes:
                 self.cache.save()
                 await self.bot.say("Reloaded!\n" + self.cache.last_update)
                 return
+            elif arg.startswith('-currreplace'):
+                message = ''
+                for r in self.cache.replacement_list:
+                    if len(message) + len(r) >= 2000:
+                        await self.bot.say(message)
+                        message = ''
+                    message += r + ', '
+                if message:
+                    await self.bot.say(message)
+                return
 
         self.cache.update()
         original_arg = arg
-        passive_level = 0
-        if arg[-1] in ['1','2','3']:
-            passive_level = int(arg[-1])
+        passive_level = -1
+        if arg[-1] in ['1','2','3', '4', '5']:
+            passive_level = int(arg[-1]) - 1
             arg = arg[:-1].strip()
         try:
             arg, categories, original_data = self.find_data(arg, original_arg, ctx, ignore_cache)
@@ -320,8 +331,10 @@ class FireEmblemHeroes:
                 return
 
             if 'Passives' in categories:
+                if original_data['Embed Info']['Title'] == 'HP Plus' and passive_level in [2,3,4]:
+                    passive_level -= 2
                 if passive_level <= len(original_data['Data']):
-                    data = original_data['Data'][passive_level-1]
+                    data = original_data['Data'][passive_level]
                 else:
                     data = original_data['Data'][-1]
             else:
@@ -642,7 +655,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
         except timeout:
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
         finally:
-            self.save()
+            self.cache.save()
 
     @bot.command(aliases=['list', 'List', 'Fehlist', 'FEHlist', 'FEHList'])
     async def fehlist(self, *args):
