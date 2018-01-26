@@ -62,7 +62,7 @@ class FehCache(object):
     def update(self):
         try:
             old_replacement_list = self.replacement_list
-            changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=1000&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
+            changes = get_page('https://feheroes.gamepedia.com/api.php?action=query&list=recentchanges&rcprop=title|timestamp&rclimit=500&rcend=%s&rcnamespace=0|6' % self.last_update)['query']['recentchanges'][:-1]
             if changes:
                 deleted = False
                 self.last_update = changes[0]['timestamp']
@@ -72,6 +72,7 @@ class FehCache(object):
                         title = (' '.join(title.lstrip('File:').lstrip('Icon_Portrait_').lstrip('Weapon_').split('_'))).rstrip('.png').rstrip('.bmp').rstrip('.jpg').rstrip('.jpeg')
                     if title in self.data:
                         self.replacement_list.append(title)
+                        cache_log.appendleft('Set %s up for replacement.' % title)
                 if old_replacement_list == self.replacement_list:
                     self.save()
         except Exception as ex:

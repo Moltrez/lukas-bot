@@ -107,16 +107,24 @@ class FireEmblemHeroes:
                 categories = self.cache.categories[arg]
                 data = self.cache.data[arg]
             if data is None or arg in self.cache.replacement_list:
-                categories, data = get_data(arg)
-                if data is None:
+                new_categories, new_data = get_data(arg)
+                if new_data is None:
                     return False, False, "I'm afraid I couldn't find information on %s." % arg
+                else:
+                    categories = new_categories
+                    data = new_data
+                    self.cache.replacement_list.remove(arg)
             return arg, categories, data
         except urllib.error.HTTPError as err:
+            if arg and categories and data:
+                return arg, categories, data
             print(err)
             if err.code >= 500:
                 return False, False,\
                     "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
         except IndexError:
+            if arg and categories and data:
+                return arg, categories, data
             return False, False, 'It appears the data I have is incomplete. Please try again later.'
 
     def get_unit_stats(self, args, default_rarity=None, ctx=None):

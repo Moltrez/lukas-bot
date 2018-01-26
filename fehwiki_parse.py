@@ -13,8 +13,8 @@ weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless
 passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956]
 
 
-def get_data(arg):
-    categories, html = get_page_html(arg)
+def get_data(arg, timeout_dur=5):
+    categories, html = get_page_html(arg, timeout_dur)
     if html is None:
         return None, None
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
@@ -200,11 +200,14 @@ def get_data(arg):
     return categories, data
 
 
-def get_page(url, prop=''):
+def get_page(url, prop='', timeout_dur=5):
     print(url)
     query_url = url+('&prop='+prop if prop else '')+'&format=json'
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urllib.request.urlopen(request, timeout=5)
+    if timeout:
+        response = urllib.request.urlopen(request, timeout=timeout_dur)
+    else:
+        response = urllib.request.urlopen(request)
     print('Loading JSON...')
     info = json.load(response)
     if 'error' in info:
@@ -296,9 +299,9 @@ def get_icon(arg, prefix=""):
         return icon
 
 
-def get_page_html(arg):
+def get_page_html(arg, timeout_dur=5):
     url = feh_source % "api.php?action=parse&page=%s" % (urllib.parse.quote(arg))
-    info = get_page(url, 'text|categories')
+    info = get_page(url, 'text|categories', timeout_dur)
     if info:
         categories = [' '.join(k['*'].split('_')) for k in info['parse']['categories']]
         soup = BSoup(info['parse']['text']['*'], "lxml")
