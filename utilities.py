@@ -733,6 +733,7 @@ Example: !list -f red sword infantry -s attack hp
                 await self.bot.say('No results found for selected filters.')
                 return
             num_results = len(heroes)
+            sort_keys.append('Name')
             for key in reversed(sort_keys):
                 heroes = sorted(heroes,
                                 key=lambda h:
@@ -740,6 +741,7 @@ Example: !list -f red sword infantry -s attack hp
                                         itertools.accumulate([h[field] for field in key] if isinstance(key, tuple) else [h[key]]))[-1],
                                         reverse=not args['r'] if key in ['Name', 'Movement', 'Colour', 'Weapon'] else args['r']
                                         )
+            sort_keys.pop()
             list_string = ', '.join([
                 h['Name'] + (
                     (' ('+','.join([

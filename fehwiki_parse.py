@@ -254,14 +254,14 @@ def find_name(arg, cache, ctx=None):
 def get_heroes_list():
     # get table from html
     categories, html = get_page_html('Stats Table')
-    table = html.find('table')
+    table = html.find_all('table')[-1]
     heroes_list = []
     # add all the rows that fit the format to current list
     for row in table.find_all('tr'):
         try:
-            heroes_list.add(list_row_to_dict(row))
+            heroes_list.append(list_row_to_dict(row))
         except KeyError:
-            continue
+            pass
     # take out all the ones with incomplete data
     heroes_list = list(filter(lambda h:h['BST'] != 0, heroes_list))
     heroes_list = {r['Name']: r for r in heroes_list}
