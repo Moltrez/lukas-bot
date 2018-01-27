@@ -318,6 +318,7 @@ class FireEmblemHeroes:
                 for r in self.cache.replacement_list:
                     if self.cache.delete_data(r):
                         save = True
+                self.cache.replacement_list.clear()
                 if save:
                     self.cache.save()
                 await self.bot.say("Cleared replacement list!")
