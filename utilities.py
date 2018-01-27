@@ -314,8 +314,12 @@ class FireEmblemHeroes:
                     await self.bot.say(message)
                 return
             elif arg.startswith('-clearreplace'):
+                save = False
                 for r in self.cache.replacement_list:
-                    self.cache.delete_data(r)
+                    if self.cache.delete_data(r):
+                        save = True
+                if save:
+                    self.cache.save()
                 await self.bot.say("Cleared replacement list!")
                 return
         self.cache.update()
