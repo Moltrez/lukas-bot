@@ -274,7 +274,7 @@ class FireEmblemHeroes:
                 for arg in args:
                     self.cache.delete_alias(arg)
                 self.cache.save()
-                await self.bot.say("Deleted!")
+                await self.bot.say("Deleted !")
                 return
             elif arg.startswith('-a '):
                 arg = arg[3:]
@@ -298,10 +298,6 @@ class FireEmblemHeroes:
                 self.cache.clear_category(arg)
                 await self.bot.say("Cleared!")
                 return
-            elif arg.startswith('-update '):
-                arg = arg[len('-update '):]
-                update_category(self.cache, arg)
-                return
             elif arg.startswith('-reload'):
                 self.cache.load()
                 self.cache.save()
@@ -317,7 +313,11 @@ class FireEmblemHeroes:
                 if message:
                     await self.bot.say(message)
                 return
-
+            elif arg.startswith('-clearreplace'):
+                for r in self.cache.replacement_list:
+                    self.cache.delete_data(r)
+                await self.bot.say("Cleared replacement list!")
+                return
         self.cache.update()
         original_arg = arg
         passive_level = -1

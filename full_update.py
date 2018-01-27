@@ -10,10 +10,13 @@ def update_category(cache, category):
     try:
         if members:
             for member in members:
-                if not member.startswith('Category:') and not any([m in cache.data for m in [member, member+' 1', member+' 2', member+' 3']]):
+                if not member.startswith('Category:') and\
+                        ((not member in cache.data) or member in cache.replacement_list):
                     print("Getting data for " + member)
                     try:
                         categories, data = get_data(member, None)
+                        if member in cache.replacement_list:
+                            cache.replacement_list.remove(member)
                         cache.add_data(member.lower(), data, categories, save=False)
                         count += 1
                     except IndexError as err:
