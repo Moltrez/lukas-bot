@@ -352,6 +352,10 @@ class FireEmblemHeroes:
             )
             if data['Embed Info']['Icon']:
                 message.set_thumbnail(url=data['Embed Info']['Icon'])
+            elif 'Specials' in categories:
+                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
+            elif 'Assists' in categories:
+                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
             for key in sorted(data.keys()):
                 if key[0].isdigit():
                     message.add_field(
@@ -427,6 +431,11 @@ class FireEmblemHeroes:
                 )
                 if 'Refine Icon' in data:
                     message2.set_thumbnail(url=data['Refine Icon'])
+                else:
+                    if 'Staves' in categories:
+                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/4/42/Wrathful_Staff_W.png')
+                    else:
+                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/20/Attack_Plus_W.png')
                 for r in data['Refine']:
                     value = ''
                     if r['Stats'] != '+0 HP':
@@ -463,7 +472,7 @@ class FireEmblemHeroes:
                         )
             await self.bot.say(embed=message1)
             await self.bot.say(embed=message2)
-            if weapon2:
+            if 'Evolution' in data:
                 save = self.cache.add_data(weapon, data, categories, save=False)
                 self.cache.add_data(weapon2, data2, categories2, force_save=save)
             else:
