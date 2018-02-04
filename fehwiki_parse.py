@@ -147,11 +147,10 @@ def get_data(arg, timeout_dur=5):
             curr_row += 1
             skill_name = stats[1]
             learners = None
-            # use learners table to figure out seal colour
             if 'Seal Exclusive Skills' not in categories:
                 learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
                 if learners_table != stats_table:
-                    skill_chain_position, learners = get_learners(learners_table, categories, skill_name)
+                    learners = get_learners(learners_table, skill_name)
             temp_data['Embed Info']['Title'] = skill_name
             temp_data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
             icon = get_icon(stats[1])
@@ -179,8 +178,6 @@ def get_data(arg, timeout_dur=5):
         elif 'Assists' in categories:
             data['Embed Info']['Colour'] = 0x1fe2c3
 
-        skill_name = stats[0]
-        learners = None
         data['Embed Info']['Title'] = arg
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
 
@@ -196,6 +193,7 @@ def get_data(arg, timeout_dur=5):
             data['3Inherit Restrictions'] = stats[-2], True
         elif 'Assists' in categories:
             data['3Inherit Restrictions'] = stats[-1], True
+        learners = get_learners(html.find_all("table", attrs={"class":"sortable"})[-1], arg)
         if learners:
             data['4Heroes with ' + arg] = learners, False
     else:
@@ -392,21 +390,19 @@ def get_bst(stats_table):
     return stats_table[-1]['Total']
 
 
-def get_learners(learners_table, categories, skill_name):
+def get_learners(learners_table, skill_name):
     learners = {i+1:[] for i in range(5)}
     # l_data is one row in a 2D array representing the learners table
-    skill_chain_position = -1
     for l_data in [a.find_all("td") for a in learners_table.find_all("tr")]:
         # append a name to the appropriate level
         for i in range(len(l_data)):
             text = l_data[i].get_text()
             if skill_name in text:
-                skill_chain_position = i
                 learned_level = int(text[-1])
-                learners[learned_level].append(l_data[0].find_all("a")[1].get_text())
+                learners[learned_level].append(l_data[0].find_all("a")[1].get_text().replace('\n', ' '))
                 break
     learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
-    return skill_chain_position, learners
+    return learners
 
 def get_gauntlet_scores():
         newurl = urllib.request.urlopen(GAUNTLET_URL).geturl()
