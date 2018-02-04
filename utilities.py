@@ -353,7 +353,7 @@ class FireEmblemHeroes:
             if data['Embed Info']['Icon']:
                 message.set_thumbnail(url=data['Embed Info']['Icon'])
             for key in sorted(data.keys()):
-                if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Evolution']:
+                if key[0].isdigit():
                     message.add_field(
                         name=key[1:],
                         value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
@@ -408,7 +408,7 @@ class FireEmblemHeroes:
             if data['Embed Info']['Icon']:
                 message1.set_thumbnail(url=data['Embed Info']['Icon'])
             for key in sorted(data.keys()):
-                if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Evolution', '3Exclusive?'] and 'Heroes with' not in key:
+                if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
                     message1.add_field(
                         name=key[1:],
                         value=data[key][0],
@@ -425,6 +425,8 @@ class FireEmblemHeroes:
                     url= data['Embed Info']['URL'],
                     color= 0xD6BD53
                 )
+                if 'Refine Icon' in data:
+                    message2.set_thumbnail(url=data['Refine Icon'])
                 for r in data['Refine']:
                     value = ''
                     if r['Stats'] != '+0 HP':
@@ -453,7 +455,7 @@ class FireEmblemHeroes:
                 if data2['Embed Info']['Icon']:
                     message2.set_thumbnail(url=data2['Embed Info']['Icon'])
                 for key in sorted(data2.keys()):
-                    if key not in ['Embed Info', 'Refine', 'Refinery Cost', 'Evolution', '3Exclusive?'] and 'Heroes with' not in key:
+                    if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
                         message2.add_field(
                             name=key[1:],
                             value=data2[key][0],
@@ -461,8 +463,11 @@ class FireEmblemHeroes:
                         )
             await self.bot.say(embed=message1)
             await self.bot.say(embed=message2)
-            save = self.cache.add_data(weapon, data, categories, save=False)
-            self.cache.add_data(weapon2, data2, categories2, force_save=save)
+            if weapon2:
+                save = self.cache.add_data(weapon, data, categories, save=False)
+                self.cache.add_data(weapon2, data2, categories2, force_save=save)
+            else:
+                self.cache.add_data(weapon, data, categories)
         except timeout:
             print("Timed out.")
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')

@@ -17,6 +17,8 @@ def get_data(arg, timeout_dur=5):
     categories, html = get_page_html(arg, timeout_dur)
     if html is None:
         return None, None
+    for br in html.find_all('br'):
+        br.replace_with('\n')
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
     if 'Heroes' in categories:
         stats = get_infobox(html)
@@ -93,7 +95,7 @@ def get_data(arg, timeout_dur=5):
         data['2SP Cost'] = stats['SP Cost'], False
         data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Special Effect' in stats:
-            data['5Special Effect'] = stats[None], False
+            data['5Special Effect'] = stats[None].replace('  ', ' '), False
         learners_table = html.find_all("table", attrs={"class":"sortable"})
         if learners_table:
             learners_table = learners_table[-1]
@@ -115,10 +117,14 @@ def get_data(arg, timeout_dur=5):
                 data['Refinery Cost'] = cost
             elif 'Type' in refinery_table[0]:
                 data['Refine'] = []
+                first_r = refinery_table[0]['Type'].split('|')[1]
+                if first_r.endswith(' W'):
+                    icon = get_icon(first_r)
+                    data['Refine Icon'] = icon
                 for r in refinery_table:
                     t = r['Type'].split('|')[1].rstrip(' W')
                     s = r['Stats'].split('|')[0]
-                    e = r['Effect'].split('|')[0]
+                    e = r['Effect'].split('|')[0].replace('  ', ' ')
                     cost = r['Cost'].split('|')
                     cost_materials = cost[1:]
                     cost = cost[0].split(', ')
@@ -134,7 +140,6 @@ def get_data(arg, timeout_dur=5):
         curr_row = 1 if len(stat_rows) == 2 else 0
         for row in stat_rows:
             temp_data = {'Embed Info': {'Title': arg, 'Icon': None}}
-
             stats = [a.get_text().strip() for a in row.find_all("td")]
             stats = [a if a else 'N/A' for a in stats]
             temp_data['Embed Info']['Colour'] = 0xe8e1c9 if len(stat_rows) == 1\
@@ -155,9 +160,9 @@ def get_data(arg, timeout_dur=5):
             slot = stats_table.th.text[-2]
             temp_data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
             temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
-            temp_data['2Effect'] = stats[3], False
+            temp_data['2Effect'] = stats[3].replace('\n', ' '), False
 
-            inherit_r = ', '.join(map(lambda r:r.text, html.ul.find_all('li')))
+            inherit_r = ', '.join(map(lambda r:r.text.strip(), html.ul.find_all('li')))
             temp_data['3Inherit Restrictions'] = inherit_r, True
             if learners:
                 if 'Sacred Seals' in categories:
@@ -166,8 +171,8 @@ def get_data(arg, timeout_dur=5):
             data['Data'].append(temp_data)
     elif 'Specials' in categories or 'Assists' in categories:
         stats_table = html.find("table", attrs={"class": "sortable"})
-        # append the inherit restriction (and slot)
-        stats = [a.get_text().strip() for a in stats_table.find_all("tr")[-1].find_all("td")]
+        data_row = stats_table.find_all("tr")[-1]
+        stats = [a.get_text().strip() for a in data_row.find_all("td")]
         stats = [a if a else 'N/A' for a in stats]
         if 'Specials' in categories:
             data['Embed Info']['Colour'] = 0xf499fe
@@ -186,8 +191,11 @@ def get_data(arg, timeout_dur=5):
         data['1SP Cost'] = stats[3], True
         data['2Effect'] = stats[2], False
 
-        inherit_r = 'Only, '.join(stats[-1].split('Only'))[:(-2 if 'Only' in stats[-1] else None)]
-        data['3Inherit Restrictions'] = inherit_r, True
+        if 'Specials' in categories:
+            data['2Prequirement'] = stats[-1].replace('\n', ', '), False
+            data['3Inherit Restrictions'] = stats[-2], True
+        elif 'Assists' in categories:
+            data['3Inherit Restrictions'] = stats[-1], True
         if learners:
             data['4Heroes with ' + arg] = learners, False
     else:
@@ -308,7 +316,7 @@ def get_page_html(arg, timeout_dur=5):
 
 def get_infobox(html):
     table = html.find("div", attrs={"class": "hero-infobox"}).find("table")
-    return {a.find("th").get_text().strip() if not a.find("th") is None else None: a.find(
+    return {a.find("th").get_text().replace('  ', ' ').strip() if not a.find("th") is None else None: a.find(
         "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr")}
 
 
