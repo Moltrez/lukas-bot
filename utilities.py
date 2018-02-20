@@ -274,7 +274,7 @@ class FireEmblemHeroes:
                 for arg in args:
                     self.cache.delete_alias(arg)
                 self.cache.save()
-                await self.bot.say("Deleted !")
+                await self.bot.say("Deleted!")
                 return
             elif arg.startswith('-a '):
                 arg = arg[3:]

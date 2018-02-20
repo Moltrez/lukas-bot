@@ -99,7 +99,7 @@ def get_data(arg, timeout_dur=5):
         learners_table = html.find_all("table", attrs={"class":"sortable"})
         if learners_table:
             learners_table = learners_table[-1]
-            learners = [a.find("td").find_all("a")[1].get_text() for a in learners_table.find_all("tr")]
+            learners = [a.find("td").find_all("a")[1].get_text().replace('\n', ' ') for a in learners_table.find_all("tr")]
             if learners:
                 data['6Heroes with ' + arg] = ', '.join(learners), False
         refinery_table = html.find("table", attrs={"class":"wikitable default"})
@@ -203,8 +203,8 @@ def get_data(arg, timeout_dur=5):
 
 
 def get_page(url, prop='', timeout_dur=5):
-    print(url)
     query_url = url+('&prop='+prop if prop else '')+'&format=json'
+    print(query_url)
     request = urllib.request.Request(query_url, headers={'User-Agent': 'Mozilla/5.0'})
     if timeout:
         response = urllib.request.urlopen(request, timeout=timeout_dur)
@@ -244,8 +244,10 @@ def find_name(arg, cache, ctx=None):
 
     # basic quick stat aliasing without needing manual input
     # enough to be vaguely useful without messing with some other skills
-    arg = arg.title().replace('Hp+', 'HP Plus').replace('Atk+', 'Attack Plus').replace('Spd+', 'Speed Plus').replace('Def+', 'Defense Plus').replace('Res+', 'Resistance Plus').\
-        replace('Hp+', 'HP Plus').replace('Attack+', 'Attack Plus').replace('Speed+', 'Speed Plus').replace('Defense+', 'Defense Plus').replace('Resistance+', 'Resistance Plus').replace(' +', ' Plus')
+    arg = arg.lower().replace('hp+', 'hp plus').replace('atk+', 'attack plus').replace('spd+', 'speed plus').\
+        replace('def+', 'defense plus').replace('res+', 'resistance plus').replace('hp+', 'hp plus').\
+        replace('attack+', 'attack plus').replace('speed+', 'speed plus').replace('defense+', 'defense plus').\
+        replace('resistance+', 'resistance plus').replace(' +', ' plus')
 
     # resolve webpage
     redirect = feh_source % "api.php?action=opensearch&search=%s&redirects=resolve" % (urllib.parse.quote(arg))
@@ -253,7 +255,7 @@ def find_name(arg, cache, ctx=None):
     if not info[1] or not info[1][0]:
         return INVALID_HERO
     else:
-        return info[1][0]
+        return sorted(sorted(info[1]), key=lambda i: len(i))[0]
     return arg
 
 
@@ -456,7 +458,7 @@ def standardize(d, k):
             l[i] = 'Cavalry'
         if l[i] in ['Ar', 'Armoured', 'Knight', 'Armour', 'Armor']:
             l[i] = 'Armored'
-        if l[i] == 'Fl':
+        if l[i] in ['Fl', 'Flier']:
             l[i] = 'Flying'
         if l[i] in ['Hp', 'Atk', 'Spd', 'Def', 'Res', 'Bst']:
             l[i] = l[i].upper()
