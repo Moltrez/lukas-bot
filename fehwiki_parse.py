@@ -124,7 +124,8 @@ def get_data(arg, timeout_dur=5):
                 first_r = refinery_table[0]['Type'].split('|')[1]
                 if not first_r.startswith('Attack') and not first_r.startswith('Wrathful'):
                     icon = get_icon(first_r)
-                    data['Refine Icon'] = icon
+                    if icon:
+                        data['Refine Icon'] = icon
                 for r in refinery_table:
                     t = r['Type'].split('|')[1].rstrip(' W')
                     s = r['Stats'].split('|')[0]
