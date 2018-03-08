@@ -24,7 +24,6 @@ class FehCache(object):
             self.list = []
             self.last_update = '2017-11-27T00:00:00Z'
         self.aliases.update(aliases)
-        self.save()
 
     def copy(self, other):
         self.aliases = aliases if 'aliases' not in dir(other) else other.aliases

@@ -23,7 +23,7 @@ stats = ['HP', 'ATK', 'SPD', 'DEF', 'RES']
 merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.array([2,1,1,1,1]), np.array([2,2,2,1,1]), np.array([2,2,2,2,2]),
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
-
+separators = ['v', 'vs', '-v', '&', '|']
 
 def find_arg(args, param_list, return_list, param_type, remove=True):
     """Finds arguments that exist in param_list and return the corresponding value from return_list."""
@@ -119,8 +119,7 @@ class FireEmblemHeroes:
                 new_categories, new_data = get_data(arg)
                 if new_data is None:
                     return False, False,\
-                           "I'm afraid I couldn't find information on %s. Could you have meant:\n%s"\
-                           % (arg, self.find_similar(arg, self.cache))
+                           "I'm afraid I couldn't find information on %s." % arg
                 else:
                     categories = new_categories
                     data = new_data
@@ -334,6 +333,7 @@ class FireEmblemHeroes:
                     self.cache.save()
                 await self.bot.say("Cleared replacement list!")
                 return
+
         self.cache.update()
         original_arg = arg
         passive_level = -1
@@ -343,7 +343,25 @@ class FireEmblemHeroes:
         try:
             arg, categories, original_data = self.find_data(arg, original_arg, ctx, ignore_cache)
             if not arg:
-                await self.bot.say(original_data)
+                if original_data.startswith("I'm"):
+                    if any([(' ' + separator + ' ') in original_arg for separator in separators]) or\
+                            original_arg.lower().startswith('compare'):
+                        await self.bot.say(
+                        "I'm afraid I couldn't find data of %s. Did you mean to do `?compare %s`?" %
+                        (original_arg, original_arg))
+                    elif any([modifier in original_arg for modifier in
+                              ['-f', '-s', '-r']]) or original_arg.lower().startswith('list'):
+                        await self.bot.say(
+                            "I'm afraid I couldn't find data of %s. Did you mean to do `?list %s`?" %
+                            (original_arg,
+                             original_arg if not original_arg.lower().startswith('list') else original_arg[4:].strip()))
+                    elif any([modifier in original_arg for modifier in
+                                 ['-', '/', '+']]) and not original_arg.endswith('+'):
+                        await self.bot.say(
+                            "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
+                            (original_arg, original_arg))
+                else:
+                    await self.bot.say(original_data)
                 return
 
             if 'Passives' in categories:
@@ -355,6 +373,11 @@ class FireEmblemHeroes:
                     data = original_data['Data'][-1]
             else:
                 data = original_data
+
+            if original_arg.startswith('list'):
+                data['Message'] = 'Did you mean `?list %s`?' % original_arg[4:].strip()
+            elif original_arg.lower() == 'gauntlet':
+                data['Message'] = 'Did you mean `?gauntlet`?'
 
             message = discord.Embed(
                 title= data['Embed Info']['Title'],
@@ -597,7 +620,6 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
 
         try:
             args = list(map(lambda a:a.lower(), args))
-            separators = ['v', 'vs', '-v', '&', '|']
             try:
                 separator, args = find_arg(args, separators, separators, 'separator', remove=False)
             except ValueError as err:

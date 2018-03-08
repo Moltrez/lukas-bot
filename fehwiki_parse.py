@@ -191,15 +191,27 @@ def get_data(arg, timeout_dur=5):
             data['0Range'] = stats[1], True
         data['1SP Cost'] = stats[3], True
         data['2Effect'] = stats[2], False
-
         if 'Specials' in categories:
-            data['2Prequirement'] = stats[-1].replace('\n', ', '), False
-            data['3Inherit Restrictions'] = stats[-2], True
+            data['3Prequirement'] = stats[-1].replace('\n', ', '), False
+            data['4Inherit Restrictions'] = stats[-2], True
+            if 'Area of Effect Specials' in categories:
+                range = ''
+                for row in html.find_all('table', attrs={"class":'wikitable'})[1].find_all('tr'):
+                    for d in row.find_all('td'):
+                        if d.img:
+                            if 'Special' in d.img['alt']:
+                                range += 'X'
+                            else:
+                                range += 'O'
+                        else:
+                            range += ' '
+                    range += '\n'
+                data['3Area of Effect'] = '```' + range + '```', False
         elif 'Assists' in categories:
             data['3Inherit Restrictions'] = stats[-1], True
         learners = get_learners(html.find_all("table", attrs={"class":"sortable"})[-1], arg)
         if learners:
-            data['4Heroes with ' + arg] = learners, False
+            data['5Heroes with ' + arg] = learners, False
     else:
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
