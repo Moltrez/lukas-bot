@@ -375,7 +375,10 @@ class FireEmblemHeroes:
                             value= refinable,
                             inline=True
                         )
-            await self.bot.say(embed=message)
+            if 'Message' in data:
+                await self.bot.say(data['Message'], embed=message)
+            else:
+                await self.bot.say(embed=message)
             self.cache.add_data(arg, original_data, categories)
         except timeout:
             print("Timed out.")

@@ -21,6 +21,9 @@ def get_data(arg, timeout_dur=5):
         br.replace_with('\n')
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
     if 'Heroes' in categories:
+        alts = html.i.get_text().strip()
+        if alts.startswith('This page is about'):
+            data['Message'] = "*" + alts + "*"
         stats = get_infobox(html)
         stats = stats[None].split('\n\n\n\n')
         stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats]}
@@ -74,6 +77,7 @@ def get_data(arg, timeout_dur=5):
             skills = skills.rstrip(', ') + last_learned + '\n'
         if skills:
             data['6Learnable Skills'] = skills, False
+
     elif 'Weapons' in categories:
         colour = weapon_colours['Null'] # for dragonstones, which are any colour
         if any(i in ['Swords', 'Red Tomes'] for i in categories):
@@ -199,6 +203,9 @@ def get_data(arg, timeout_dur=5):
     else:
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
+        if 'Disambiguation pages' in categories:
+            options = [option.a['title'].strip() for option in html.find_all('li')]
+            data['1Could refer to:'] = '\n'.join(options), False
     return categories, data
 
 
