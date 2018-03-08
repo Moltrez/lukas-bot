@@ -360,6 +360,9 @@ class FireEmblemHeroes:
                         await self.bot.say(
                             "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
                             (original_arg, original_arg))
+                    else:
+                        await self.bot.say(original_data)
+                        return
                 else:
                     await self.bot.say(original_data)
                 return
