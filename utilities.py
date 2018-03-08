@@ -3,7 +3,7 @@ import numpy as np
 from socket import timeout
 from discord.ext import commands as bot
 from fehwiki_parse import *
-from full_update import update_category
+from difflib import SequenceMatcher
 
 import feh_cache
 
@@ -89,6 +89,13 @@ class FireEmblemHeroes:
         self.bot = bot
         self.cache = feh_cache.FehCache()
 
+    def find_similar(self, arg, cache):
+        return '\n'.join(
+            [p[0] for p in
+             sorted([[page, SequenceMatcher(None, arg, page).ratio()] for page in cache.data], key=lambda x:x[1], reverse=True)[:2]
+             ]
+        )
+
     def find_data(self, arg, original_arg, ctx=None, ignore_cache=False):
         try:
             arg = find_name(arg, self.cache, ctx=ctx)
@@ -100,7 +107,9 @@ class FireEmblemHeroes:
                     elif original_arg.lower() in ['waifu', 'my waifu']:
                         return False, False,\
                             "I was not aware you had one. If you want me to associate you with one, use the setwaifu command."
-                return False, False, "I'm afraid I couldn't find information on %s." % original_arg
+                return False, False,\
+                       "I'm afraid I couldn't find information on %s. Could you have meant:\n%s"\
+                       % (original_arg, self.find_similar(original_arg, self.cache))
 
             data = None
             if arg in self.cache.data and not ignore_cache:
@@ -109,7 +118,9 @@ class FireEmblemHeroes:
             if data is None or arg in self.cache.replacement_list:
                 new_categories, new_data = get_data(arg)
                 if new_data is None:
-                    return False, False, "I'm afraid I couldn't find information on %s." % arg
+                    return False, False,\
+                           "I'm afraid I couldn't find information on %s. Could you have meant:\n%s"\
+                           % (arg, self.find_similar(arg, self.cache))
                 else:
                     categories = new_categories
                     data = new_data
