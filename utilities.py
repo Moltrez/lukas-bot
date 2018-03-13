@@ -771,14 +771,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                     messages.append(nmessage)
             if analytics_mode:
                 analytics_table = np.array(raw_stats).transpose()
-                print(analytics_table)
                 a_row_format = '|%7s|%5s %-31.31s|\n'
                 amessage = a_row_format % ('Highest', 'Value', '(Character(s))')
                 for i in range(0, len(stats)):
                     characters = np.where(analytics_table[i]==analytics_table[i].max())[0]
                     amessage += a_row_format % (stats[i], str(analytics_table[i].max()), '('+', '.join([u[0] for u in [max_tables[j] for j in characters]])+')')
                 totals = analytics_table.sum(axis=0)
-                print(totals)
                 amessage += a_row_format % ('BST', str(totals.max()), '('+', '.join([u[0] for u in [max_tables[j] for j in np.where(totals==totals.max())[0]]])+')')
                 messages.append(amessage)
             curr_message = ''
