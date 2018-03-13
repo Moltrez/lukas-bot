@@ -617,99 +617,179 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
     async def fehcompare(self, ctx, *args):
         """I will compare the max stats of two units with specified parameters.
 Please reference ?help fehstats for the kinds of accepted parameters.
-Simply type in unit builds as you would with ?fehstats and add a v or vs between the units. Use -q to only show the difference.
+Simply type in unit builds as you would with ?fehstats and add a v or vs between the units.
+Up to 15 units can be compared at the same time.
+By default differences will be shown when comparing 2 units but not for more.
+Use -d to show the difference as well as the stats. Use -q to only show the difference. Use -a to show who has the highest of each stat.
 Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default."""
         self.cache.update()
 
         try:
             args = list(map(lambda a:a.lower(), args))
-            try:
-                separator, args = find_arg(args, separators, separators, 'separator', remove=False)
-            except ValueError as err:
-                # multiple separators
-                await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
-                return
+            # try:
+            #     separator, args = find_arg(args, separators, separators, 'separator', remove=False)
+            # except ValueError as err:
+            #     # multiple separators
+            #     await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+            #     return
+            sep_finding = [i in args for i in separators]
             # no separators
-            if separator is None:
-                await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+            if not any(sep_finding):
+                await self.bot.say("Please separate the units you wish to compare using "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|`.")
                 return
             quiet_mode = False
+            stats_mode = True
+            analytics_mode = False
             if '-q' in args:
                 quiet_mode = True
+                stats_mode = False
                 args.remove('-q')
-            unit1_args = args[:args.index(separator)]
-            unit2_args = args[args.index(separator)+1:]
-            unit1_stats = self.get_unit_stats(unit1_args, default_rarity=5, ctx=ctx)
-            if not isinstance(unit1_stats, tuple):
-                await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
+            if '-d' in args:
+                quiet_mode = True
+                args.remove('-d')
+            if '-a' in args:
+                analytics_mode = True
+                args.remove('-a')
+            # unit1_args = args[:args.index(separator)]
+            # unit2_args = args[args.index(separator)+1:]
+            # unit1_stats = self.get_unit_stats(unit1_args, default_rarity=5, ctx=ctx)
+            # if not isinstance(unit1_stats, tuple):
+            #     await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
+            #     return
+            # unit2_stats = self.get_unit_stats(unit2_args, default_rarity=5, ctx=ctx)
+            # if not isinstance(unit2_stats, tuple):
+            #     await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
+            #     return
+            # self.cache.save()
+            # unit1, base1, max1 = unit1_stats
+            # unit2, base2, max2 = unit2_stats
+            # if not quiet_mode:
+            #     base1_table = array_to_table(base1)
+            #     max1_table = array_to_table(max1)
+            #     message1 = discord.Embed(
+            #         title=unit1['Title'],
+            #         url=unit1['URL'],
+            #         color=unit1['Colour']
+            #     )
+            #     if not unit1['Icon'] is None:
+            #         message1.set_thumbnail(url=unit1['Icon'])
+            #     message1.add_field(
+            #         name="BST",
+            #         value=max1_table[-1]['Total'],
+            #         inline=False
+            #     )
+            #     message1.add_field(
+            #         name="Base Stats",
+            #         value=format_stats_table(base1_table),
+            #         inline=False
+            #     )
+            #     message1.add_field(
+            #         name="Max Level Stats",
+            #         value=format_stats_table(max1_table),
+            #         inline=False
+            #     )
+            #     base2_table = array_to_table(base2)
+            #     max2_table = array_to_table(max2)
+            #     message2 = discord.Embed(
+            #         title=unit2['Title'],
+            #         url=unit2['URL'],
+            #         color=unit2['Colour']
+            #     )
+            #     if not unit2['Icon'] is None:
+            #         message2.set_thumbnail(url=unit2['Icon'])
+            #     message2.add_field(
+            #         name="BST",
+            #         value=max2_table[-1]['Total'],
+            #         inline=False
+            #     )
+            #     message2.add_field(
+            #         name="Base Stats",
+            #         value=format_stats_table(base2_table),
+            #         inline=False
+            #     )
+            #     message2.add_field(
+            #         name="Max Level Stats",
+            #         value=format_stats_table(max2_table),
+            #         inline=False
+            #     )
+            #     await self.bot.say(embed=message1)
+            #     await self.bot.say(embed=message2)
+            # max1 = np.array(list(filter(lambda r:any(r), max1))[0])
+            # max2 = np.array(list(filter(lambda r:any(r), max2))[0])
+            # difference = max1 - max2
+            # bst_diff = difference.sum()
+            # if any(difference):
+            #     await self.bot.say("%s compared to %s: %s%s" %\
+            #      (unit1['Title'], unit2['Title'], ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
+            # else:
+            #     await self.bot.say("There appears to be no difference between these units!")
+            unit_requests = []
+            current_args = []
+            nth_unit = 1
+            args.append('&')
+            for arg in args:
+                if arg in separators:
+                    if not current_args:
+                        continue
+                    unit_requests.append(current_args)
+                    current_args = []
+                    nth_unit += 1
+                    continue
+                current_args.append(arg)
+            limit = 15
+            if nth_unit > limit:
+                await self.bot.say('Please only compare up to %d units at a time.' % limit)
                 return
-            unit2_stats = self.get_unit_stats(unit2_args, default_rarity=5, ctx=ctx)
-            if not isinstance(unit2_stats, tuple):
-                await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
-                return
-            self.cache.save()
-            unit1, base1, max1 = unit1_stats
-            unit2, base2, max2 = unit2_stats
-            if not quiet_mode:
-                base1_table = array_to_table(base1)
-                max1_table = array_to_table(max1)
-                message1 = discord.Embed(
-                    title=unit1['Title'],
-                    url=unit1['URL'],
-                    color=unit1['Colour']
-                )
-                if not unit1['Icon'] is None:
-                    message1.set_thumbnail(url=unit1['Icon'])
-                message1.add_field(
-                    name="BST",
-                    value=max1_table[-1]['Total'],
-                    inline=False
-                )
-                message1.add_field(
-                    name="Base Stats",
-                    value=format_stats_table(base1_table),
-                    inline=False
-                )
-                message1.add_field(
-                    name="Max Level Stats",
-                    value=format_stats_table(max1_table),
-                    inline=False
-                )
-                base2_table = array_to_table(base2)
-                max2_table = array_to_table(max2)
-                message2 = discord.Embed(
-                    title=unit2['Title'],
-                    url=unit2['URL'],
-                    color=unit2['Colour']
-                )
-                if not unit2['Icon'] is None:
-                    message2.set_thumbnail(url=unit2['Icon'])
-                message2.add_field(
-                    name="BST",
-                    value=max2_table[-1]['Total'],
-                    inline=False
-                )
-                message2.add_field(
-                    name="Base Stats",
-                    value=format_stats_table(base2_table),
-                    inline=False
-                )
-                message2.add_field(
-                    name="Max Level Stats",
-                    value=format_stats_table(max2_table),
-                    inline=False
-                )
-                await self.bot.say(embed=message1)
-                await self.bot.say(embed=message2)
-            max1 = np.array(list(filter(lambda r:any(r), max1))[0])
-            max2 = np.array(list(filter(lambda r:any(r), max2))[0])
-            difference = max1 - max2
-            bst_diff = difference.sum()
-            if any(difference):
-                await self.bot.say("%s compared to %s: %s%s" %\
-                 (unit1['Title'], unit2['Title'], ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
-            else:
-                await self.bot.say("There appears to be no difference between these units!")
+            max_tables = []
+            for request in unit_requests:
+                ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
+                if not isinstance(ustats, tuple):
+                    await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % nth_unit + ustats)
+                    return
+                unit, _, max_t = ustats
+                name = unit['Title'].replace(' ', '')
+                if '(' in name:
+                    name = name.split('(')
+                    name[-1] = ''.join(filter(lambda x: x.isupper(), name[-1][:-1])) + ')'
+                    name = '('.join(name)
+                max_tables.append((name, max_t))
+            row_format = '|%-15.15s|%4s|%4s|%4s|%4s|%4s|%4s|\n'
+            message = row_format % ('Unit', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
+            unit_number = 1
+            for unit in max_tables:
+                table = array_to_table(unit[1])[0]
+                message += row_format % (unit[0], table['HP'], table['ATK'], table['SPD'], table['DEF'], table['RES'], table['Total'])
+                unit_number += 1
+            raw_stats = [np.array(list(filter(lambda r:any(r), t))[0]) for t in [table[1] for table in max_tables]]
+            messages = [message] if stats_mode else []
+            if quiet_mode or nth_unit == 3:
+                for i in range(0, len(max_tables)-1):
+                    nmessage = row_format % (max_tables[i][0][:13] + ' &', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
+                    for j in range(i+1, len(max_tables)):
+                        difference = raw_stats[i] - raw_stats[j]
+                        nmessage += row_format % ('%15.15s' % max_tables[j][0], str(difference[0]), str(difference[1]), str(difference[2]), str(difference[3]), str(difference[4]), str(difference.sum()))
+                    messages.append(nmessage)
+            if analytics_mode:
+                analytics_table = np.array(raw_stats).transpose()
+                print(analytics_table)
+                a_row_format = '|%7s|%5s %-31.31s|\n'
+                amessage = a_row_format % ('Highest', 'Value', '(Character(s))')
+                for i in range(0, len(stats)):
+                    characters = np.where(analytics_table[i]==analytics_table[i].max())[0]
+                    amessage += a_row_format % (stats[i], str(analytics_table[i].max()), '('+', '.join([u[0] for u in [max_tables[j] for j in characters]])+')')
+                totals = analytics_table.sum(axis=0)
+                print(totals)
+                amessage += a_row_format % ('BST', str(totals.max()), '('+', '.join([u[0] for u in [max_tables[j] for j in np.where(totals==totals.max())[0]]])+')')
+                messages.append(amessage)
+            curr_message = ''
+            for message in messages:
+                formatted_message = '```' + message + '```'
+                if len(curr_message) + len(formatted_message) > 2000:
+                    await self.bot.say(curr_message)
+                    curr_message = ''
+                curr_message += formatted_message
+            if curr_message:
+                await self.bot.say(curr_message)
         except timeout:
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
         finally:

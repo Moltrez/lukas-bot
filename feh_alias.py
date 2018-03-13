@@ -97,11 +97,11 @@ aliases = {
     'bk':'Black Knight',
     'wlissa':"Lissa (Winter's Envoy)",
     'wchrom':"Chrom (Winter's Envoy)",
-    'wtharja':"Tharja (Winter's Envoy",
-    'wrobin':"Robin (Winter's Envoy)",
+    'wtharja':"Tharja (Winter's Envoy)",
+    'wrobin':"Robin (M) (Winter's Envoy)",
     'xmas lissa':"Lissa (Winter's Envoy)",
     'xmas chrom':"Chrom (Winter's Envoy)",
     'xmas tharja':"Tharja (Winter's Envoy)",
-    'xmas robin':"Robin (Winter's Envoy)",
+    'xmas robin':"Robin (M) (Winter's Envoy)",
     'thicc':'Thökk'
 }
