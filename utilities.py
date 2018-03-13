@@ -725,7 +725,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             #     await self.bot.say("There appears to be no difference between these units!")
             unit_requests = []
             current_args = []
-            nth_unit = 1
+            nth_unit = 0
             args.append('&')
             for arg in args:
                 if arg in separators:
@@ -762,7 +762,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 unit_number += 1
             raw_stats = [np.array(list(filter(lambda r:any(r), t))[0]) for t in [table[1] for table in max_tables]]
             messages = [message] if stats_mode else []
-            if quiet_mode or nth_unit == 3:
+            if quiet_mode or nth_unit == 2:
                 for i in range(0, len(max_tables)-1):
                     nmessage = row_format % (max_tables[i][0][:13] + ' &', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
                     for j in range(i+1, len(max_tables)):
