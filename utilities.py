@@ -414,7 +414,7 @@ class FireEmblemHeroes:
                             inline=True
                         )
             if 'Message' in data:
-                await self.bot.say(data['Message'], embed=message)
+                await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
             else:
                 await self.bot.say(embed=message)
             self.cache.add_data(arg, original_data, categories)
