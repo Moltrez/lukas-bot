@@ -651,6 +651,11 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             if '-a' in args:
                 analytics_mode = True
                 args.remove('-a')
+            common_args = []
+            if '-all' in args:
+                all_i = args.index('-all')
+                common_args = args[all_i+1:]
+                args = args[:all_i]
             # unit1_args = args[:args.index(separator)]
             # unit2_args = args[args.index(separator)+1:]
             # unit1_stats = self.get_unit_stats(unit1_args, default_rarity=5, ctx=ctx)
@@ -725,7 +730,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             # else:
             #     await self.bot.say("There appears to be no difference between these units!")
             unit_requests = []
-            current_args = []
+            current_args = common_args.copy()
             nth_unit = 0
             args.append('&')
             for arg in args:
@@ -733,7 +738,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                     if not current_args:
                         continue
                     unit_requests.append(current_args)
-                    current_args = []
+                    current_args = common_args.copy()
                     nth_unit += 1
                     continue
                 current_args.append(arg)
@@ -741,10 +746,11 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 await self.bot.say('Please only compare up to %d units at a time.' % compare_limit)
                 return
             max_tables = []
+            curr_unit = 1
             for request in unit_requests:
                 ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
                 if not isinstance(ustats, tuple):
-                    await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % nth_unit + ustats)
+                    await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
                     return
                 unit, _, max_t = ustats
                 name = unit['Title'].replace(' ', '')
@@ -753,6 +759,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                     name[-1] = ''.join(filter(lambda x: x.isupper(), name[-1][:-1])) + ')'
                     name = '('.join(name)
                 max_tables.append((name, max_t))
+                curr_unit += 1
             row_format = '|%-15.15s|%4s|%4s|%4s|%4s|%4s|%4s|\n'
             message = row_format % ('Unit', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
             unit_number = 1
@@ -818,7 +825,8 @@ Example: !list -f red sword infantry -s attack hp
                 if (len(args) > 1 and '-r' in args and '-f' not in args and '-s' not in args) or\
                     ('-r' not in args and '-f' not in args and '-s' not in args) or\
                     (args[0] not in ['-r', '-f', '-s']) or\
-                    ('-r' in args and args[-1] != '-r' and args[args.index('-r')+1] not in ['-f', '-s']):
+                    ('-r' in args and args[-1] != '-r' and args[args.index('-r')+1] not in ['-f', '-s']) or\
+                    any('-' in arg and arg not in ['-r', '-f', '-s'] for arg in args):
                     await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
                     return
 
