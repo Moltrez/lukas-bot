@@ -24,6 +24,7 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 separators = ['v', 'vs', '-v', '&', '|']
+compare_limit = 15
 
 def find_arg(args, param_list, return_list, param_type, remove=True):
     """Finds arguments that exist in param_list and return the corresponding value from return_list."""
@@ -736,9 +737,8 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                     nth_unit += 1
                     continue
                 current_args.append(arg)
-            limit = 15
-            if nth_unit > limit:
-                await self.bot.say('Please only compare up to %d units at a time.' % limit)
+            if nth_unit > compare_limit:
+                await self.bot.say('Please only compare up to %d units at a time.' % compare_limit)
                 return
             max_tables = []
             for request in unit_requests:
@@ -900,9 +900,11 @@ Example: !list -f red sword infantry -s attack hp
                         ) for h in heroes
                     ])
                 heroes = heroes[:-1]
-            await self.bot.say('Results found: %d\nResults shown: %d' % (num_results, len(heroes)))
-            message = list_string
-            await self.bot.say(message)
+            results_string = 'Results found: %d\nResults shown: %d' % (num_results, len(heroes))
+            if num_results > 1 and num_results <= compare_limit:
+                results_string += '\nIf you wish to compare these units in greater detail:\n`?compare %s -a`' % ' & '.join(h['Name'] for h in heroes)
+            await self.bot.say(results_string)
+            await self.bot.say(list_string)
         except timeout:
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
