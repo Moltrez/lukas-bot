@@ -289,8 +289,10 @@ class FireEmblemHeroes:
                 return
             elif arg.startswith('-a '):
                 arg = arg[3:]
-                alias, title = list(map(lambda x: ' '.join(x.split('_')), arg.split(' ', 1)))
-                self.cache.add_alias(alias, title)
+                args = arg.split(' ', 1)
+                aliases = args[0].split('&')
+                for alias in aliases:
+                    self.cache.add_alias(alias, args[1])
                 await self.bot.say("Added!")
                 return
             elif arg.startswith('-aliases'):

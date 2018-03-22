@@ -98,8 +98,8 @@ def get_data(arg, timeout_dur=5):
         data['1Range'] = stats['Range'], True
         data['2SP Cost'] = stats['SP Cost'], False
         data['3Exclusive?'] = stats['Exclusive?'], True
-        if 'Special Effect' in stats:
-            data['5Special Effect'] = stats[None].replace('  ', ' '), False
+        if 'Description' in stats:
+            data['5Description'] = stats[None].replace('  ', ' '), False
         learners_table = html.find_all("table", attrs={"class":"sortable"})
         if learners_table:
             learners_table = learners_table[-1]
