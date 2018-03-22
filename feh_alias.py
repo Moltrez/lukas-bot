@@ -89,7 +89,7 @@ aliases = {
     'hnowi':'Nowi (Trick or Defeat!)',
     'hjakob':'Jakob (Trick or Defeat!)',
     'hhenry':'Henry (Trick or Defeat!)',
-    'hsakura':'Sakyra (Trick or Defeat!)',
+    'hsakura':'Sakura (Trick or Defeat!)',
     'bcaeda':'Caeda (Bridal Blessings)',
     'bcharlotte':'Charlotte (Bridal Blessings)',
     'bcordelia':'Cordelia (Bridal Blessings)',
