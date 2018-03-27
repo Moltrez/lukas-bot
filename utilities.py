@@ -351,7 +351,8 @@ class FireEmblemHeroes:
                             original_arg.lower().startswith('compare'):
                         await self.bot.say(
                         "I'm afraid I couldn't find data of %s. Did you mean to do `?compare %s`?" %
-                        (original_arg, original_arg))
+                        (original_arg,
+                         original_arg if not original_arg.lower().startswith('compare') else original_arg[7:].strip()))
                     elif any([modifier in original_arg for modifier in
                               ['-f', '-s', '-r']]) or original_arg.lower().startswith('list'):
                         await self.bot.say(
@@ -362,7 +363,8 @@ class FireEmblemHeroes:
                                  ['-', '/', '+']]) and not original_arg.endswith('+'):
                         await self.bot.say(
                             "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
-                            (original_arg, original_arg))
+                            (original_arg,
+                             original_arg if not original_arg.lower().startswith('stats') else original_arg[5:].strip()))
                     else:
                         await self.bot.say(original_data)
                         return
@@ -537,6 +539,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard,
             self.cache.set_flaunt(args[1], img_url)
             if args[1] in self.flaunt_cache:
                 del self.flaunt_cache[args[1]]
+            await self.bot.say("Flaunt changed!")
             return
         f = None
         if user in self.cache.flaunts:
