@@ -298,7 +298,7 @@ class FireEmblemHeroes:
             elif arg.startswith('-aliases'):
                 f_string = 'aliases = {\n'
                 f_string += ',\n'.join(
-                    ['    "%s":"%s"' %(alias, self.cache.aliases[alias]) for alias in self.cache.aliases])
+                    ['    "%s": "%s"' %(alias, self.cache.aliases[alias]) for alias in self.cache.aliases])
                 f_string += '\n}\n'
                 f = io.BytesIO(bytes(f_string, 'utf-8'))
                 f.name = 'feh_alias.py'
