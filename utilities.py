@@ -90,10 +90,11 @@ class FireEmblemHeroes:
         self.bot = bot
         self.cache = feh_cache.FehCache()
 
-    def find_similar(self, arg, cache):
+    def find_similar(self, arg):
         return '\n'.join(
             [p[0] for p in
-             sorted([[page, SequenceMatcher(None, arg, page).ratio()] for page in cache.data], key=lambda x:x[1], reverse=True)[:2]
+             sorted([[page, SequenceMatcher(None, arg.lower().replace(' ',''), page).ratio()]
+                     for page in self.cache.aliases], key=lambda x:x[1], reverse=True)[:3]
              ]
         )
 
@@ -110,7 +111,7 @@ class FireEmblemHeroes:
                             "I was not aware you had one. If you want me to associate you with one, use the setwaifu command."
                 return False, False,\
                        "I'm afraid I couldn't find information on %s. Could you have meant:\n%s"\
-                       % (original_arg, self.find_similar(original_arg, self.cache))
+                       % (original_arg, self.find_similar(original_arg))
 
             data = None
             if arg in self.cache.data and not ignore_cache:
