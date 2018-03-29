@@ -428,7 +428,7 @@ class FireEmblemHeroes:
                 await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
             else:
                 await self.bot.say(embed=message)
-            self.cache.add_data(arg, original_data, categories)
+            self.cache.add_data(original_arg, original_data, categories)
         except timeout:
             print("Timed out.")
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
