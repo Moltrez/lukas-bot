@@ -296,15 +296,22 @@ class FireEmblemHeroes:
                 await self.bot.say("Added!")
                 return
             elif arg.startswith('-aliases'):
-                lofaliases = sorted([key + ' -> ' + self.cache.aliases[key] + '\n' for key in self.cache.aliases])
-                message = ''
-                for l in lofaliases:
-                    if len(message) + len(l) >= 2000:
-                        await self.bot.say(message)
-                        message = ''
-                    message += l
-                if message:
-                    await self.bot.say(message)
+                f_string = 'aliases = {\n'
+                f_string += ',\n'.join(
+                    ['    "%s":"%s"' %(alias, self.cache.aliases[alias]) for alias in self.cache.aliases])
+                f_string += '\n}\n'
+                f = io.BytesIO(bytes(f_string, 'utf-8'))
+                f.name = 'feh_alias.py'
+                await self.bot.upload(f)
+                return
+            elif arg.startswith('-sanitizealiases'):
+                a = list(self.cache.aliases)
+                for alias in a:
+                    if alias[-1] in ['1','2','3']:
+                        self.cache.delete_alias(alias, save=False)
+                    else:
+                        self.cache.resolve_alias(alias, save=False)
+                self.cache.save()
                 return
             elif arg.startswith('-clearcategory '):
                 arg = arg[len('-clearcategory '):]

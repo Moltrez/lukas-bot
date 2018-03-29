@@ -126,14 +126,14 @@ class FehCache(object):
             if save:
                 self.save()
 
-    def resolve_alias(self, alias):
+    def resolve_alias(self, alias, save=True):
         # replace old aliases to ones without spaces
         alias = alias.lower()
         if alias.lower() in self.aliases:
             result = self.aliases[alias]
             if ' ' in alias:
                 self.add_alias(alias.replace(' ', ''), result, save=False)
-                self.delete_alias(alias)
+                self.delete_alias(alias, save=save)
             return result
         alias = alias.replace(' ', '')
         if alias.lower() in self.aliases:
