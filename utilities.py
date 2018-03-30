@@ -306,12 +306,18 @@ class FireEmblemHeroes:
                 await self.bot.upload(f)
                 return
             elif arg.startswith('-sanitizealiases'):
-                a = list(self.cache.aliases)
-                for alias in a:
+                for alias in list(self.cache.aliases):
                     if alias[-1] in ['1','2','3']:
                         self.cache.delete_alias(alias, save=False)
                     else:
                         self.cache.resolve_alias(alias, save=False)
+                self.cache.save()
+                return
+            elif arg.startswith('-cleandatabase'):
+                for page in list(self.cache.data):
+                    if not any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
+                            for c in self.cache.categories[page]]):
+                        self.cache.delete_data(page, save=False)
                 self.cache.save()
                 return
             elif arg.startswith('-clearcategory '):
@@ -442,7 +448,9 @@ class FireEmblemHeroes:
                 await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
             else:
                 await self.bot.say(embed=message)
-            self.cache.add_data(original_arg, original_data, categories)
+            if any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
+                    for c in categories]):
+                self.cache.add_data(original_arg, original_data, categories)
         except timeout:
             print("Timed out.")
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')

@@ -12,6 +12,7 @@ def update_category(cache, category):
             for member in members:
                 if not member.startswith('Category:') and\
                     not member.startswith('Template:') and\
+                    not member.startswith('User talk:') and\
                         ((member not in cache.data) or member in cache.replacement_list):
                     print("Getting data for " + member)
                     try:
