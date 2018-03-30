@@ -12,7 +12,12 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
-    await bot.edit_profile(username='Python')
+    try:
+        with open('./avatar.png', 'rb') as avatar:
+            await bot.edit_profile(username='Python', avatar=avatar.read())
+    except Exception as ex:
+        print(ex)
+        await bot.edit_profile(username='Python')
     await bot.change_presence(game=discord.Game(name="FEHWiki"))
 
 luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
