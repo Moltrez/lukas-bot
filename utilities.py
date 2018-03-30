@@ -21,26 +21,26 @@ class MagikarpJump:
 class ASCIIMessage:
 
     def __init__(self, title):
-        self.message = '%-45.45s\n' % ('[' + title + ']')
+        self._message = '%-45.45s\n' % ('[' + title + ']')
         self.inline_count = 0
         self.last_value = ''
 
-    def add_message(self, name, value, inline):
+    def add_field(self, name, value, inline):
         if inline:
-            self.message += '%-22.22s' % ('[' + name + ']')
+            self._message += '%-22.22s' % ('[' + name + ']')
             if self.inline_count == 0:
                 # first message to inline
                 self.last_value = value
                 self.inline_count = 1
             elif self.inline_count == 1:
                 # second message to inline
-                self.message += '\n%-22.22s%-22.22s\n' % (self.last_value, value)
+                self._message += '\n%-22.22s%-22.22s\n' % (self.last_value, value)
                 self.inline_count = 0
         if not inline:
             if self.inline_count != 0:
-                self.message += ' ' * 23 + '\n%-45.45s\n' % self.last_value
+                self._message += ' ' * 23 + '\n%-45.45s\n' % self.last_value
                 self.inline_count = 0
-            self.message += '%-45.45s\n' % ('[' + name + ']')
+            self._message += '%-45.45s\n' % ('[' + name + ']')
             for line in value.split('\n'):
                 if not line:
                     continue
@@ -53,7 +53,13 @@ class ASCIIMessage:
                     while '**' in line:
                         line = line.replace('**', curr_brack, 1)
                         curr_brack = ']' if curr_brack == '[' else ']'
-                self.message += line + '\n'
+                self._message += line + '\n'
+    @property
+    def message(self):
+        return '```ini\n' + self._message + '```'
+    @message.setter
+    def message(self, value):
+        self._message = value
 
 # these are constant so declare up here
 stats = ['HP', 'ATK', 'SPD', 'DEF', 'RES']
@@ -455,7 +461,7 @@ class FireEmblemHeroes:
             amess = ASCIIMessage(data['Embed Info']['Title'])
             for key in sorted(data.keys()):
                 if key[0].isdigit():
-                    amess.add_message(
+                    amess.add_field(
                         name = key[1:],
                         value = data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
                         inline = data[key][1]
@@ -467,12 +473,12 @@ class FireEmblemHeroes:
                             refinable = 'Yes'
                         else:
                             refinable = 'No'
-                        amess.add_message(
+                        amess.add_field(
                             name = 'Refinable?',
                             value = refinable,
                             inline = True
                         )
-            await self.bot.say(message + '```ini\n'+amess.message+'```')
+            await self.bot.say(message + amess.message)
             if any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
                     for c in categories]):
                 self.cache.add_data(original_arg, original_data, categories)
@@ -503,13 +509,9 @@ class FireEmblemHeroes:
                 else:
                     break
             # initial weapon message
-            message1 = discord.Embed(
-                title= data['Embed Info']['Title'],
-                url= data['Embed Info']['URL'],
-                color= data['Embed Info']['Colour']
+            message1 = ASCIIMessage(
+                title= data['Embed Info']['Title']
             )
-            if data['Embed Info']['Icon']:
-                message1.set_thumbnail(url=data['Embed Info']['Icon'])
             for key in sorted(data.keys()):
                 if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
                     message1.add_field(
@@ -523,18 +525,9 @@ class FireEmblemHeroes:
                 inline=False
             )
             if 'Refine' in data:
-                message2 = discord.Embed(
-                    title= 'Refinery Options',
-                    url= data['Embed Info']['URL'],
-                    color= 0xD6BD53
+                message2 = ASCIIMessage(
+                    title= 'Refinery Options'
                 )
-                if 'Refine Icon' in data:
-                    message2.set_thumbnail(url=data['Refine Icon'])
-                else:
-                    if 'Staves' in categories:
-                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/4/42/Wrathful_Staff_W.png')
-                    else:
-                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/20/Attack_Plus_W.png')
                 for r in data['Refine']:
                     value = ''
                     if r['Stats'] != '+0 HP':
@@ -555,10 +548,8 @@ class FireEmblemHeroes:
                     await self.bot.say(data2)
                     return
                 # evolved weapon message
-                message2 = discord.Embed(
-                    title= data2['Embed Info']['Title'],
-                    url= data2['Embed Info']['URL'],
-                    color= data2['Embed Info']['Colour']
+                message2 = ASCIIMessage(
+                    title= data2['Embed Info']['Title']
                 )
                 if data2['Embed Info']['Icon']:
                     message2.set_thumbnail(url=data2['Embed Info']['Icon'])
@@ -569,8 +560,8 @@ class FireEmblemHeroes:
                             value=data2[key][0],
                             inline=data2[key][1]
                         )
-            await self.bot.say(embed=message1)
-            await self.bot.say(embed=message2)
+            await self.bot.say(message1.message)
+            await self.bot.say(message2.message)
             if 'Evolution' in data:
                 save = self.cache.add_data(weapon, data, categories, save=False)
                 self.cache.add_data(weapon2, data2, categories2, force_save=save)
@@ -645,13 +636,9 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                 embed_info, base, max = unit_stats
                 base = array_to_table(base)
                 max = array_to_table(max)
-                message = discord.Embed(
-                    title=embed_info['Title'],
-                    url=embed_info['URL'],
-                    color=embed_info['Colour']
+                message = ASCIIMessage(
+                    title=embed_info['Title']
                 )
-                if not embed_info['Icon'] is None:
-                    message.set_thumbnail(url=embed_info['Icon'])
                 message.add_field(
                     name="BST",
                     value=max[-1]['Total'],
@@ -667,7 +654,7 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                     value=format_stats_table(max),
                     inline=False
                 )
-                await self.bot.say(embed=message)
+                await self.bot.say(message.message)
             else:
                 await self.bot.say(unit_stats)
         except timeout:
