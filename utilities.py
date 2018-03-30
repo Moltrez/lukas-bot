@@ -369,7 +369,20 @@ class FireEmblemHeroes:
                              original_arg if not original_arg.lower().startswith('list') else original_arg[4:].strip()))
                     elif any([modifier in original_arg for modifier in
                                  ['-', '/', '+']]) and not original_arg.endswith('+'):
-                        await self.bot.say(
+                        if '/' in original_arg:
+                            slashloc = original_arg.find('/')
+                            if slashloc > 0 and \
+                                all(c in map(str,range(10))
+                                    for c in [original_arg[slashloc-1], original_arg[slashloc+1]]):
+                                await self.bot.say(
+                                    "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
+                                    (original_arg,
+                                     original_arg if not original_arg.lower().startswith('stats') else original_arg[
+                                                                                                       5:].strip()))
+                            else:
+                                await self.bot.say(original_data)
+                        else:
+                            await self.bot.say(
                             "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
                             (original_arg,
                              original_arg if not original_arg.lower().startswith('stats') else original_arg[5:].strip()))
