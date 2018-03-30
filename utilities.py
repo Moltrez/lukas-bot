@@ -489,6 +489,21 @@ class FireEmblemHeroes:
                                     curr_line += item + ', '
                                 line = curr_line[:-2]
                             message += '%-45.45s\n' % line
+                    if 'Exclusive?' in key:
+                        if 'Evolution' in data:
+                            refinable = 'Evolves'
+                        elif 'Refinery Cost' in data:
+                            refinable = 'Yes'
+                        else:
+                            refinable = 'No'
+                        if inline:
+                            message += '%-22.22s' % ('[Refinable?]')
+                            if inline_count == 0:
+                                last_value = refinable
+                                inline_count = 1
+                            elif inline_count == 1:
+                                message += '\n%-22.22s%-22.22s\n' % (last_value, refinable)
+                                inline_count = 0
             message += '```'
             await self.bot.say(message)
             if any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
