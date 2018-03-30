@@ -414,40 +414,83 @@ class FireEmblemHeroes:
             elif original_arg.lower() == 'gauntlet':
                 data['Message'] = 'Did you mean `?gauntlet`?'
 
-            message = discord.Embed(
-                title= data['Embed Info']['Title'],
-                url= data['Embed Info']['URL'],
-                color= data['Embed Info']['Colour']
-            )
-            if data['Embed Info']['Icon']:
-                message.set_thumbnail(url=data['Embed Info']['Icon'])
-            elif 'Specials' in categories:
-                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
-            elif 'Assists' in categories:
-                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
+            # message = discord.Embed(
+            #     title= data['Embed Info']['Title'],
+            #     url= data['Embed Info']['URL'],
+            #     color= data['Embed Info']['Colour']
+            # )
+            # if data['Embed Info']['Icon']:
+            #     message.set_thumbnail(url=data['Embed Info']['Icon'])
+            # elif 'Specials' in categories:
+            #     message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
+            # elif 'Assists' in categories:
+            #     message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
+            # for key in sorted(data.keys()):
+            #     if key[0].isdigit():
+            #         message.add_field(
+            #             name=key[1:],
+            #             value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
+            #             inline=data[key][1]
+            #         )
+            #         if 'Exclusive?' in key:
+            #             if 'Evolution' in data:
+            #                 refinable = 'Evolves'
+            #             elif 'Refinery Cost' in data:
+            #                 refinable = 'Yes'
+            #             else:
+            #                 refinable = 'No'
+            #             message.add_field(
+            #                 name='Refinable?',
+            #                 value= refinable,
+            #                 inline=True
+            #             )
+            message = (data['Message'] + '\n') if 'Message' in data else ''
+            message += '```ini\n%-45.45s\n' %  ('['+data['Embed Info']['Title']+']')
+            inline_count = 0
+            last_value = ''
             for key in sorted(data.keys()):
                 if key[0].isdigit():
-                    message.add_field(
-                        name=key[1:],
-                        value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
-                        inline=data[key][1]
-                    )
-                    if 'Exclusive?' in key:
-                        if 'Evolution' in data:
-                            refinable = 'Evolves'
-                        elif 'Refinery Cost' in data:
-                            refinable = 'Yes'
-                        else:
-                            refinable = 'No'
-                        message.add_field(
-                            name='Refinable?',
-                            value= refinable,
-                            inline=True
-                        )
-            if 'Message' in data:
-                await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
-            else:
-                await self.bot.say(embed=message)
+                    field_name = key[1:]
+                    value = data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0])
+                    inline = data[key][1]
+                    if inline:
+                        message += '%-22.22s' % ('[' + field_name + ']')
+                        if inline_count == 0:
+                            # first message to inline
+                            last_value = value
+                            inline_count = 1
+                        elif inline_count == 1:
+                            # second message to inline
+                            message += '\n%-22.22s%-22.22s\n' % (last_value, value)
+                            inline_count = 0
+                    if not inline:
+                        if inline_count != 0:
+                            message += ' '*23+'\n%-45.45s\n' % last_value
+                            inline_count = 0
+                        message += '%-45.45s\n' % ('[' + field_name + ']')
+                        for line in value.split('\n'):
+                            if not line:
+                                continue
+                            line = line.replace('`', '')
+                            if '_' in line:
+                                underindex = line.find('_')
+                                line = ';' + line[:underindex] + line[underindex+1:]
+                            if '**' in line:
+                                curr_brack = '['
+                                while '**' in line:
+                                    line = line.replace('**', curr_brack, 1)
+                                    curr_brack = ']' if curr_brack == '[' else ']'
+                            if len(line) > 45 and ', ' in line:
+                                curr_line = ';' if line[0] == ';' else ''
+                                for item in line.split(', '):
+                                    if len(curr_line) + len(item) + 2 >= 44:
+                                        message += '%-45.45s\n' % (curr_line)
+                                        curr_line = ';' if line[0] == ';' else ''
+                                    curr_line += item + ', '
+                                line = curr_line[:-2]
+                            message += '%-45.45s\n' % line
+            message += '```'
+            await self.bot.say(message)
             if any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
                     for c in categories]):
                 self.cache.add_data(original_arg, original_data, categories)
