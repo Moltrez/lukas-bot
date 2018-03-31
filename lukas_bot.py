@@ -48,7 +48,7 @@ async def on_message(message):
     if lukas_pattern.match(message.content):
         emotion, message_content = random.choice([
             ('happy.png', "Really now? I'll be sure to let him know."),
-            ('sad.png', "Yeah, yeah. I'll pass the message one."),
+            ('sad.png', "Yeah, yeah. I'll pass the message on."),
             ('angry.png', "Seems like everybody does. Sorry he's not here anymore, I guess.")
         ])
         await bot.send_file(message.channel, './emotions/' + emotion)
