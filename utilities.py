@@ -457,28 +457,34 @@ class FireEmblemHeroes:
             elif original_arg.lower() == 'gauntlet':
                 data['Message'] = 'Did you mean `?gauntlet`?'
 
-            message = (data['Message'] + '\n') if 'Message' in data else ''
-            amess = ASCIIMessage(data['Embed Info']['Title'])
-            for key in sorted(data.keys()):
-                if key[0].isdigit():
-                    amess.add_field(
-                        name = key[1:],
-                        value = data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
-                        inline = data[key][1]
-                    )
-                    if 'Exclusive?' in key:
-                        if 'Evolution' in data:
-                            refinable = 'Evolves'
-                        elif 'Refinery Cost' in data:
-                            refinable = 'Yes'
-                        else:
-                            refinable = 'No'
+            if random.random() < 0.3:
+                await self.bot.upload('./emotions/sad.png')
+                await self.bot.say(random.choice([
+                    'Uhh, you know what? Just take this. This is fine right?\n',
+                    'Yeah, nope. Just not feeling it right now, so you can just have this.']) + str(data))
+            else:
+                message = (data['Message'] + '\n') if 'Message' in data else ''
+                amess = ASCIIMessage(data['Embed Info']['Title'])
+                for key in sorted(data.keys()):
+                    if key[0].isdigit():
                         amess.add_field(
-                            name = 'Refinable?',
-                            value = refinable,
-                            inline = True
+                            name = key[1:],
+                            value = data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
+                            inline = data[key][1]
                         )
-            await self.bot.say(message + amess.message)
+                        if 'Exclusive?' in key:
+                            if 'Evolution' in data:
+                                refinable = 'Evolves'
+                            elif 'Refinery Cost' in data:
+                                refinable = 'Yes'
+                            else:
+                                refinable = 'No'
+                            amess.add_field(
+                                name = 'Refinable?',
+                                value = refinable,
+                                inline = True
+                            )
+                await self.bot.say(message + amess.message)
             if any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
                     for c in categories]):
                 self.cache.add_data(original_arg, original_data, categories)
