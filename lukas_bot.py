@@ -24,7 +24,7 @@ async def on_ready():
 luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
 lukas_pattern = re.compile('.*love.*lukas', re.I)
 python_pattern = re.compile('.*love.*python', re.I)
-forsyth_pattern = re.compile('.*love.*forsyth[^e]*', re.I)
+forsyth_pattern = re.compile('.*love.*forsyth($|[^e])', re.I)
 
 @bot.event
 async def on_message(message):
