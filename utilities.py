@@ -457,7 +457,7 @@ class FireEmblemHeroes:
             elif original_arg.lower() == 'gauntlet':
                 data['Message'] = 'Did you mean `?gauntlet`?'
 
-            if random.random() < 0.3:
+            if random.random() < 0.1:
                 await self.bot.upload('./emotions/sad.png')
                 await self.bot.say(random.choice([
                     'Uhh, you know what? Just take this. This is fine right?',
@@ -642,7 +642,7 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                 embed_info, base, max = unit_stats
                 base = array_to_table(base)
                 max = array_to_table(max)
-                if random.random() < 0.5:
+                if random.random() < 0.1:
                     await self.bot.upload('./emotions/sad.png')
                     await self.bot.say("I don't really see why I have to pretty up some _numbers_.\n" + str(embed_info) + '\n' + str(base) + '\n' + str(max))
                 else:
