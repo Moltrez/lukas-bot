@@ -642,9 +642,9 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                 embed_info, base, max = unit_stats
                 base = array_to_table(base)
                 max = array_to_table(max)
-                if random.random < 0.5:
-                    await self.bot.upload('./emotions/neutral.png')
-                    await self.boy.say("I don't really see why I have to pretty up some _numbers_.\n" + str(embed_info) + str(base) + str(max))
+                if random.random() < 0.5:
+                    await self.bot.upload('./emotions/sad.png')
+                    await self.bot.say("I don't really see why I have to pretty up some _numbers_.\n" + str(embed_info) + '\n' + str(base) + '\n' + str(max))
                 else:
                     message = ASCIIMessage(
                         title=embed_info['Title']
