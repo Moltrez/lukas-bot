@@ -24,6 +24,7 @@ async def on_ready():
 luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
 lukas_pattern = re.compile('.*love.*lukas', re.I)
 python_pattern = re.compile('.*love.*python', re.I)
+forsyth_pattern = re.compile('.*love.*forsyth[^e]', re.I)
 
 @bot.event
 async def on_message(message):
@@ -60,6 +61,9 @@ async def on_message(message):
             "Thanks, pal. You keep doing you.",
             "You hear that, Forsyth?"
         ]))
+    if forsyth_pattern.match(message.content):
+        await bot.send_file(message.channel, './emotions/happy.png')
+        await bot.send_message(message.channel, "Really? THAT Forsyth? I don't get it but I'm sure he'll be thrilled.")
     await bot.process_commands(message)
 
 token = os.environ.get('TOKEN', default=None)

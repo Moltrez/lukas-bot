@@ -99,7 +99,7 @@ def table_to_array(table, boon, bane, rarity):
                 continue
             stat = row[key].split('/')
             if any([not s.isdigit() for s in stat]):
-                raise ValueError('This hero does not appear to have stats yet.')
+                raise ValueError('This hero doesn\'t seem to have stats yet.')
             stat_index = 1
             if boon and key == boon:
                 stat_index = 2
@@ -148,12 +148,12 @@ class FireEmblemHeroes:
                 if ctx:
                     if original_arg.lower() in ['son', 'my son']:
                         return False, False,\
-                            "I was not aware you had one. If you want me to associate you with one, use the setson command."
+                            "You never told me you had one. Use the setson command and I'll remember it. Promise."
                     elif original_arg.lower() in ['waifu', 'my waifu']:
                         return False, False,\
-                            "I was not aware you had one. If you want me to associate you with one, use the setwaifu command."
+                            "You never told me you had one. Use the setwaifu command and I'll remember it. Promise."
                 return False, False,\
-                       "I'm afraid I couldn't find information on %s. Could you have meant:\n%s"\
+                       "I don't have anything on %s. Maybe you meant:\n%s"\
                        % (original_arg, self.find_similar(original_arg))
 
             data = None
@@ -177,11 +177,11 @@ class FireEmblemHeroes:
             print(err)
             if err.code >= 500:
                 return False, False,\
-                    "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
+                    "Doesn't seem like I can find anything right now. Not being lazy, I swear!"
         except IndexError:
             if arg and categories and data:
                 return arg, categories, data
-            return False, False, 'It appears the data I have is incomplete. Please try again later.'
+            return False, False, 'Looks like they haven\'t finished putting data in for this one yet so I got nothing. Maybe try again later.'
 
     def get_unit_stats(self, args, default_rarity=None, ctx=None):
         # convert to lower case
@@ -235,19 +235,19 @@ class FireEmblemHeroes:
             return data
         self.cache.add_data(unit, data, categories, save=False)
         if 'Heroes' not in categories:
-            return '%s does not seem to be a hero.' % (unit)
+            return '%s doesn\'t seem to be a hero.' % (unit)
 
         base_stats_table = data['4Base Stats'][0]
         max_stats_table = data['5Max Level Stats'][0]
         if base_stats_table is None or max_stats_table is None:
-            return 'This hero does not appear to have stats.'
+            return 'This hero doesn\'t appear to have stats.'
         if boon is None and bane is None and rarity is None and merge is None and support is None and modifiers is None:
             return data['Embed Info'], base_stats_table, max_stats_table
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
         max_stats = table_to_array(max_stats_table, boon, bane, rarity)
         # check if empty
         if not any([any(r) for r in base_stats]):
-            return 'This hero does not appear to be available at the specified rarity.'
+            return 'This hero can\'t be that rarity it seems.'
         # calculate merge bonuses
         if merge is not None:
             for i in range(5):
@@ -278,7 +278,7 @@ class FireEmblemHeroes:
             scores = get_gauntlet_scores()
         except urllib.error.HTTPError as err:
             if err.code >= 500:
-                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                await self.bot.say("Doesn't seem like I can find anything right now. Not being lazy, I swear!")
                 return
         longest = max(scores, key=lambda s: len(s[0]['Score']) + len(s[0]['Status']) + 3)
         longest = len(longest[0]['Score']) + len(longest[0]['Status']) + 3
@@ -460,8 +460,8 @@ class FireEmblemHeroes:
             if random.random() < 0.3:
                 await self.bot.upload('./emotions/sad.png')
                 await self.bot.say(random.choice([
-                    'Uhh, you know what? Just take this. This is fine right?\n',
-                    'Yeah, nope. Just not feeling it right now, so you can just have this.']) + str(data))
+                    'Uhh, you know what? Just take this. This is fine right?',
+                    'Yeah, nope. Just not feeling it right now, so you can have this.']) + '\n' + str(data))
             else:
                 message = (data['Message'] + '\n') if 'Message' in data else ''
                 amess = ASCIIMessage(data['Embed Info']['Title'])
@@ -503,13 +503,13 @@ class FireEmblemHeroes:
                     await self.bot.say(data)
                     return
                 if 'Weapons' not in categories:
-                    await self.bot.say('%s does not seem to be a weapon.' % (weapon))
+                    await self.bot.say('%s doesn\'t seem to be a weapon.' % (weapon))
                     return
                 if 'Refinery Cost' not in data:
                     if data['3Exclusive?'][0] == ('No') and not weapon.endswith('+'):
                         args = weapon + '+'
                     else:
-                        await self.bot.say('It appears that %s cannot be refined.' % (weapon))
+                        await self.bot.say('It appears that %s can\'t be refined.' % (weapon))
                         self.cache.save()
                         return
                 else:
@@ -575,7 +575,7 @@ class FireEmblemHeroes:
                 self.cache.add_data(weapon, data, categories)
         except timeout:
             print("Timed out.")
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+            await self.bot.say("Doesn't seem like I can find anything right now. Not being lazy, I swear!")
 
     flaunt_cache = {}
 
@@ -642,29 +642,33 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                 embed_info, base, max = unit_stats
                 base = array_to_table(base)
                 max = array_to_table(max)
-                message = ASCIIMessage(
-                    title=embed_info['Title']
-                )
-                message.add_field(
-                    name="BST",
-                    value=max[-1]['Total'],
-                    inline=False
-                )
-                message.add_field(
-                    name="Base Stats",
-                    value=format_stats_table(base),
-                    inline=False
-                )
-                message.add_field(
-                    name="Max Level Stats",
-                    value=format_stats_table(max),
-                    inline=False
-                )
-                await self.bot.say(message.message)
+                if random.random < 0.5:
+                    await self.bot.upload('./emotions/neutral.png')
+                    await self.boy.say("I don't really see why I have to pretty up some _numbers_.\n" + str(embed_info) + str(base) + str(max))
+                else:
+                    message = ASCIIMessage(
+                        title=embed_info['Title']
+                    )
+                    message.add_field(
+                        name="BST",
+                        value=max[-1]['Total'],
+                        inline=False
+                    )
+                    message.add_field(
+                        name="Base Stats",
+                        value=format_stats_table(base),
+                        inline=False
+                    )
+                    message.add_field(
+                        name="Max Level Stats",
+                        value=format_stats_table(max),
+                        inline=False
+                    )
+                    await self.bot.say(message.message)
             else:
                 await self.bot.say(unit_stats)
         except timeout:
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+            await self.bot.say("Doesn't seem like I can find anything right now. Not being lazy, I swear!")
 
     @bot.command(pass_context=True, aliases=['Fehcompare', 'compare', 'Compare', 'FEHcompare', 'FEHCompare'])
     async def fehcompare(self, ctx, *args):
@@ -775,7 +779,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             if curr_message:
                 await self.bot.say(curr_message)
         except timeout:
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+            await self.bot.say("Doesn't seem like I can find anything right now. Not being lazy, I swear!")
         finally:
             self.cache.save()
 
@@ -806,7 +810,7 @@ Example: !list -f red sword infantry -s attack hp
                     (args[0] not in ['-r', '-f', '-s']) or\
                     ('-r' in args and args[-1] != '-r' and args[args.index('-r')+1] not in ['-f', '-s']) or\
                     any('-' in arg and arg not in ['-r', '-f', '-s'] for arg in args):
-                    await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
+                    await self.bot.say('Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
                     return
 
             # set up argument parser
@@ -835,7 +839,7 @@ Example: !list -f red sword infantry -s attack hp
                     if self.cache.list:
                         heroes = self.cache.list
                     else:
-                        await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                        await self.bot.say("Doesn't seem like I can find anything right now. Not being lazy, I swear!")
                         return
             except timeout:
                 print('Timed out')
@@ -889,11 +893,11 @@ Example: !list -f red sword infantry -s attack hp
                 heroes = heroes[:-1]
             results_string = 'Results found: %d\nResults shown: %d' % (num_results, len(heroes))
             if num_results > 1 and num_results <= compare_limit:
-                results_string += '\nIf you wish to compare these units in greater detail:\n`?compare %s -a`' % ' & '.join(h['Name'] for h in heroes)
+                results_string += '\nIf you want to compare these units in greater detail:\n`?compare %s -a`' % ' & '.join(h['Name'] for h in heroes)
             await self.bot.say(results_string)
             await self.bot.say(list_string)
         except timeout:
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+            await self.bot.say("Doesn't seem like I can find anything right now. Not being lazy, I swear!")
 
 def setup(bot):
     bot.add_cog(MagikarpJump(bot))
