@@ -12,6 +12,13 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+    if bot.user.name != 'Lukas':
+        try:
+            with open('./avatar.png', 'rb') as avatar:
+                await bot.edit_profile(username='Lukas', avatar=avatar.read())
+        except Exception as ex:
+            print(ex)
+            await bot.edit_profile(username='Lukas')
     await bot.change_presence(game=discord.Game(name="FEHWiki"))
 
 
