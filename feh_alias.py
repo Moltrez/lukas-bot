@@ -497,7 +497,6 @@ aliases = {
     "greentomebreaker":"Green Tomebreaker",
     "greentomevalor":"Green Tome Valor",
     "greyskull":"Geirskögul",
-    "grima":"Robin (M) (Fallen Heroes)",
     "grima'struth":"Grima's Truth",
     "grimastruth":"Grima's Truth",
     "grimoire":"Grimoire",

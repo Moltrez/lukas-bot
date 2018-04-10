@@ -18,6 +18,7 @@ class FehCache(object):
             self.sons = sons
             self.waifus = waifus
             self.flaunts = flaunt
+            self.python_preference = set()
             self.replacement_list = []
             self.data = {}
             self.categories = {}
@@ -30,6 +31,7 @@ class FehCache(object):
         self.sons = sons if 'sons' not in dir(other) else other.sons
         self.waifus = waifus if 'waifus' not in dir(other) else other.waifus
         self.flaunts = flaunt if 'flaunts' not in dir(other) else other.flaunts
+        self.python_preference = set() if 'python_preference' not in dir(other) else other.python_preference
         self.replacement_list = [] if 'replacement_list' not in dir(other) else other.replacement_list
         self.data = {} if 'data' not in dir(other) else other.data
         self.categories = {} if 'categories' not in dir(other) else other.categories
@@ -169,7 +171,6 @@ class FehCache(object):
                     self.save()
             return will_save
 
-
     def delete_data(self, title, save=True):
         if title in self.data:
             del self.data[title]
@@ -177,3 +178,14 @@ class FehCache(object):
             cache_log.appendleft('Deleted data for: %s' % title)
             return True
         return False
+
+    def toggle_preference(self, user):
+        if user in self.python_preference:
+            self.python_preference.remove(user)
+        else:
+            self.python_preference.add(user)
+        self.save()
+        if user in self.python_preference:
+            return True
+        else:
+            return False

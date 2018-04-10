@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 
 import feh_cache
 
+
 class MagikarpJump:
     """The game we don't play anymore."""
 
@@ -17,6 +18,53 @@ class MagikarpJump:
     async def lmr(self):
         """I will tell you which rod will net you the best Magikarp."""
         await self.bot.say(random.choice(['L', 'M', 'R']))
+
+
+class ASCIIMessage:
+
+    def __init__(self, title):
+        self._message = '%-45.45s\n' % ('[' + title + ']')
+        self.inline_count = 0
+        self.last_value = ''
+
+    def add_field(self, name, value, inline):
+        if inline:
+            self._message += '%-22.22s' % ('[' + name + ']')
+            if self.inline_count == 0:
+                # first message to inline
+                self.last_value = value
+                self.inline_count = 1
+            elif self.inline_count == 1:
+                # second message to inline
+                self._message += '\n%-22.22s%-22.22s\n' % (self.last_value, value)
+                self.inline_count = 0
+        if not inline:
+            if self.inline_count != 0:
+                self._message += ' ' * 23 + '\n%-45.45s\n' % self.last_value
+                self.inline_count = 0
+            self._message += '%-45.45s\n' % ('[' + name + ']')
+            for line in value.split('\n'):
+                if not line:
+                    continue
+                line = line.replace('`', '')
+                if '_' in line:
+                    underindex = line.find('_')
+                    line = ';' + line[:underindex] + line[underindex + 1:]
+                if '**' in line:
+                    curr_brack = '['
+                    while '**' in line:
+                        line = line.replace('**', curr_brack, 1)
+                        curr_brack = ']' if curr_brack == '[' else ']'
+                self._message += line + '\n'
+
+    @property
+    def message(self):
+        return '```ini\n' + self._message + '```'
+
+    @message.setter
+    def message(self, value):
+        self._message = value
+
 
 # these are constant so declare up here
 stats = ['HP', 'ATK', 'SPD', 'DEF', 'RES']
@@ -271,6 +319,15 @@ class FireEmblemHeroes:
         else:
             await self.bot.say('Successfully set your waifu to %s (%s). You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
 
+    @bot.command(pass_context=True, aliases=['toggle', 'Toggle'])
+    async def toggledefaultformat(self, ctx):
+        """Change your default presentation format between my embeds and Python's codeblocks."""
+        result = self.cache.toggle_preference(ctx.message.author.id)
+        if result:
+            await self.bot.say("I have noted that you prefer Python's codeblocks.")
+        else:
+            await self.bot.say("I have noted that you prefer my embeds.")
+
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
         """I will provide some information on any Fire Emblem Heroes topic."""
@@ -351,6 +408,16 @@ class FireEmblemHeroes:
                 await self.bot.say("Cleared replacement list!")
                 return
 
+        python_format = ctx.message.author.id in self.cache.python_preference
+        if '-lukas' in arg:
+            python_format = False
+            l_i = arg.find('-lukas')
+            arg = (arg[:l_i] + arg[l_i+6:]).replace('  ', ' ')
+        if '-python' in arg:
+            python_format = True
+            l_i = arg.find('-python')
+            arg = (arg[:l_i] + arg[l_i + 7:]).replace('  ', ' ')
+
         self.cache.update()
         original_arg = arg
         passive_level = -1
@@ -414,17 +481,20 @@ class FireEmblemHeroes:
             elif original_arg.lower() == 'gauntlet':
                 data['Message'] = 'Did you mean `?gauntlet`?'
 
-            message = discord.Embed(
-                title= data['Embed Info']['Title'],
-                url= data['Embed Info']['URL'],
-                color= data['Embed Info']['Colour']
-            )
-            if data['Embed Info']['Icon']:
-                message.set_thumbnail(url=data['Embed Info']['Icon'])
-            elif 'Specials' in categories:
-                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
-            elif 'Assists' in categories:
-                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
+            if python_format:
+                message = ASCIIMessage(title=data['Embed Info']['Title'])
+            else:
+                message = discord.Embed(
+                    title= data['Embed Info']['Title'],
+                    url= data['Embed Info']['URL'],
+                    color= data['Embed Info']['Colour']
+                )
+                if data['Embed Info']['Icon']:
+                    message.set_thumbnail(url=data['Embed Info']['Icon'])
+                elif 'Specials' in categories:
+                    message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
+                elif 'Assists' in categories:
+                    message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
             for key in sorted(data.keys()):
                 if key[0].isdigit():
                     message.add_field(
@@ -445,9 +515,15 @@ class FireEmblemHeroes:
                             inline=True
                         )
             if 'Message' in data:
-                await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
+                if python_format:
+                    await self.bot.say(data['Message'].replace('. ', '.\n') + '\n' + message.message)
+                else:
+                    await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
             else:
-                await self.bot.say(embed=message)
+                if python_format:
+                    await self.bot.say(message.message)
+                else:
+                    await self.bot.say(embed=message)
             if any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
                     for c in categories]):
                 self.cache.add_data(original_arg, original_data, categories)
@@ -455,10 +531,21 @@ class FireEmblemHeroes:
             print("Timed out.")
             await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
-    @bot.command(aliases=['refine', 'Refine', 'Fehrefine', 'FEHRefine'])
-    async def fehrefine(self, *, args):
+    @bot.command(pass_context=True, aliases=['refine', 'Refine', 'Fehrefine', 'FEHRefine'])
+    async def fehrefine(self, ctx, *, args):
         """View the refinery options for a weapon."""
         self.cache.update()
+
+        python_format = ctx.message.author.id in self.cache.python_preference
+        if '-lukas' in args:
+            python_format = False
+            l_i = args.find('-lukas')
+            args = (args[:l_i] + args[l_i+6:]).replace('  ', ' ')
+        if '-python' in args:
+            python_format = True
+            l_i = args.find('-python')
+            args = (args[:l_i] + args[l_i + 7:]).replace('  ', ' ')
+
         try:
             while (True):
                 weapon, categories, data = self.find_data(args, args)
@@ -478,13 +565,16 @@ class FireEmblemHeroes:
                 else:
                     break
             # initial weapon message
-            message1 = discord.Embed(
-                title= data['Embed Info']['Title'],
-                url= data['Embed Info']['URL'],
-                color= data['Embed Info']['Colour']
-            )
-            if data['Embed Info']['Icon']:
-                message1.set_thumbnail(url=data['Embed Info']['Icon'])
+            if python_format:
+                message1 = ASCIIMessage(title=data['Embed Info']['Title'])
+            else:
+                message1 = discord.Embed(
+                    title= data['Embed Info']['Title'],
+                    url= data['Embed Info']['URL'],
+                    color= data['Embed Info']['Colour']
+                )
+                if data['Embed Info']['Icon']:
+                    message1.set_thumbnail(url=data['Embed Info']['Icon'])
             for key in sorted(data.keys()):
                 if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
                     message1.add_field(
@@ -498,18 +588,21 @@ class FireEmblemHeroes:
                 inline=False
             )
             if 'Refine' in data:
-                message2 = discord.Embed(
-                    title= 'Refinery Options',
-                    url= data['Embed Info']['URL'],
-                    color= 0xD6BD53
-                )
-                if 'Refine Icon' in data:
-                    message2.set_thumbnail(url=data['Refine Icon'])
+                if python_format:
+                    message2 = ASCIIMessage(title='Refinery Options')
                 else:
-                    if 'Staves' in categories:
-                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/4/42/Wrathful_Staff_W.png')
+                    message2 = discord.Embed(
+                        title= 'Refinery Options',
+                        url= data['Embed Info']['URL'],
+                        color= 0xD6BD53
+                    )
+                    if 'Refine Icon' in data:
+                        message2.set_thumbnail(url=data['Refine Icon'])
                     else:
-                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/20/Attack_Plus_W.png')
+                        if 'Staves' in categories:
+                            message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/4/42/Wrathful_Staff_W.png')
+                        else:
+                            message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/20/Attack_Plus_W.png')
                 for r in data['Refine']:
                     value = ''
                     if r['Stats'] != '+0 HP':
@@ -530,13 +623,16 @@ class FireEmblemHeroes:
                     await self.bot.say(data2)
                     return
                 # evolved weapon message
-                message2 = discord.Embed(
-                    title= data2['Embed Info']['Title'],
-                    url= data2['Embed Info']['URL'],
-                    color= data2['Embed Info']['Colour']
-                )
-                if data2['Embed Info']['Icon']:
-                    message2.set_thumbnail(url=data2['Embed Info']['Icon'])
+                if python_format:
+                    message2 = ASCIIMessage(title=data2['Embed Info']['Title'])
+                else:
+                    message2 = discord.Embed(
+                        title= data2['Embed Info']['Title'],
+                        url= data2['Embed Info']['URL'],
+                        color= data2['Embed Info']['Colour']
+                    )
+                    if data2['Embed Info']['Icon']:
+                        message2.set_thumbnail(url=data2['Embed Info']['Icon'])
                 for key in sorted(data2.keys()):
                     if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
                         message2.add_field(
@@ -544,8 +640,15 @@ class FireEmblemHeroes:
                             value=data2[key][0],
                             inline=data2[key][1]
                         )
-            await self.bot.say(embed=message1)
-            await self.bot.say(embed=message2)
+            if python_format:
+                if len(message1.message) + len(message2.message) < 2000:
+                    await self.bot.say(message1.message + message2.message)
+                else:
+                    await self.bot.say(message1.message)
+                    await self.bot.say(message2.message)
+            else:
+                await self.bot.say(embed=message1)
+                await self.bot.say(embed=message2)
             if 'Evolution' in data:
                 save = self.cache.add_data(weapon, data, categories, save=False)
                 self.cache.add_data(weapon2, data2, categories2, force_save=save)
@@ -614,19 +717,32 @@ Example usage:
 will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summoner S Support and an additional 14 attack (presumably from a Slaying Lance+) as well as -3 attack and +5 defense (presumably from Fortress Defense)."""
         self.cache.update()
 
+        python_format = ctx.message.author.id in self.cache.python_preference
+        if '-lukas' in args:
+            python_format = False
+            args = list(args)
+            args.remove('-lukas')
+        if '-python' in args:
+            python_format = True
+            args = list(args)
+            args.remove('-python')
+
         try:
             unit_stats = self.get_unit_stats(args, ctx=ctx)
             if isinstance(unit_stats, tuple):
                 embed_info, base, max = unit_stats
                 base = array_to_table(base)
                 max = array_to_table(max)
-                message = discord.Embed(
-                    title=embed_info['Title'],
-                    url=embed_info['URL'],
-                    color=embed_info['Colour']
-                )
-                if not embed_info['Icon'] is None:
-                    message.set_thumbnail(url=embed_info['Icon'])
+                if python_format:
+                    message = ASCIIMessage(title=embed_info['Title'])
+                else:
+                    message = discord.Embed(
+                        title=embed_info['Title'],
+                        url=embed_info['URL'],
+                        color=embed_info['Colour']
+                    )
+                    if not embed_info['Icon'] is None:
+                        message.set_thumbnail(url=embed_info['Icon'])
                 message.add_field(
                     name="BST",
                     value=max[-1]['Total'],
@@ -642,7 +758,10 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                     value=format_stats_table(max),
                     inline=False
                 )
-                await self.bot.say(embed=message)
+                if python_format:
+                    await self.bot.say(message.message)
+                else:
+                    await self.bot.say(embed=message)
             else:
                 await self.bot.say(unit_stats)
         except timeout:
