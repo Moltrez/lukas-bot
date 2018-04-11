@@ -74,7 +74,7 @@ class FehCache(object):
                     if title in self.data and title not in self.replacement_list:
                         self.replacement_list.append(title)
                         cache_log.appendleft('Set %s up for replacement.' % title)
-                if old_replacement_list == self.replacement_list:
+                if old_replacement_list != self.replacement_list:
                     self.save()
         except Exception as ex:
             print(ex)
