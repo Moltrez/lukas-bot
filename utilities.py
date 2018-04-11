@@ -653,13 +653,13 @@ class FireEmblemHeroes:
             if python_format:
                 to_send = message1.message
                 if message2 is not None:
-                    if to_send + message2.message < 2000:
+                    if len(to_send) + len(message2.message) < 2000:
                         to_send += message2.message
                     else:
                         await self.bot.say(to_send)
                         to_send = message2.message
                 if message3 is not None:
-                    if to_send + message3.message < 2000:
+                    if len(to_send) + len(message3.message) < 2000:
                         to_send += message3.message
                     else:
                         await self.bot.say(to_send)
