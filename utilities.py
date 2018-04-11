@@ -505,8 +505,8 @@ class FireEmblemHeroes:
                     )
                     if 'Exclusive?' in key:
                         if 'Evolution' in data:
-                            refinable = 'Evolves'
-                        elif 'Refinery Cost' in data:
+                            refinable = 'Evolves and Refines' if 'Refine' in data else 'Evolves'
+                        elif 'Refine' in data:
                             refinable = 'Yes'
                         else:
                             refinable = 'No'
@@ -556,7 +556,7 @@ class FireEmblemHeroes:
                 if 'Weapons' not in categories:
                     await self.bot.say('%s does not seem to be a weapon.' % (weapon))
                     return
-                if 'Refinery Cost' not in data:
+                if 'Refine' not in data and 'Evolution' not in data:
                     if data['3Exclusive?'][0] == ('No') and not weapon.endswith('+'):
                         args = weapon + '+'
                     else:
@@ -583,11 +583,20 @@ class FireEmblemHeroes:
                         value=data[key][0],
                         inline=data[key][1]
                     )
-            message1.add_field(
-                name='Refinery Cost',
-                value=data['Refinery Cost'],
-                inline=False
-            )
+            if 'Refinery Cost' in data:
+                message1.add_field(
+                    name='Refinery Cost',
+                    value=data['Refinery Cost'],
+                    inline=False
+                )
+            if 'Evolution Cost' in data:
+                message1.add_field(
+                    name='Evolution Cost',
+                    value=data['Evolution Cost'],
+                    inline=False
+                )
+            message2 = None
+            message3 = None
             if 'Refine' in data:
                 if python_format:
                     message2 = ASCIIMessage(title='Refinery Options')
@@ -616,7 +625,7 @@ class FireEmblemHeroes:
                         value=value.strip(),
                         inline=False
                     )
-            else:
+            if 'Evolution' in data:
                 # weapon evolves
                 args2 = data['Evolution'][0]
                 weapon2, categories2, data2 = self.find_data(args2, args2)
@@ -625,31 +634,44 @@ class FireEmblemHeroes:
                     return
                 # evolved weapon message
                 if python_format:
-                    message2 = ASCIIMessage(title=data2['Embed Info']['Title'])
+                    message3 = ASCIIMessage(title=data2['Embed Info']['Title'])
                 else:
-                    message2 = discord.Embed(
+                    message3 = discord.Embed(
                         title= data2['Embed Info']['Title'],
                         url= data2['Embed Info']['URL'],
                         color= data2['Embed Info']['Colour']
                     )
                     if data2['Embed Info']['Icon']:
-                        message2.set_thumbnail(url=data2['Embed Info']['Icon'])
+                        message3.set_thumbnail(url=data2['Embed Info']['Icon'])
                 for key in sorted(data2.keys()):
                     if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
-                        message2.add_field(
+                        message3.add_field(
                             name=key[1:],
                             value=data2[key][0],
                             inline=data2[key][1]
                         )
             if python_format:
-                if len(message1.message) + len(message2.message) < 2000:
-                    await self.bot.say(message1.message + message2.message)
-                else:
-                    await self.bot.say(message1.message)
-                    await self.bot.say(message2.message)
+                to_send = message1.message
+                if message2 is not None:
+                    if to_send + message2.message < 2000:
+                        to_send += message2.message
+                    else:
+                        await self.bot.say(to_send)
+                        to_send = message2.message
+                if message3 is not None:
+                    if to_send + message3.message < 2000:
+                        to_send += message3.message
+                    else:
+                        await self.bot.say(to_send)
+                        to_send = message3.message
+                if to_send:
+                    await self.bot.say(to_send)
             else:
                 await self.bot.say(embed=message1)
-                await self.bot.say(embed=message2)
+                if message2 is not None:
+                    await self.bot.say(embed=message2)
+                if message3 is not None:
+                    await self.bot.say(embed=message3)
             if 'Evolution' in data:
                 save = self.cache.add_data(weapon, data, categories, save=False)
                 self.cache.add_data(weapon2, data2, categories2, force_save=save)
