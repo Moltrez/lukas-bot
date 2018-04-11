@@ -350,7 +350,8 @@ class FireEmblemHeroes:
                 args = arg.split(' ', 1)
                 aliases = args[0].split('&')
                 for alias in aliases:
-                    self.cache.add_alias(alias, args[1])
+                    self.cache.add_alias(alias, args[1], save=False)
+                self.cache.save()
                 await self.bot.say("Added!")
                 return
             elif arg.startswith('-aliases'):
