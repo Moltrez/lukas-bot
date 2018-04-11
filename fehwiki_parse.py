@@ -107,37 +107,38 @@ def get_data(arg, timeout_dur=5):
             if learners:
                 data['6Heroes with ' + arg] = ', '.join(learners), False
         refinery_table = html.find("table", attrs={"class":"wikitable default"})
-        refinery_table = extract_table(refinery_table, True)
-        if refinery_table:
-            if 'Image' in refinery_table[0]:
-                cost = refinery_table[0]['Cost'].split('|')
-                cost_materials = cost[1:]
-                cost = cost[0].split()
-                cost[0] += ' SP'
-                cost[1] = cost[1].strip().lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
-                cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
-                cost = ', '.join(cost)
-                data['Evolution'] = refinery_table[0]['Name'].split('|')[0], False
-                data['Refinery Cost'] = cost
-            elif 'Type' in refinery_table[0]:
-                data['Refine'] = []
-                first_r = refinery_table[0]['Type'].split('|')[1]
-                if not first_r.startswith('Attack') and not first_r.startswith('Wrathful'):
-                    icon = get_icon(first_r)
-                    if icon:
-                        data['Refine Icon'] = icon
-                for r in refinery_table:
-                    t = r['Type'].split('|')[1].rstrip(' W')
-                    s = r['Stats'].split('|')[0]
-                    e = r['Effect'].split('|')[0].replace('  ', ' ')
-                    cost = r['Cost'].split('|')
+        if not refinery_table.text.strip().startswith('Language'):
+            refinery_table = extract_table(refinery_table, True)
+            if refinery_table:
+                if 'Image' in refinery_table[0]:
+                    cost = refinery_table[0]['Cost'].split('|')
                     cost_materials = cost[1:]
-                    cost = cost[0].split(', ')
-                    cost[1] = cost[1].strip() + ' ' + cost_materials[0].strip() + 's'
+                    cost = cost[0].split()
+                    cost[0] += ' SP'
+                    cost[1] = cost[1].strip().lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
                     cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
                     cost = ', '.join(cost)
-                    data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
+                    data['Evolution'] = refinery_table[0]['Name'].split('|')[0], False
                     data['Refinery Cost'] = cost
+                elif 'Type' in refinery_table[0]:
+                    data['Refine'] = []
+                    first_r = refinery_table[0]['Type'].split('|')[1]
+                    if not first_r.startswith('Attack') and not first_r.startswith('Wrathful'):
+                        icon = get_icon(first_r)
+                        if icon:
+                            data['Refine Icon'] = icon
+                    for r in refinery_table:
+                        t = r['Type'].split('|')[1].rstrip(' W')
+                        s = r['Stats'].split('|')[0]
+                        e = r['Effect'].split('|')[0].replace('  ', ' ')
+                        cost = r['Cost'].split('|')
+                        cost_materials = cost[1:]
+                        cost = cost[0].split(', ')
+                        cost[1] = cost[1].strip() + ' ' + cost_materials[0].strip() + 's'
+                        cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
+                        cost = ', '.join(cost)
+                        data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
+                        data['Refinery Cost'] = cost
     elif 'Passives' in categories:
         stats_table = html.find("table", attrs={"class": "sortable"})
         stat_rows = stats_table.find_all("tr")[1:]
