@@ -282,7 +282,7 @@ def find_name(arg, cache, ctx=None):
 
 def get_heroes_list():
     # get table from html
-    categories, html = get_page_html('Stats Table')
+    categories, html = get_page_html('Level 40 stats table')
     table = html.find_all('table')[-1]
     heroes_list = []
     # add all the rows that fit the format to current list
