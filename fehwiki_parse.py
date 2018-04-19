@@ -69,7 +69,7 @@ def get_data(arg, timeout_dur=5):
                     skills = skills.rstrip(', ')
                     if not last_learned is None:
                         skills += last_learned
-                    skills += '\n**' + slot.get_text() + '**: '
+                    skills += '\n**' + slot.get_text() + ':** '
                 skills += row.find("td").get_text().strip()
                 if 'Type': # if we're in passives, get learned levels
                      last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()

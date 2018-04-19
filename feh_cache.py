@@ -42,6 +42,7 @@ class FehCache(object):
         urllib3.disable_warnings()
         cloudinary.config()
         try:
+            #assert(False) # force local load
             web_copy = cloudinary.api.resource(filename[2:], resource_type='raw')['url']
             response = urllib.request.urlopen(web_copy)
             print("Loaded from the internet.")
