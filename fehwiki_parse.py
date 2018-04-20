@@ -100,12 +100,15 @@ def get_data(arg, timeout_dur=5):
         data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Description' in stats:
             data['5Description'] = stats[None].replace('  ', ' '), False
+        ps = html.find_all('p')
+        if any(['can be evolved from' in p.text for p in ps]):
+            data['6Evolves from'] = ps[ps.index([p for p in ps if 'can be evolved from' in p.text][0])].a.text.strip(), False
         learners_table = html.find_all("table", attrs={"class":"sortable"})
         if learners_table:
             learners_table = learners_table[-1]
-            learners = [a.find("td").find_all("a")[1].get_text().replace('\n', ' ') for a in learners_table.find_all("tr")]
+            learners = ', '.join([a.find("td").find_all("a")[1].get_text().replace('\n', ' ') for a in learners_table.find_all("tr")])
             if learners:
-                data['6Heroes with ' + arg] = ', '.join(learners), False
+                data['6Heroes with ' + arg] = learners, False
         refinery_tables = html.find_all("table", attrs={"class":"wikitable default"})
         for refinery_table in refinery_tables:
             if not refinery_table.text.strip().startswith('Language'):
