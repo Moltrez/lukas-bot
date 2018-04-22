@@ -159,9 +159,22 @@ class FehCache(object):
     def add_data(self, alias, data, categories, save=True, force_save=False):
         name = data['Embed Info']['Title']
         will_save = self.add_alias(alias, name, save=False)
-        will_save = will_save or self.add_alias(name, name, save=False)
+        will_save = self.add_alias(name, name, save=False) or will_save
+        will_save = self.add_alias(name.replace('(', '').replace(')', ''), name, save=False) or will_save
+        will_save = self.add_alias(name.replace("'", '').replace('(', '').replace(')', ''), name, save=False) or will_save
         if ':' in name:
-            will_save = will_save or self.add_alias(shorten_hero_name(name), name, save=False)
+            will_save = self.add_alias(shorten_hero_name(name), name, save=False) or will_save
+            will_save = self.add_alias(shorten_hero_name(name).replace(':', ''), name, save=False) or will_save
+            will_save = self.add_alias(shorten_hero_name(name).replace("'", ''), name, save=False) or will_save
+            will_save = self.add_alias(shorten_hero_name(name).replace("'", '').replace(':', ''), name, save=False) or will_save
+
+        will_save = self.add_alias(name.replace('Attack', 'atk').replace('Speed', 'spd')\
+                                                    .replace('Defense', 'def').replace('Resistance', 'res')\
+                                                    .replace('Plus', '+'),
+                                                    name, save=False) or will_save
+        will_save = self.add_alias(name.replace('Attack', 'atk').replace('Speed', 'spd')\
+                                                    .replace('Defense', 'def').replace('Resistance', 'res'),
+                                                    name, save=False) or will_save
         if name not in self.data or self.data[name] != data:
             will_save = True
             self.data[name] = data

@@ -236,7 +236,7 @@ def get_data(arg, timeout_dur=5):
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
         if 'Disambiguation pages' in categories:
-            valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan']
+            valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan', 'Grima', 'Falchion']
             options = [option.a['title'].strip() for option in html.find_all('li')]
             if arg in valid_ambiguous_people:
                 data['1Could refer to:'] = '\n'.join(options), False
@@ -449,7 +449,7 @@ def get_learners(learners_table, skill_name):
         # append a name to the appropriate level
         for i in range(len(l_data)):
             text = l_data[i].get_text()
-            if skill_name in text:
+            if skill_name in text and text[-1].isdigit():
                 learned_level = int(text[-1])
                 learners[learned_level].append(shorten_hero_name(l_data[0].find_all("a")[1].get_text().replace('\n', ' ')))
                 break

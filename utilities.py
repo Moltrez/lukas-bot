@@ -385,7 +385,6 @@ class FireEmblemHeroes:
                 return
             elif arg.startswith('-reload'):
                 self.cache.load()
-                self.cache.save()
                 await self.bot.say("Reloaded!\n" + self.cache.last_update)
                 return
             elif arg.startswith('-currreplace'):
