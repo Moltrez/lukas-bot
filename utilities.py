@@ -525,7 +525,7 @@ class FireEmblemHeroes:
                     await self.bot.say(message.message)
                 else:
                     await self.bot.say(embed=message)
-            if any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
+            if any([c in valid_categories
                     for c in categories]):
                 self.cache.add_data(original_arg, original_data, categories)
         except timeout:

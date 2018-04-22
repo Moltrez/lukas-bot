@@ -8,9 +8,9 @@ feh_source = "https://feheroes.gamepedia.com/%s"
 INVALID_HERO = 'no'
 GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
-page_cache = {}
 weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
 passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956]
+valid_categories = ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
 
 
 def get_data(arg, timeout_dur=5):
@@ -23,7 +23,10 @@ def get_data(arg, timeout_dur=5):
     if 'Heroes' in categories:
         alts = html.i.get_text().strip()
         if alts.startswith('This page is about'):
-            data['Message'] = "*" + alts + "*"
+            data['Message'] = '\n'.join(['*'+row.th.text.strip()+'* '+
+                                    ', '.join(
+                                        [a.text.strip() for a in row.td.find_all('div') if a.text])
+                                    for row in html.find('table', attrs={'class':'wikitable'}).find_all('tr') if row.td is not None])
         stats = get_infobox(html)
         stats = stats[None].split('\n\n\n\n')
         stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats]}
@@ -221,8 +224,17 @@ def get_data(arg, timeout_dur=5):
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
         if 'Disambiguation pages' in categories:
+            valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan']
             options = [option.a['title'].strip() for option in html.find_all('li')]
-            data['1Could refer to:'] = '\n'.join(options), False
+            if arg in valid_ambiguous_people:
+                data['1Could refer to:'] = '\n'.join(options), False
+            else:
+                # connect to the first one
+                return get_data(options[0], timeout_dur=timeout_dur)
+        if not categories:
+            # check if soft redirect
+            if html.text.strip().endswith('This page is a soft redirect.'):
+                return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
     return categories, data
 
 
@@ -346,6 +358,8 @@ def get_infobox(html):
 
 def get_heroes_stats_tables(html):
     tables = html.find_all("table", attrs={"class":"wikitable"})
+    if 'Other Heroes named' in tables[0].text:
+        tables = tables[1:]
     if len(tables) < 4:
         return [None, None]
     elif 'skills-table' in tables[1]['class']:

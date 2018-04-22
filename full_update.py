@@ -2,6 +2,7 @@ from fehwiki_parse import *
 from feh_cache import *
 from socket import timeout
 
+
 def update_category(cache, category):
     cache.update()
     members = get_page('http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle=Category:%s&cmlimit=400' % category)['query']['categorymembers']
@@ -19,7 +20,8 @@ def update_category(cache, category):
                         categories, data = get_data(member, None)
                         if member in cache.replacement_list:
                             cache.replacement_list.remove(member)
-                        cache.add_data(member.lower(), data, categories, save=False)
+                        if any([c in categories for c in valid_categories]):
+                            cache.add_data(member.lower(), data, categories, save=False)
                         count += 1
                     except IndexError as err:
                         print(err)
@@ -34,9 +36,6 @@ def update_category(cache, category):
 
 if __name__ == '__main__':
     cache = FehCache()
-    update_category(cache, 'Heroes')
-    update_category(cache, 'Passives')
-    update_category(cache, 'Weapons')
-    update_category(cache, 'Specials')
-    update_category(cache, 'Assists')
+    for c in valid_categories:
+        update_category(cache, c)
     print(cache.last_update)
