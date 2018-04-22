@@ -23,10 +23,13 @@ def get_data(arg, timeout_dur=5):
     if 'Heroes' in categories:
         alts = html.i.get_text().strip()
         if alts.startswith('This page is about'):
-            data['Message'] = '\n'.join(['*'+row.th.text.strip()+'* '+
-                                    ', '.join(
-                                        [a.text.strip() for a in row.td.find_all('div') if a.text])
-                                    for row in html.find('table', attrs={'class':'wikitable'}).find_all('tr') if row.td is not None])
+            if alts.endswith('You may be looking for:'):
+                data['Message'] = '\n'.join(['*'+row.th.text.strip()+'* '+
+                                        ', '.join(
+                                            [a.text.strip() for a in row.td.find_all('div') if a.text])
+                                        for row in html.find('table', attrs={'class':'wikitable'}).find_all('tr') if row.td is not None])
+            else:
+                data['Message'] = '*' + alts + '*'
         stats = get_infobox(html)
         stats = stats[None].split('\n\n\n\n')
         stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats]}
@@ -47,11 +50,15 @@ def get_data(arg, timeout_dur=5):
             data['Embed Info']['Icon'] = icon
         rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
         data['0Rarities'] = (rarity if rarity else 'N/A'), True
-        data['1BST'] = get_bst(max_stats_table), True
+        bst = get_bst(max_stats_table)
+        if bst is not None:
+            data['1BST'] = bst, True
         data['2Weapon Type'] = stats['Weapon Type'], True
         data['3Move Type'] = stats['Move Type'], True
-        data['4Base Stats'] = base_stats_table, False
-        data['5Max Level Stats'] = max_stats_table, False
+        if base_stats_table:
+            data['4Base Stats'] = base_stats_table, False
+        if max_stats_table:
+            data['5Max Level Stats'] = max_stats_table, False
         skill_tables = html.find_all("table", attrs={"class":"skills-table"})
         skills = ''
         for table in skill_tables:

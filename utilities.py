@@ -498,23 +498,23 @@ class FireEmblemHeroes:
                     message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
             for key in sorted(data.keys()):
                 if key[0].isdigit():
-                    message.add_field(
-                        name=key[1:],
-                        value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
-                        inline=data[key][1]
-                    )
-                    if 'Exclusive?' in key:
-                        if 'Evolution' in data:
-                            refinable = 'Evolves and Refines' if 'Refine' in data else 'Evolves'
-                        elif 'Refine' in data:
-                            refinable = 'Yes'
-                        else:
-                            refinable = 'No'
                         message.add_field(
-                            name='Refinable?',
-                            value= refinable,
-                            inline=True
+                            name=key[1:],
+                            value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
+                            inline=data[key][1]
                         )
+                        if 'Exclusive?' in key:
+                            if 'Evolution' in data:
+                                refinable = 'Evolves and Refines' if 'Refine' in data else 'Evolves'
+                            elif 'Refine' in data:
+                                refinable = 'Yes'
+                            else:
+                                refinable = 'No'
+                            message.add_field(
+                                name='Refinable?',
+                                value= refinable,
+                                inline=True
+                            )
             if 'Message' in data:
                 if python_format:
                     await self.bot.say(data['Message'].replace('. ', '.\n') + '\n' + message.message)
