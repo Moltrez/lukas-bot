@@ -115,13 +115,14 @@ class FehCache(object):
         alias = alias.lower().replace(' ', '')
         if alias[-1] in ['1','2','3']:
             alias = alias[:-1]
-        if alias not in ['son', 'my son', 'waifu', 'my waifu'] and alias not in self.aliases and '/' not in alias:
-            self.aliases[alias] = name
-            cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
-            if save:
-                self.save()
-            else:
-                return True
+        if alias not in ['son', 'my son', 'waifu', 'my waifu'] and '/' not in alias\
+            and (alias not in self.aliases or (alias in self.aliases and self.aliases[alias] != name)):
+                self.aliases[alias] = name
+                cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
+                if save:
+                    self.save()
+                else:
+                    return True
         return False
 
     def delete_alias(self, alias, save=True):

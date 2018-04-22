@@ -235,6 +235,9 @@ def get_data(arg, timeout_dur=5):
             # check if soft redirect
             if html.text.strip().endswith('This page is a soft redirect.'):
                 return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
+            # check if hard redirect
+            if html.text.strip().startswith('Redirect to:'):
+                return get_data(html.text.strip().strip('Redirect to:'), timeout_dur=timeout_dur)
     return categories, data
 
 
