@@ -13,6 +13,11 @@ passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956]
 valid_categories = ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
 
 
+def shorten_hero_name(name):
+    main_name, epithet = name.split(':')
+    return main_name + ':' + ''.join(w[0] for w in epithet.strip().split(' '))
+
+
 def get_data(arg, timeout_dur=5):
     categories, html = get_page_html(arg, timeout_dur)
     if html is None:
@@ -45,7 +50,7 @@ def get_data(arg, timeout_dur=5):
             colour = weapon_colours['Green']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
-        icon = get_icon(arg, "Icon_Portrait_")
+        icon = get_icon(''.join(filter(lambda x: x.isalpha() or x == ' ', arg)), "Icon_Portrait_")
         if not icon is None:
             data['Embed Info']['Icon'] = icon
         rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
@@ -116,7 +121,7 @@ def get_data(arg, timeout_dur=5):
         learners_table = html.find_all("table", attrs={"class":"sortable"})
         if learners_table:
             learners_table = learners_table[-1]
-            learners = ', '.join([a.find("td").find_all("a")[1].get_text().replace('\n', ' ') for a in learners_table.find_all("tr")])
+            learners = ', '.join(map(shorten_hero_name, [a.find("td").find_all("a")[1].get_text().replace('\n', ' ') for a in learners_table.find_all("tr")]))
             if learners:
                 data['6Heroes with ' + arg] = learners, False
         refinery_tables = html.find_all("table", attrs={"class":"wikitable default"})
@@ -240,11 +245,8 @@ def get_data(arg, timeout_dur=5):
                 return get_data(options[0], timeout_dur=timeout_dur)
         if not categories:
             # check if soft redirect
-            if html.text.strip().endswith('This page is a soft redirect.'):
+            if 'redirect' in html.text.strip().lower():
                 return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
-            # check if hard redirect
-            if html.text.strip().startswith('Redirect to:'):
-                return get_data(html.text.strip()[len('Redirect to:'):].strip(), timeout_dur=timeout_dur)
     return categories, data
 
 

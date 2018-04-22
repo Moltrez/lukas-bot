@@ -24,6 +24,7 @@ class FehCache(object):
             self.categories = {}
             self.list = []
             self.last_update = '2017-11-27T00:00:00Z'
+        aliases.update(self.aliases)
         self.aliases.update(aliases)
 
     def copy(self, other):
