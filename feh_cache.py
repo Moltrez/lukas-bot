@@ -87,6 +87,7 @@ class FehCache(object):
             json.dump(jsonpickle.encode(self), save_to)
             save_to.close()
             result = cloudinary.uploader.upload(filename, resource_type='raw', public_id=filename[2:], invalidate=True)
+        print("Save complete!")
 
     def set_fam(self, type, user, title):
         if type == 'son':
