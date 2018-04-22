@@ -22,6 +22,8 @@ def update_category(cache, category):
                             cache.replacement_list.remove(member)
                         if any([c in categories for c in valid_categories]):
                             cache.add_data(member.lower(), data, categories, save=False)
+                        while cache_log:
+                            print(cache_log.pop())
                         count += 1
                     except IndexError as err:
                         print(err)

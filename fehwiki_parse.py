@@ -328,7 +328,7 @@ def list_row_to_dict(row):
     data = row.find_all('td')
     colour, weapon = row['data-weapon-type'].split()
     hero = {
-        'Name':data[1].text,
+        'Name':shorten_hero_name(data[1].text),
         'Colour':colour,
         'Weapon':weapon,
         'Movement':row['data-move-type'],
@@ -451,7 +451,7 @@ def get_learners(learners_table, skill_name):
             text = l_data[i].get_text()
             if skill_name in text:
                 learned_level = int(text[-1])
-                learners[learned_level].append(l_data[0].find_all("a")[1].get_text().replace('\n', ' '))
+                learners[learned_level].append(shorten_hero_name(l_data[0].find_all("a")[1].get_text().replace('\n', ' ')))
                 break
     learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
     return learners

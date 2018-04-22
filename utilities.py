@@ -929,12 +929,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                     await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
                     return
                 unit, _, max_t = ustats
-                name = unit['Title'].replace(' ', '')
-                if '(' in name:
-                    name = name.split('(')
-                    name[-1] = ''.join(filter(lambda x: x.isupper(), name[-1][:-1])) + ')'
-                    name = '('.join(name)
-                max_tables.append((name, max_t))
+                max_tables.append((shorten_hero_name(unit['Title']), max_t))
                 curr_unit += 1
             row_format = '|%-15.15s|%4s|%4s|%4s|%4s|%4s|%4s|\n'
             message = row_format % ('Unit', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
@@ -947,7 +942,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             messages = [message] if stats_mode else []
             if quiet_mode or nth_unit == 2:
                 for i in range(0, len(max_tables)-1):
-                    nmessage = row_format % (max_tables[i][0][:13] + ' &', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
+                    nmessage = row_format % (max_tables[i][0][:13] + ' -', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
                     for j in range(i+1, len(max_tables)):
                         difference = raw_stats[i] - raw_stats[j]
                         nmessage += row_format % ('%15.15s' % max_tables[j][0], str(difference[0]), str(difference[1]), str(difference[2]), str(difference[3]), str(difference[4]), str(difference.sum()))
