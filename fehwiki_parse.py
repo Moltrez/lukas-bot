@@ -370,7 +370,7 @@ def get_infobox(html):
 
 def get_heroes_stats_tables(html):
     tables = html.find_all("table", attrs={"class":"wikitable"})
-    if 'Other Heroes named' in tables[0].text:
+    if 'Heroes named' in tables[0].text:
         tables = tables[1:]
     if len(tables) < 4:
         return [None, None]
