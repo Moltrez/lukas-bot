@@ -50,7 +50,7 @@ def get_data(arg, timeout_dur=5):
             colour = weapon_colours['Green']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
-        icon = get_icon(''.join(filter(lambda x: x.isalpha() or x == ' ', arg)), "Icon_Portrait_")
+        icon = get_icon(''.join(filter(lambda x: x.isalpha() or x in [' ', '-'], arg)), "Icon_Portrait_")
         if not icon is None:
             data['Embed Info']['Icon'] = icon
         rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
