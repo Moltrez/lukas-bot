@@ -236,7 +236,7 @@ def get_data(arg, timeout_dur=5):
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
         if 'Disambiguation pages' in categories:
-            valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan', 'Grima', 'Falchion']
+            valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan', 'Grima', 'Falchion', 'Kana']
             options = [option.a['title'].strip() for option in html.find_all('li')]
             if arg in valid_ambiguous_people:
                 data['1Could refer to:'] = '\n'.join(options), False
