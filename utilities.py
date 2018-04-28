@@ -176,6 +176,11 @@ class FireEmblemHeroes:
                     if arg in self.cache.replacement_list:
                         self.cache.replacement_list.remove(arg)
             return arg, categories, data
+        except timeout:
+            print('Timed out')
+            if arg and categories and data:
+                return arg, categories, data
+            return False, False, 'Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.'
         except urllib.error.HTTPError as err:
             if arg and categories and data:
                 return arg, categories, data
@@ -424,112 +429,108 @@ class FireEmblemHeroes:
         if arg[-1] in ['1','2','3', '4', '5']:
             passive_level = int(arg[-1]) - 1
             arg = arg[:-1].strip()
-        try:
-            arg, categories, original_data = self.find_data(arg, original_arg, ctx, ignore_cache)
-            if not arg:
-                if original_data.startswith("I'm"):
-                    if any([(' ' + separator + ' ') in original_arg for separator in separators]) or\
-                            original_arg.lower().startswith('compare'):
-                        await self.bot.say(
-                        "I'm afraid I couldn't find data of %s. Did you mean to do `?compare %s`?" %
+        arg, categories, original_data = self.find_data(arg, original_arg, ctx, ignore_cache)
+        if not arg:
+            if original_data.startswith("I'm"):
+                if any([(' ' + separator + ' ') in original_arg for separator in separators]) or\
+                        original_arg.lower().startswith('compare'):
+                    await self.bot.say(
+                    "I'm afraid I couldn't find data of %s. Did you mean to do `?compare %s`?" %
+                    (original_arg,
+                     original_arg if not original_arg.lower().startswith('compare') else original_arg[7:].strip()))
+                elif any([modifier in original_arg for modifier in
+                          ['-f', '-s', '-r']]) or original_arg.lower().startswith('list'):
+                    await self.bot.say(
+                        "I'm afraid I couldn't find data of %s. Did you mean to do `?list %s`?" %
                         (original_arg,
-                         original_arg if not original_arg.lower().startswith('compare') else original_arg[7:].strip()))
-                    elif any([modifier in original_arg for modifier in
-                              ['-f', '-s', '-r']]) or original_arg.lower().startswith('list'):
-                        await self.bot.say(
-                            "I'm afraid I couldn't find data of %s. Did you mean to do `?list %s`?" %
-                            (original_arg,
-                             original_arg if not original_arg.lower().startswith('list') else original_arg[4:].strip()))
-                    elif any([modifier in original_arg for modifier in
-                                 ['-', '/', '+']]) and not original_arg.endswith('+'):
-                        if '/' in original_arg:
-                            slashloc = original_arg.find('/')
-                            if slashloc > 0 and \
-                                all(c in map(str,range(10))
-                                    for c in [original_arg[slashloc-1], original_arg[slashloc+1]]):
-                                await self.bot.say(
-                                    "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
-                                    (original_arg,
-                                     original_arg if not original_arg.lower().startswith('stats') else original_arg[
-                                                                                                       5:].strip()))
-                            else:
-                                await self.bot.say(original_data)
-                        else:
+                         original_arg if not original_arg.lower().startswith('list') else original_arg[4:].strip()))
+                elif any([modifier in original_arg for modifier in
+                             ['-', '/', '+']]) and not original_arg.endswith('+'):
+                    if '/' in original_arg:
+                        slashloc = original_arg.find('/')
+                        if slashloc > 0 and \
+                            all(c in map(str,range(10))
+                                for c in [original_arg[slashloc-1], original_arg[slashloc+1]]):
                             await self.bot.say(
-                            "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
-                            (original_arg,
-                             original_arg if not original_arg.lower().startswith('stats') else original_arg[5:].strip()))
+                                "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
+                                (original_arg,
+                                 original_arg if not original_arg.lower().startswith('stats') else original_arg[
+                                                                                                   5:].strip()))
+                        else:
+                            await self.bot.say(original_data)
                     else:
-                        await self.bot.say(original_data)
-                        return
+                        await self.bot.say(
+                        "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
+                        (original_arg,
+                         original_arg if not original_arg.lower().startswith('stats') else original_arg[5:].strip()))
                 else:
                     await self.bot.say(original_data)
-                return
-
-            if 'Passives' in categories:
-                if original_data['Embed Info']['Title'] == 'HP Plus' and passive_level in [2,3,4]:
-                    passive_level -= 2
-                if passive_level <= len(original_data['Data']):
-                    data = original_data['Data'][passive_level]
-                else:
-                    data = original_data['Data'][-1]
+                    return
             else:
-                data = original_data
+                await self.bot.say(original_data)
+            return
 
-            if original_arg.startswith('list'):
-                data['Message'] = 'Did you mean `?list %s`?' % original_arg[4:].strip()
-            elif original_arg.lower() == 'gauntlet':
-                data['Message'] = 'Did you mean `?gauntlet`?'
-
-            if python_format:
-                message = ASCIIMessage(title=data['Embed Info']['Title'])
+        if 'Passives' in categories:
+            if original_data['Embed Info']['Title'] == 'HP Plus' and passive_level in [2,3,4]:
+                passive_level -= 2
+            if passive_level <= len(original_data['Data']):
+                data = original_data['Data'][passive_level]
             else:
-                message = discord.Embed(
-                    title= data['Embed Info']['Title'],
-                    url= data['Embed Info']['URL'],
-                    color= data['Embed Info']['Colour']
-                )
-                if data['Embed Info']['Icon']:
-                    message.set_thumbnail(url=data['Embed Info']['Icon'])
-                elif 'Specials' in categories:
-                    message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
-                elif 'Assists' in categories:
-                    message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
-            for key in sorted(data.keys()):
-                if key[0].isdigit():
+                data = original_data['Data'][-1]
+        else:
+            data = original_data
+
+        if original_arg.startswith('list'):
+            data['Message'] = 'Did you mean `?list %s`?' % original_arg[4:].strip()
+        elif original_arg.lower() == 'gauntlet':
+            data['Message'] = 'Did you mean `?gauntlet`?'
+
+        if python_format:
+            message = ASCIIMessage(title=data['Embed Info']['Title'])
+        else:
+            message = discord.Embed(
+                title= data['Embed Info']['Title'],
+                url= data['Embed Info']['URL'],
+                color= data['Embed Info']['Colour']
+            )
+            if data['Embed Info']['Icon']:
+                message.set_thumbnail(url=data['Embed Info']['Icon'])
+            elif 'Specials' in categories:
+                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
+            elif 'Assists' in categories:
+                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
+        for key in sorted(data.keys()):
+            if key[0].isdigit():
+                    message.add_field(
+                        name=key[1:],
+                        value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
+                        inline=data[key][1]
+                    )
+                    if 'Exclusive?' in key:
+                        if 'Evolution' in data:
+                            refinable = 'Evolves and Refines' if 'Refine' in data else 'Evolves'
+                        elif 'Refine' in data:
+                            refinable = 'Yes'
+                        else:
+                            refinable = 'No'
                         message.add_field(
-                            name=key[1:],
-                            value=data[key][0] if key not in ['4Base Stats', '5Max Level Stats'] else format_stats_table(data[key][0]),
-                            inline=data[key][1]
+                            name='Refinable?',
+                            value= refinable,
+                            inline=True
                         )
-                        if 'Exclusive?' in key:
-                            if 'Evolution' in data:
-                                refinable = 'Evolves and Refines' if 'Refine' in data else 'Evolves'
-                            elif 'Refine' in data:
-                                refinable = 'Yes'
-                            else:
-                                refinable = 'No'
-                            message.add_field(
-                                name='Refinable?',
-                                value= refinable,
-                                inline=True
-                            )
-            if 'Message' in data:
-                if python_format:
-                    await self.bot.say(data['Message'].replace('. ', '.\n') + '\n' + message.message)
-                else:
-                    await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
+        if 'Message' in data:
+            if python_format:
+                await self.bot.say(data['Message'].replace('. ', '.\n') + '\n' + message.message)
             else:
-                if python_format:
-                    await self.bot.say(message.message)
-                else:
-                    await self.bot.say(embed=message)
-            if any([c in valid_categories
-                    for c in categories]):
-                self.cache.add_data(original_arg, original_data, categories)
-        except timeout:
-            print("Timed out.")
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+                await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
+        else:
+            if python_format:
+                await self.bot.say(message.message)
+            else:
+                await self.bot.say(embed=message)
+        if any([c in valid_categories
+                for c in categories]):
+            self.cache.add_data(original_arg, original_data, categories)
 
     @bot.command(pass_context=True, aliases=['refine', 'Refine', 'Fehrefine', 'FEHRefine'])
     async def fehrefine(self, ctx, *, args):
@@ -546,139 +547,135 @@ class FireEmblemHeroes:
             l_i = args.find('-python')
             args = (args[:l_i] + args[l_i + 7:]).replace('  ', ' ')
 
-        try:
-            while (True):
-                weapon, categories, data = self.find_data(args, args)
-                if not weapon:
-                    await self.bot.say(data)
-                    return
-                if 'Weapons' not in categories:
-                    await self.bot.say('%s does not seem to be a weapon.' % (weapon))
-                    return
-                if 'Refine' not in data and 'Evolution' not in data:
-                    if data['3Exclusive?'][0] == ('No') and not weapon.endswith('+'):
-                        args = weapon + '+'
-                    else:
-                        await self.bot.say('It appears that %s cannot be refined.' % (weapon))
-                        self.cache.save()
-                        return
+        while (True):
+            weapon, categories, data = self.find_data(args, args)
+            if not weapon:
+                await self.bot.say(data)
+                return
+            if 'Weapons' not in categories:
+                await self.bot.say('%s does not seem to be a weapon.' % (weapon))
+                return
+            if 'Refine' not in data and 'Evolution' not in data:
+                if data['3Exclusive?'][0] == ('No') and not weapon.endswith('+'):
+                    args = weapon + '+'
                 else:
-                    break
-            # initial weapon message
-            if python_format:
-                message1 = ASCIIMessage(title=data['Embed Info']['Title'])
+                    await self.bot.say('It appears that %s cannot be refined.' % (weapon))
+                    self.cache.save()
+                    return
             else:
-                message1 = discord.Embed(
-                    title= data['Embed Info']['Title'],
+                break
+        # initial weapon message
+        if python_format:
+            message1 = ASCIIMessage(title=data['Embed Info']['Title'])
+        else:
+            message1 = discord.Embed(
+                title= data['Embed Info']['Title'],
+                url= data['Embed Info']['URL'],
+                color= data['Embed Info']['Colour']
+            )
+            if data['Embed Info']['Icon']:
+                message1.set_thumbnail(url=data['Embed Info']['Icon'])
+        for key in sorted(data.keys()):
+            if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
+                message1.add_field(
+                    name=key[1:],
+                    value=data[key][0],
+                    inline=data[key][1]
+                )
+        if 'Refinery Cost' in data:
+            message1.add_field(
+                name='Refinery Cost',
+                value=data['Refinery Cost'],
+                inline=False
+            )
+        if 'Evolution Cost' in data:
+            message1.add_field(
+                name='Evolution Cost',
+                value=data['Evolution Cost'],
+                inline=False
+            )
+        message2 = None
+        message3 = None
+        if 'Refine' in data:
+            if python_format:
+                message2 = ASCIIMessage(title='Refinery Options')
+            else:
+                message2 = discord.Embed(
+                    title= 'Refinery Options',
                     url= data['Embed Info']['URL'],
-                    color= data['Embed Info']['Colour']
+                    color= 0xD6BD53
                 )
-                if data['Embed Info']['Icon']:
-                    message1.set_thumbnail(url=data['Embed Info']['Icon'])
-            for key in sorted(data.keys()):
-                if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
-                    message1.add_field(
-                        name=key[1:],
-                        value=data[key][0],
-                        inline=data[key][1]
-                    )
-            if 'Refinery Cost' in data:
-                message1.add_field(
-                    name='Refinery Cost',
-                    value=data['Refinery Cost'],
-                    inline=False
-                )
-            if 'Evolution Cost' in data:
-                message1.add_field(
-                    name='Evolution Cost',
-                    value=data['Evolution Cost'],
-                    inline=False
-                )
-            message2 = None
-            message3 = None
-            if 'Refine' in data:
-                if python_format:
-                    message2 = ASCIIMessage(title='Refinery Options')
+                if 'Refine Icon' in data:
+                    message2.set_thumbnail(url=data['Refine Icon'])
                 else:
-                    message2 = discord.Embed(
-                        title= 'Refinery Options',
-                        url= data['Embed Info']['URL'],
-                        color= 0xD6BD53
-                    )
-                    if 'Refine Icon' in data:
-                        message2.set_thumbnail(url=data['Refine Icon'])
+                    if 'Staves' in categories:
+                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/4/42/Wrathful_Staff_W.png')
                     else:
-                        if 'Staves' in categories:
-                            message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/4/42/Wrathful_Staff_W.png')
-                        else:
-                            message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/20/Attack_Plus_W.png')
-                for r in data['Refine']:
-                    value = ''
-                    if r['Stats'] != '+0 HP':
-                        value += r['Stats'] + '\n'
-                    effect = r['Effect'].replace((data['5Special Effect'][0] if '5Special Effect' in data else ''),'')
-                    if effect:
-                        value += effect.strip()
-                    message2.add_field(
-                        name=r['Type'],
-                        value=value.strip(),
-                        inline=False
-                    )
-            if 'Evolution' in data:
-                # weapon evolves
-                args2 = data['Evolution'][0]
-                weapon2, categories2, data2 = self.find_data(args2, args2)
-                if not weapon2:
-                    await self.bot.say(data2)
-                    return
-                # evolved weapon message
-                if python_format:
-                    message3 = ASCIIMessage(title=data2['Embed Info']['Title'])
-                else:
-                    message3 = discord.Embed(
-                        title= data2['Embed Info']['Title'],
-                        url= data2['Embed Info']['URL'],
-                        color= data2['Embed Info']['Colour']
-                    )
-                    if data2['Embed Info']['Icon']:
-                        message3.set_thumbnail(url=data2['Embed Info']['Icon'])
-                for key in sorted(data2.keys()):
-                    if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
-                        message3.add_field(
-                            name=key[1:],
-                            value=data2[key][0],
-                            inline=data2[key][1]
-                        )
+                        message2.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/20/Attack_Plus_W.png')
+            for r in data['Refine']:
+                value = ''
+                if r['Stats'] != '+0 HP':
+                    value += r['Stats'] + '\n'
+                effect = r['Effect'].replace((data['5Special Effect'][0] if '5Special Effect' in data else ''),'')
+                if effect:
+                    value += effect.strip()
+                message2.add_field(
+                    name=r['Type'],
+                    value=value.strip(),
+                    inline=False
+                )
+        if 'Evolution' in data:
+            # weapon evolves
+            args2 = data['Evolution'][0]
+            weapon2, categories2, data2 = self.find_data(args2, args2)
+            if not weapon2:
+                await self.bot.say(data2)
+                return
+            # evolved weapon message
             if python_format:
-                to_send = message1.message
-                if message2 is not None:
-                    if len(to_send) + len(message2.message) < 2000:
-                        to_send += message2.message
-                    else:
-                        await self.bot.say(to_send)
-                        to_send = message2.message
-                if message3 is not None:
-                    if len(to_send) + len(message3.message) < 2000:
-                        to_send += message3.message
-                    else:
-                        await self.bot.say(to_send)
-                        to_send = message3.message
-                if to_send:
+                message3 = ASCIIMessage(title=data2['Embed Info']['Title'])
+            else:
+                message3 = discord.Embed(
+                    title= data2['Embed Info']['Title'],
+                    url= data2['Embed Info']['URL'],
+                    color= data2['Embed Info']['Colour']
+                )
+                if data2['Embed Info']['Icon']:
+                    message3.set_thumbnail(url=data2['Embed Info']['Icon'])
+            for key in sorted(data2.keys()):
+                if key != '3Exclusive?' and key[0].isdigit() and 'Heroes with' not in key:
+                    message3.add_field(
+                        name=key[1:],
+                        value=data2[key][0],
+                        inline=data2[key][1]
+                    )
+        if python_format:
+            to_send = message1.message
+            if message2 is not None:
+                if len(to_send) + len(message2.message) < 2000:
+                    to_send += message2.message
+                else:
                     await self.bot.say(to_send)
-            else:
-                await self.bot.say(embed=message1)
-                if message2 is not None:
-                    await self.bot.say(embed=message2)
-                if message3 is not None:
-                    await self.bot.say(embed=message3)
-            if 'Evolution' in data:
-                save = self.cache.add_data(weapon, data, categories, save=False)
-                self.cache.add_data(weapon2, data2, categories2, force_save=save)
-            else:
-                self.cache.add_data(weapon, data, categories)
-        except timeout:
-            print("Timed out.")
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+                    to_send = message2.message
+            if message3 is not None:
+                if len(to_send) + len(message3.message) < 2000:
+                    to_send += message3.message
+                else:
+                    await self.bot.say(to_send)
+                    to_send = message3.message
+            if to_send:
+                await self.bot.say(to_send)
+        else:
+            await self.bot.say(embed=message1)
+            if message2 is not None:
+                await self.bot.say(embed=message2)
+            if message3 is not None:
+                await self.bot.say(embed=message3)
+        if 'Evolution' in data:
+            save = self.cache.add_data(weapon, data, categories, save=False)
+            self.cache.add_data(weapon2, data2, categories2, force_save=save)
+        else:
+            self.cache.add_data(weapon, data, categories)
 
     flaunt_cache = {}
 
@@ -749,45 +746,42 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
             args = list(args)
             args.remove('-python')
 
-        try:
-            unit_stats = self.get_unit_stats(args, ctx=ctx)
-            if isinstance(unit_stats, tuple):
-                embed_info, base, max = unit_stats
-                base = array_to_table(base)
-                max = array_to_table(max)
-                if python_format:
-                    message = ASCIIMessage(title=embed_info['Title'])
-                else:
-                    message = discord.Embed(
-                        title=embed_info['Title'],
-                        url=embed_info['URL'],
-                        color=embed_info['Colour']
-                    )
-                    if not embed_info['Icon'] is None:
-                        message.set_thumbnail(url=embed_info['Icon'])
-                message.add_field(
-                    name="BST",
-                    value=max[-1]['Total'],
-                    inline=False
-                )
-                message.add_field(
-                    name="Base Stats",
-                    value=format_stats_table(base),
-                    inline=False
-                )
-                message.add_field(
-                    name="Max Level Stats",
-                    value=format_stats_table(max),
-                    inline=False
-                )
-                if python_format:
-                    await self.bot.say(message.message)
-                else:
-                    await self.bot.say(embed=message)
+        unit_stats = self.get_unit_stats(args, ctx=ctx)
+        if isinstance(unit_stats, tuple):
+            embed_info, base, max = unit_stats
+            base = array_to_table(base)
+            max = array_to_table(max)
+            if python_format:
+                message = ASCIIMessage(title=embed_info['Title'])
             else:
-                await self.bot.say(unit_stats)
-        except timeout:
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+                message = discord.Embed(
+                    title=embed_info['Title'],
+                    url=embed_info['URL'],
+                    color=embed_info['Colour']
+                )
+                if not embed_info['Icon'] is None:
+                    message.set_thumbnail(url=embed_info['Icon'])
+            message.add_field(
+                name="BST",
+                value=max[-1]['Total'],
+                inline=False
+            )
+            message.add_field(
+                name="Base Stats",
+                value=format_stats_table(base),
+                inline=False
+            )
+            message.add_field(
+                name="Max Level Stats",
+                value=format_stats_table(max),
+                inline=False
+            )
+            if python_format:
+                await self.bot.say(message.message)
+            else:
+                await self.bot.say(embed=message)
+        else:
+            await self.bot.say(unit_stats)
 
     @bot.command(pass_context=True, aliases=['Fehcompare', 'compare', 'Compare', 'FEHcompare', 'FEHCompare'])
     async def fehcompare(self, ctx, *args):
@@ -800,175 +794,99 @@ Use -d to show the difference as well as the stats. Use -q to only show the diff
 Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default."""
         self.cache.update()
 
-        try:
-            args = list(map(lambda a:a.lower(), args))
-            # try:
-            #     separator, args = find_arg(args, separators, separators, 'separator', remove=False)
-            # except ValueError as err:
-            #     # multiple separators
-            #     await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
-            #     return
-            sep_finding = [i in args for i in separators]
-            # no separators
-            if not any(sep_finding):
-                await self.bot.say("Please separate the units you wish to compare using "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|`.")
-                return
-            quiet_mode = False
-            stats_mode = True
-            analytics_mode = False
-            if '-q' in args:
-                quiet_mode = True
-                stats_mode = False
-                args.remove('-q')
-            if '-d' in args:
-                quiet_mode = True
-                args.remove('-d')
-            if '-a' in args:
-                analytics_mode = True
-                args.remove('-a')
-            common_args = []
-            if '-all' in args:
-                all_i = args.index('-all')
-                common_args = args[all_i+1:]
-                args = args[:all_i]
-            # unit1_args = args[:args.index(separator)]
-            # unit2_args = args[args.index(separator)+1:]
-            # unit1_stats = self.get_unit_stats(unit1_args, default_rarity=5, ctx=ctx)
-            # if not isinstance(unit1_stats, tuple):
-            #     await self.bot.say('I had difficulty finding what you wanted for the first unit. ' + unit1_stats)
-            #     return
-            # unit2_stats = self.get_unit_stats(unit2_args, default_rarity=5, ctx=ctx)
-            # if not isinstance(unit2_stats, tuple):
-            #     await self.bot.say('I had difficulty finding what you wanted for the second unit. ' + unit2_stats)
-            #     return
-            # self.cache.save()
-            # unit1, base1, max1 = unit1_stats
-            # unit2, base2, max2 = unit2_stats
-            # if not quiet_mode:
-            #     base1_table = array_to_table(base1)
-            #     max1_table = array_to_table(max1)
-            #     message1 = discord.Embed(
-            #         title=unit1['Title'],
-            #         url=unit1['URL'],
-            #         color=unit1['Colour']
-            #     )
-            #     if not unit1['Icon'] is None:
-            #         message1.set_thumbnail(url=unit1['Icon'])
-            #     message1.add_field(
-            #         name="BST",
-            #         value=max1_table[-1]['Total'],
-            #         inline=False
-            #     )
-            #     message1.add_field(
-            #         name="Base Stats",
-            #         value=format_stats_table(base1_table),
-            #         inline=False
-            #     )
-            #     message1.add_field(
-            #         name="Max Level Stats",
-            #         value=format_stats_table(max1_table),
-            #         inline=False
-            #     )
-            #     base2_table = array_to_table(base2)
-            #     max2_table = array_to_table(max2)
-            #     message2 = discord.Embed(
-            #         title=unit2['Title'],
-            #         url=unit2['URL'],
-            #         color=unit2['Colour']
-            #     )
-            #     if not unit2['Icon'] is None:
-            #         message2.set_thumbnail(url=unit2['Icon'])
-            #     message2.add_field(
-            #         name="BST",
-            #         value=max2_table[-1]['Total'],
-            #         inline=False
-            #     )
-            #     message2.add_field(
-            #         name="Base Stats",
-            #         value=format_stats_table(base2_table),
-            #         inline=False
-            #     )
-            #     message2.add_field(
-            #         name="Max Level Stats",
-            #         value=format_stats_table(max2_table),
-            #         inline=False
-            #     )
-            #     await self.bot.say(embed=message1)
-            #     await self.bot.say(embed=message2)
-            # max1 = np.array(list(filter(lambda r:any(r), max1))[0])
-            # max2 = np.array(list(filter(lambda r:any(r), max2))[0])
-            # difference = max1 - max2
-            # bst_diff = difference.sum()
-            # if any(difference):
-            #     await self.bot.say("%s compared to %s: %s%s" %\
-            #      (unit1['Title'], unit2['Title'], ', '.join(['%s: **%s%d**' % (stats[i], '+' if difference[i]>0 else '', difference[i]) for i in range(5) if difference[i]]), (', BST: **%s%d**' % ('+' if bst_diff>0 else '', bst_diff)) if bst_diff else ''))
-            # else:
-            #     await self.bot.say("There appears to be no difference between these units!")
-            unit_requests = []
-            current_args = common_args.copy()
-            nth_unit = 0
-            args.append('&')
-            for arg in args:
-                if arg in separators:
-                    if not current_args:
-                        continue
-                    unit_requests.append(current_args)
-                    current_args = common_args.copy()
-                    nth_unit += 1
+        args = list(map(lambda a:a.lower(), args))
+        # try:
+        #     separator, args = find_arg(args, separators, separators, 'separator', remove=False)
+        # except ValueError as err:
+        #     # multiple separators
+        #     await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+        #     return
+        sep_finding = [i in args for i in separators]
+        # no separators
+        if not any(sep_finding):
+            await self.bot.say("Please separate the units you wish to compare using "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|`.")
+            return
+        quiet_mode = False
+        stats_mode = True
+        analytics_mode = False
+        if '-q' in args:
+            quiet_mode = True
+            stats_mode = False
+            args.remove('-q')
+        if '-d' in args:
+            quiet_mode = True
+            args.remove('-d')
+        if '-a' in args:
+            analytics_mode = True
+            args.remove('-a')
+        common_args = []
+        if '-all' in args:
+            all_i = args.index('-all')
+            common_args = args[all_i+1:]
+            args = args[:all_i]
+
+        unit_requests = []
+        current_args = common_args.copy()
+        nth_unit = 0
+        args.append('&')
+        for arg in args:
+            if arg in separators:
+                if not current_args:
                     continue
-                current_args.append(arg)
-            if nth_unit > compare_limit:
-                await self.bot.say('Please only compare up to %d units at a time.' % compare_limit)
+                unit_requests.append(current_args)
+                current_args = common_args.copy()
+                nth_unit += 1
+                continue
+            current_args.append(arg)
+        if nth_unit > compare_limit:
+            await self.bot.say('Please only compare up to %d units at a time.' % compare_limit)
+            return
+        max_tables = []
+        curr_unit = 1
+        for request in unit_requests:
+            ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
+            if not isinstance(ustats, tuple):
+                await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
                 return
-            max_tables = []
-            curr_unit = 1
-            for request in unit_requests:
-                ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
-                if not isinstance(ustats, tuple):
-                    await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
-                    return
-                unit, _, max_t = ustats
-                max_tables.append((shorten_hero_name(unit['Title']), max_t))
-                curr_unit += 1
-            row_format = '|%-15.15s|%4s|%4s|%4s|%4s|%4s|%4s|\n'
-            message = row_format % ('Unit', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
-            unit_number = 1
-            for unit in max_tables:
-                table = array_to_table(unit[1])[0]
-                message += row_format % (unit[0], table['HP'], table['ATK'], table['SPD'], table['DEF'], table['RES'], table['Total'])
-                unit_number += 1
-            raw_stats = [np.array(list(filter(lambda r:any(r), t))[0]) for t in [table[1] for table in max_tables]]
-            messages = [message] if stats_mode else []
-            if quiet_mode or nth_unit == 2:
-                for i in range(0, len(max_tables)-1):
-                    nmessage = row_format % (max_tables[i][0][:13] + ' -', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
-                    for j in range(i+1, len(max_tables)):
-                        difference = raw_stats[i] - raw_stats[j]
-                        nmessage += row_format % ('%15.15s' % max_tables[j][0], str(difference[0]), str(difference[1]), str(difference[2]), str(difference[3]), str(difference[4]), str(difference.sum()))
-                    messages.append(nmessage)
-            if analytics_mode:
-                analytics_table = np.array(raw_stats).transpose()
-                a_row_format = '|%7s|%5s %-31.31s|\n'
-                amessage = a_row_format % ('Highest', 'Value', '(Character(s))')
-                for i in range(0, len(stats)):
-                    characters = np.where(analytics_table[i]==analytics_table[i].max())[0]
-                    amessage += a_row_format % (stats[i], str(analytics_table[i].max()), '('+', '.join([u[0] for u in [max_tables[j] for j in characters]])+')')
-                totals = analytics_table.sum(axis=0)
-                amessage += a_row_format % ('BST', str(totals.max()), '('+', '.join([u[0] for u in [max_tables[j] for j in np.where(totals==totals.max())[0]]])+')')
-                messages.append(amessage)
-            curr_message = ''
-            for message in messages:
-                formatted_message = '```' + message + '```'
-                if len(curr_message) + len(formatted_message) > 2000:
-                    await self.bot.say(curr_message)
-                    curr_message = ''
-                curr_message += formatted_message
-            if curr_message:
+            unit, _, max_t = ustats
+            max_tables.append((shorten_hero_name(unit['Title']), max_t))
+            curr_unit += 1
+        row_format = '|%-15.15s|%4s|%4s|%4s|%4s|%4s|%4s|\n'
+        message = row_format % ('Unit', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
+        unit_number = 1
+        for unit in max_tables:
+            table = array_to_table(unit[1])[0]
+            message += row_format % (unit[0], table['HP'], table['ATK'], table['SPD'], table['DEF'], table['RES'], table['Total'])
+            unit_number += 1
+        raw_stats = [np.array(list(filter(lambda r:any(r), t))[0]) for t in [table[1] for table in max_tables]]
+        messages = [message] if stats_mode else []
+        if quiet_mode or nth_unit == 2:
+            for i in range(0, len(max_tables)-1):
+                nmessage = row_format % (max_tables[i][0][:13] + ' -', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')
+                for j in range(i+1, len(max_tables)):
+                    difference = raw_stats[i] - raw_stats[j]
+                    nmessage += row_format % ('%15.15s' % max_tables[j][0], str(difference[0]), str(difference[1]), str(difference[2]), str(difference[3]), str(difference[4]), str(difference.sum()))
+                messages.append(nmessage)
+        if analytics_mode:
+            analytics_table = np.array(raw_stats).transpose()
+            a_row_format = '|%7s|%5s %-31.31s|\n'
+            amessage = a_row_format % ('Highest', 'Value', '(Character(s))')
+            for i in range(0, len(stats)):
+                characters = np.where(analytics_table[i]==analytics_table[i].max())[0]
+                amessage += a_row_format % (stats[i], str(analytics_table[i].max()), '('+', '.join([u[0] for u in [max_tables[j] for j in characters]])+')')
+            totals = analytics_table.sum(axis=0)
+            amessage += a_row_format % ('BST', str(totals.max()), '('+', '.join([u[0] for u in [max_tables[j] for j in np.where(totals==totals.max())[0]]])+')')
+            messages.append(amessage)
+        curr_message = ''
+        for message in messages:
+            formatted_message = '```' + message + '```'
+            if len(curr_message) + len(formatted_message) > 2000:
                 await self.bot.say(curr_message)
-        except timeout:
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
-        finally:
-            self.cache.save()
+                curr_message = ''
+            curr_message += formatted_message
+        if curr_message:
+            await self.bot.say(curr_message)
+        self.cache.save()
 
     @bot.command(aliases=['list', 'List', 'Fehlist', 'FEHlist', 'FEHList'])
     async def fehlist(self, *args):
