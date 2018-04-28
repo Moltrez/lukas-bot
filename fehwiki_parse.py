@@ -27,6 +27,8 @@ def get_data(arg, timeout_dur=5):
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
     if 'Heroes' in categories:
         alts = html.i.get_text().strip()
+        if alts.startswith('This article relates to upcoming/new content and might be inaccurate or incomplete.'):
+            alts = html.find_all(i)[1].get_text().strip()
         if alts.startswith('This page is about'):
             if alts.endswith('You may be looking for:'):
                 data['Message'] = '\n'.join(['*'+row.th.text.strip()+'* '+
@@ -50,7 +52,7 @@ def get_data(arg, timeout_dur=5):
             colour = weapon_colours['Green']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
-        icon = get_icon(''.join(filter(lambda x: x.isalpha() or x == ' ', arg)), "Icon_Portrait_")
+        icon = get_icon(''.join(filter(lambda x: x.isalpha() or x in [' ', '-'], arg)), "Icon_Portrait_")
         if not icon is None:
             data['Embed Info']['Icon'] = icon
         rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
@@ -89,7 +91,8 @@ def get_data(arg, timeout_dur=5):
                 if 'Type': # if we're in passives, get learned levels
                      last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
                 skills += ', '
-            skills = skills.rstrip(', ') + last_learned + '\n'
+            if skills:
+                skills = skills.rstrip(', ') + last_learned + '\n'
         if skills:
             data['6Learnable Skills'] = skills, False
 
@@ -236,7 +239,7 @@ def get_data(arg, timeout_dur=5):
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
         if 'Disambiguation pages' in categories:
-            valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan', 'Grima', 'Falchion']
+            valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan', 'Grima', 'Falchion', 'Kana']
             options = [option.a['title'].strip() for option in html.find_all('li')]
             if arg in valid_ambiguous_people:
                 data['1Could refer to:'] = '\n'.join(options), False
@@ -370,7 +373,7 @@ def get_infobox(html):
 
 def get_heroes_stats_tables(html):
     tables = html.find_all("table", attrs={"class":"wikitable"})
-    if 'Other Heroes named' in tables[0].text:
+    if 'Heroes named' in tables[0].text:
         tables = tables[1:]
     if len(tables) < 4:
         return [None, None]
