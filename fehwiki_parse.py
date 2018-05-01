@@ -28,7 +28,7 @@ def get_data(arg, timeout_dur=5):
     if 'Heroes' in categories:
         alts = html.i.get_text().strip()
         if alts.startswith('This article relates to upcoming/new content and might be inaccurate or incomplete.'):
-            alts = html.find_all(i)[1].get_text().strip()
+            alts = html.find_all('i')[1].get_text().strip()
         if alts.startswith('This page is about'):
             if alts.endswith('You may be looking for:'):
                 data['Message'] = '\n'.join(['*'+row.th.text.strip()+'* '+
