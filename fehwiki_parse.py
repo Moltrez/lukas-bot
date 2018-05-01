@@ -151,7 +151,7 @@ def get_data(arg, timeout_dur=5):
                         for r in refinery_table:
                             t = r['Type'].split('|')[1].rstrip(' W')
                             s = r['Stats'].split('|')[0]
-                            e = r['Effect'].split('|')[0].replace('  ', ' ')
+                            e = r['Description'].split('|')[0].replace('  ', ' ')
                             cost = r['Cost'].split('|')
                             cost_materials = cost[1:]
                             cost = cost[0].split(', ')
