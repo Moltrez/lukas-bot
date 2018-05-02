@@ -3,7 +3,7 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 jsonpickle_numpy.register_handlers()
 from feh_alias import *
 from feh_personal import *
-from fehwiki_parse import get_page, shorten_hero_name
+from fehwiki_parse import get_page, shorten_hero_name, feh_source, weapon_colours
 from collections import deque
 
 cache_log = deque([], 500)
@@ -113,14 +113,47 @@ class FehCache(object):
             self.list = list
         self.save()
 
-    def add_alias(self, alias, name, save=True):
+    def add_alias(self, alias, name, save=True, resolve_conflicts=True):
         alias = alias.lower().replace(' ', '')
         if alias[-1] in ['1','2','3']:
             alias = alias[:-1]
         if alias not in ['son', 'my son', 'waifu', 'my waifu'] and '/' not in alias\
-            and (alias not in self.aliases or (alias in self.aliases and self.aliases[alias] != name)):
+            and (alias not in self.aliases or
+                    (alias in self.aliases and name != self.aliases[alias] and not resolve_conflicts)):
                 self.aliases[alias] = name
                 cache_log.appendleft('Added alias: %s -> %s' % (alias, name))
+                if save:
+                    self.save()
+                else:
+                    return True
+        if alias in self.aliases and name != self.aliases[alias] and resolve_conflicts:
+            # create an internal disambiguation page
+            if alias in self.data:
+                should_save = False
+                # already an internal disambiguation page
+                if name not in self.data[alias]['1Could refer to:'][0].split('\n'):
+                    # add to the internal disambiguation page listings if not already in there
+                    self.data[alias]['1Could refer to:'] = self.data[alias]['1Could refer to:'][0] + '\n' + name, False
+                    cache_log.appendleft('Found alias conflict!\nAdded alias to disambiguation.')
+                    should_save = True
+                if self.aliases[alias] != alias:
+                    self.aliases[alias] = alias
+                    cache_log.appendleft('Linking alias to its disambiguation page.')
+                    should_save = True
+                if should_save:
+                    if save:
+                        self.save()
+                    else:
+                        return True
+            else:
+                # create an internal disambiguation page, links to current aliased-to-name with no epithet
+                new_data = {'Embed Info': {'Colour':weapon_colours['Null'], 'Icon':None, 'Title':alias,
+                                           'URL': feh_source % self.aliases[alias].split(':')[0]},
+                            '1Could refer to:': (self.aliases[alias] + '\n' + name, False)}
+                self.data[alias] = new_data
+                self.categories[alias] = ['Disambiguation pages']
+                self.aliases[alias] = alias
+                cache_log.appendleft('Found alias conflict!\nCreated disambiguation page and linked alias to page.')
                 if save:
                     self.save()
                 else:

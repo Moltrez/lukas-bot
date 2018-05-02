@@ -354,9 +354,12 @@ class FireEmblemHeroes:
                 arg = arg[3:]
                 args = arg.split(' ', 1)
                 aliases = args[0].split('&')
+                should_save = False
                 for alias in aliases:
-                    self.cache.add_alias(alias, args[1], save=False)
-                self.cache.save()
+                    should_save = self.cache.add_alias(alias, args[1], save=False, resolve_conflicts=False) \
+                                  or should_save
+                if should_save:
+                    self.cache.save()
                 await self.bot.say("Added!")
                 return
             elif arg.startswith('-aliases'):
@@ -479,9 +482,6 @@ class FireEmblemHeroes:
                 data = original_data['Data'][-1]
         else:
             data = original_data
-
-        if 'Disambiguation pages' in categories:
-            print(data)
 
         if original_arg.startswith('list'):
             data['Message'] = 'Did you mean `?list %s`?' % original_arg[4:].strip()
