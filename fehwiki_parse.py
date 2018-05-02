@@ -27,7 +27,7 @@ def get_data(arg, timeout_dur=5):
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
     if 'Heroes' in categories:
         first_table = html.find('table', attrs={'class':'wikitable'})
-        if first_table.text.strip().startswith('Other'):
+        if first_table.text.strip().startswith('Other') and first_table.td is not None:
             data['Message'] = '**Other related Heroes:** '+\
                                     ', '.join(
                                         [a.text.strip() for a in first_table.td.find_all('div') if a is not None and a.text])
