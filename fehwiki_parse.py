@@ -26,17 +26,14 @@ def get_data(arg, timeout_dur=5):
         br.replace_with('\n')
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
     if 'Heroes' in categories:
-        alts = html.i.get_text().strip()
-        if alts.startswith('This article relates to upcoming/new content and might be inaccurate or incomplete.'):
-            alts = html.find_all('i')[1].get_text().strip()
-        if alts.startswith('This page is about'):
-            if alts.endswith('You may be looking for:'):
-                data['Message'] = '\n'.join(['*'+row.th.text.strip()+'* '+
-                                        ', '.join(
-                                            [a.text.strip() for a in row.td.find_all('div') if a.text])
-                                        for row in html.find('table', attrs={'class':'wikitable'}).find_all('tr') if row.td is not None])
-            else:
-                data['Message'] = '*' + alts + '*'
+        first_table = html.find('table', attrs={'class':'wikitable'})
+        if first_table.text.strip().startswith('Other'):
+            data['Message'] = '**Other related Heroes:** '+\
+                                    ', '.join(
+                                        [a.text.strip() for a in first_table.td.find_all('div') if a is not None and a.text])
+        elif any(['This page is about' in content.text for content in html.find_all('i')]):
+            alts = [content.text for content in html.find_all('i') if 'This page is about' in content.text][0]
+            data['Message'] = '*' + alts + '*'
         stats = get_infobox(html)
         stats = stats[None].split('\n\n\n\n')
         stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats]}
@@ -97,14 +94,14 @@ def get_data(arg, timeout_dur=5):
             data['6Learnable Skills'] = skills, False
 
     elif 'Weapons' in categories:
-        colour = weapon_colours['Null'] # for dragonstones, which are any colour
+        colour = weapon_colours['Null'] # for dragonstones and bows, which are any colour
         if any(i in ['Swords', 'Red Tomes'] for i in categories):
             colour = weapon_colours['Red']
         elif any(i in ['Lances', 'Blue Tomes'] for i in categories):
             colour = weapon_colours['Blue']
         elif any(i in ['Axes', 'Green Tomes'] for i in categories):
             colour = weapon_colours['Green']
-        elif any(i in ['Staves', 'Daggers', 'Bows'] for i in categories):
+        elif any(i in ['Staves', 'Daggers'] for i in categories):
             colour = weapon_colours['Colourless']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
@@ -373,14 +370,9 @@ def get_infobox(html):
 
 def get_heroes_stats_tables(html):
     tables = html.find_all("table", attrs={"class":"wikitable"})
-    if 'Heroes named' in tables[0].text:
-        tables = tables[1:]
-    if len(tables) < 4:
+    tables = [table for table in tables if 'Rarity' in table.text]
+    if len(tables) < 2:
         return [None, None]
-    elif 'skills-table' in tables[1]['class']:
-        return [None, None]
-    else:
-        tables = tables[1:3]
     return [extract_table(a) for a in tables]
 
 

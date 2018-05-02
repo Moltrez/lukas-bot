@@ -140,8 +140,8 @@ class FireEmblemHeroes:
 
     def find_similar(self, arg):
         return '\n'.join(
-            [p[0] for p in
-             sorted([[page, SequenceMatcher(None, arg.lower().replace(' ',''), page).ratio()]
+            [p[0] + ' (Categories: ' + ', '.join(self.cache.categories[self.cache.aliases[p[0]]]) + ')' for p in
+             sorted([[page, SequenceMatcher(None, arg.lower().replace(' ', ''), page).ratio()]
                      for page in self.cache.aliases], key=lambda x:x[1], reverse=True)[:3]
              ]
         )
@@ -188,11 +188,7 @@ class FireEmblemHeroes:
             if err.code >= 500:
                 return False, False,\
                     "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
-        except Exception:
-
-
-
-
+        except KeyError:
             if arg and categories and data:
                 return arg, categories, data
             return False, False, 'It appears the data I have is incomplete. Please try again later.'
@@ -483,6 +479,9 @@ class FireEmblemHeroes:
                 data = original_data['Data'][-1]
         else:
             data = original_data
+
+        if 'Disambiguation pages' in categories:
+            print(data)
 
         if original_arg.startswith('list'):
             data['Message'] = 'Did you mean `?list %s`?' % original_arg[4:].strip()
