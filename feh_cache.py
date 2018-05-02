@@ -134,11 +134,11 @@ class FehCache(object):
                 if name not in self.data[alias]['1Could refer to:'][0].split('\n'):
                     # add to the internal disambiguation page listings if not already in there
                     self.data[alias]['1Could refer to:'] = self.data[alias]['1Could refer to:'][0] + '\n' + name, False
-                    cache_log.appendleft('Found alias conflict!\nAdded alias to disambiguation.')
+                    cache_log.appendleft('Found alias conflict!\nAdded alias `%s`to disambiguation.' % alias)
                     should_save = True
                 if self.aliases[alias] != alias:
                     self.aliases[alias] = alias
-                    cache_log.appendleft('Linking alias to its disambiguation page.')
+                    cache_log.appendleft('Linking alias `%s` to its disambiguation page.' % alias)
                     should_save = True
                 if should_save:
                     if save:
@@ -153,7 +153,8 @@ class FehCache(object):
                 self.data[alias] = new_data
                 self.categories[alias] = ['Disambiguation pages']
                 self.aliases[alias] = alias
-                cache_log.appendleft('Found alias conflict!\nCreated disambiguation page and linked alias to page.')
+                cache_log.appendleft(
+                    'Found alias conflict!\nCreated disambiguation page for `%s` and linked alias to page.' % alias)
                 if save:
                     self.save()
                 else:
