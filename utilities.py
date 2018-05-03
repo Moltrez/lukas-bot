@@ -259,14 +259,14 @@ class FireEmblemHeroes:
         base_stats_table = data['4Base Stats'][0]
         max_stats_table = data['5Max Level Stats'][0]
         if base_stats_table is None or max_stats_table is None:
-            return 'This hero does not appear to have stats.'
+            return should_save, 'This hero does not appear to have stats.'
         if boon is None and bane is None and rarity is None and merge is None and support is None and modifiers is None:
-            return data['Embed Info'], base_stats_table, max_stats_table
+            return should_save, (data['Embed Info'], base_stats_table, max_stats_table)
         base_stats = table_to_array(base_stats_table, boon, bane, rarity)
         max_stats = table_to_array(max_stats_table, boon, bane, rarity)
         # check if empty
         if not any([any(r) for r in base_stats]):
-            return 'This hero does not appear to be available at the specified rarity.'
+            return should_save, 'This hero does not appear to be available at the specified rarity.'
         # calculate merge bonuses
         if merge is not None:
             for i in range(5):
