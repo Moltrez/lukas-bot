@@ -193,7 +193,7 @@ class FehCache(object):
 
     def add_data(self, alias, data, categories, save=True, force_save=False):
         name = data['Embed Info']['Title']
-        will_save = self.add_alias(alias, name, save=False)
+        will_save = self.add_alias(alias, name, save=False, resolve_conflicts=False)
         will_save = self.add_alias(name, name, save=False) or will_save
         will_save = self.add_alias(name.replace('(', '').replace(')', ''), name, save=False) or will_save
         will_save = self.add_alias(name.replace("'", '').replace('(', '').replace(')', ''), name, save=False) or will_save
