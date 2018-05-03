@@ -140,7 +140,16 @@ class FireEmblemHeroes:
 
     def find_similar(self, arg):
         return '\n'.join(
-            [p[0] + ' (Categories: ' + ', '.join(self.cache.categories[self.cache.aliases[p[0]]]) + ')' for p in
+            [p[0] + ' _(' +
+             (('Categories: ' +
+             ', '.join([c for c in self.cache.categories[self.cache.aliases[p[0]]]
+                        if any(helpful in c and helpful not in ['Weapons', 'Heroes', 'Passives'] for helpful in
+                               valid_categories +
+                               ['Sword', 'Axe', 'Lance', 'Bow', 'Dagger', 'Breath', 'Tome', 'Cavalry', 'Infantry',
+                                'Flying', 'Armored', 'A ', 'B ', 'C ', 'Sacred Seals', 'Tempest Trials'])]))
+              if self.cache.aliases[p[0]] in self.cache.categories else ('Old Page: ' + self.cache.aliases[p[0]]))
+              + ')_'
+             for p in
              sorted([[page, SequenceMatcher(None, arg.lower().replace(' ', ''), page).ratio()]
                      for page in self.cache.aliases], key=lambda x:x[1], reverse=True)[:3]
              ]
@@ -380,9 +389,11 @@ class FireEmblemHeroes:
                 self.cache.save()
                 return
             elif arg.startswith('-cleandatabase'):
+                linked_to = {self.cache.aliases[a] for a in self.cache.aliases}
+                print(linked_to)
                 for page in list(self.cache.data):
                     if not any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
-                            for c in self.cache.categories[page]]):
+                            for c in self.cache.categories[page]]) or page not in linked_to:
                         self.cache.delete_data(page, save=False)
                 self.cache.save()
                 return
