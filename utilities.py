@@ -251,10 +251,10 @@ class FireEmblemHeroes:
         args = ' '.join(args)
         unit, categories, data = self.find_data(args, args, ctx)
         if not unit:
-            return data
-        self.cache.add_data(unit, data, categories, save=False)
+            return False, data
+        should_save = self.cache.add_data(args, data, categories, save=False)
         if 'Heroes' not in categories:
-            return '%s does not seem to be a hero.' % (unit)
+            return should_save, '%s does not seem to be a hero.' % (unit)
 
         base_stats_table = data['4Base Stats'][0]
         max_stats_table = data['5Max Level Stats'][0]
@@ -288,7 +288,7 @@ class FireEmblemHeroes:
                 if any(base_stats[i]):
                     base_stats[i] += modifiers
                     max_stats[i] += modifiers
-        return data['Embed Info'], base_stats, max_stats
+        return should_save, (data['Embed Info'], base_stats, max_stats)
 
     @bot.command(aliases=['gauntlet', 'Gauntlet', 'Fehgauntlet', 'FEHgauntlet', 'FEHGauntlet'])
     async def fehgauntlet(self):
@@ -353,10 +353,12 @@ class FireEmblemHeroes:
                 ignore_cache = True
             elif arg.startswith('-d '):
                 arg = arg[3:]
-                args = arg.split('|')
+                args = arg.split('&')
+                should_save = False
                 for arg in args:
-                    self.cache.delete_alias(arg)
-                self.cache.save()
+                    should_save = self.cache.delete_alias(arg, save=False) or should_save
+                if should_save:
+                    self.cache.save()
                 await self.bot.say("Deleted!")
                 return
             elif arg.startswith('-a '):
@@ -542,9 +544,7 @@ class FireEmblemHeroes:
                 await self.bot.say(message.message)
             else:
                 await self.bot.say(embed=message)
-        if any([c in valid_categories
-                for c in categories]):
-            self.cache.add_data(original_arg, original_data, categories)
+        self.cache.add_data(original_arg, original_data, categories)
 
     @bot.command(pass_context=True, aliases=['refine', 'Refine', 'Fehrefine', 'FEHRefine'])
     async def fehrefine(self, ctx, *, args):
@@ -760,7 +760,7 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
             args = list(args)
             args.remove('-python')
 
-        unit_stats = self.get_unit_stats(args, ctx=ctx)
+        should_save, unit_stats = self.get_unit_stats(args, ctx=ctx)
         if isinstance(unit_stats, tuple):
             embed_info, base, max = unit_stats
             base = array_to_table(base)
@@ -796,6 +796,8 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                 await self.bot.say(embed=message)
         else:
             await self.bot.say(unit_stats)
+        if should_save:
+            self.cache.save()
 
     @bot.command(pass_context=True, aliases=['Fehcompare', 'compare', 'Compare', 'FEHcompare', 'FEHCompare'])
     async def fehcompare(self, ctx, *args):
@@ -857,8 +859,10 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             return
         max_tables = []
         curr_unit = 1
+        should_save = False
         for request in unit_requests:
-            ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
+            save, ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
+            should_save = should_save or save
             if not isinstance(ustats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
                 return
@@ -900,7 +904,8 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             curr_message += formatted_message
         if curr_message:
             await self.bot.say(curr_message)
-        self.cache.save()
+        if should_save:
+            self.cache.save()
 
     @bot.command(aliases=['list', 'List', 'Fehlist', 'FEHlist', 'FEHList'])
     async def fehlist(self, *args):

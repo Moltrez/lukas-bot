@@ -3,7 +3,7 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 jsonpickle_numpy.register_handlers()
 from feh_alias import *
 from feh_personal import *
-from fehwiki_parse import get_page, shorten_hero_name, feh_source, weapon_colours
+from fehwiki_parse import get_page, shorten_hero_name, feh_source, weapon_colours, valid_categories
 from collections import deque
 
 cache_log = deque([], 500)
@@ -192,6 +192,8 @@ class FehCache(object):
         self.save()
 
     def add_data(self, alias, data, categories, save=True, force_save=False):
+        if not any([c in valid_categories for c in categories]):
+            return False
         name = data['Embed Info']['Title']
         will_save = self.add_alias(alias, name, save=False, resolve_conflicts=False)
         will_save = self.add_alias(name, name, save=False) or will_save
