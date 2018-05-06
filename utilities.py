@@ -168,7 +168,7 @@ class FireEmblemHeroes:
                             "I was not aware you had one. If you want me to associate you with one, use the setwaifu command."
                 return False, False,\
                        "I'm afraid I couldn't find information on %s. Could you have meant:\n%s"\
-                       % (original_arg, self.find_similar(original_arg))
+                       % (original_arg.replace('*','\*').replace('_','\_'), self.find_similar(original_arg))
 
             data = None
             if arg in self.cache.data and not ignore_cache:
@@ -206,16 +206,29 @@ class FireEmblemHeroes:
         # convert to lower case
         args = list(map(lambda x: x.lower(), args))
 
+        # split a *+ if it exists
+        to_remove = None
+        for arg in args:
+            if '*+' in arg:
+                to_remove = arg
+                r, m = arg.split('+', 1)
+                args.append(r)
+                args.append('+'+m)
+        if to_remove:
+            args.remove(to_remove)
+
         # get IV information
         boons = ['+' + s.lower() for s in stats]
         banes = ['-' + s.lower() for s in stats]
         boon, args = find_arg(args, boons, stats, 'boons')
         bane, args = find_arg(args, banes, stats, 'banes')
-        if (boon and not bane) or (bane and not boon):
-            return 'Only boon or only bane specified.'
+        if boon and not bane:
+            return False, 'Only boon (+%s) specified.' % boon
+        if bane and not boon:
+            return False, 'Only bane (+%s) specified.' % bane
         if boon is not None and bane is not None:
             if (boon == bane):
-                return 'Boon is the same as bane.'
+                return False, 'Boon is the same as bane.'
         # get merge number
         merges = ['+' + str(i) for i in range(1, 11)]
         merge, args = find_arg(args, merges, range(1, 11), 'merge levels')
@@ -451,13 +464,13 @@ class FireEmblemHeroes:
                         original_arg.lower().startswith('compare'):
                     await self.bot.say(
                     "I'm afraid I couldn't find data of %s. Did you mean to do `?compare %s`?" %
-                    (original_arg,
+                    (original_arg.replace('*','\*').replace('_','\_'),
                      original_arg if not original_arg.lower().startswith('compare') else original_arg[7:].strip()))
                 elif any([modifier in original_arg for modifier in
                           ['-f', '-s', '-r']]) or original_arg.lower().startswith('list'):
                     await self.bot.say(
                         "I'm afraid I couldn't find data of %s. Did you mean to do `?list %s`?" %
-                        (original_arg,
+                        (original_arg.replace('*','\*').replace('_','\_'),
                          original_arg if not original_arg.lower().startswith('list') else original_arg[4:].strip()))
                 elif any([modifier in original_arg for modifier in
                              ['-', '/', '+']]) and not original_arg.endswith('+'):
@@ -468,7 +481,7 @@ class FireEmblemHeroes:
                                 for c in [original_arg[slashloc-1], original_arg[slashloc+1]]):
                             await self.bot.say(
                                 "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
-                                (original_arg,
+                                (original_arg.replace('*','\*').replace('_','\_'),
                                  original_arg if not original_arg.lower().startswith('stats') else original_arg[
                                                                                                    5:].strip()))
                         else:
@@ -476,7 +489,7 @@ class FireEmblemHeroes:
                     else:
                         await self.bot.say(
                         "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
-                        (original_arg,
+                        (original_arg.replace('*','\*').replace('_','\_'),
                          original_arg if not original_arg.lower().startswith('stats') else original_arg[5:].strip()))
                 else:
                     await self.bot.say(original_data)
