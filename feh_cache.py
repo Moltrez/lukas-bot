@@ -107,11 +107,13 @@ class FehCache(object):
         self.save()
 
     def set_list(self, list):
+        old_list = self.list
         if isinstance(self.list, dict):
             self.list.update(list)
         else:
             self.list = list
-        self.save()
+        if self.list != old_list:
+            self.save()
 
     def add_alias(self, alias, name, save=True, resolve_conflicts=True):
         alias = alias.lower().replace(' ', '')

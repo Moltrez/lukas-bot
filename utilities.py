@@ -72,7 +72,8 @@ merge_bonuses = [np.zeros(5), np.array([1,1,0,0,0]), np.array([1,1,1,1,0]), np.a
                  np.array([3,3,2,2,2]), np.array([3,3,3,3,2]), np.array([4,3,3,3,3]), np.array([4,4,4,3,3]), np.array([4,4,4,4,4])]
 summoner_bonuses = {None:np.zeros(5), 'c':np.array([3,0,0,0,2]), 'b':np.array([4,0,0,2,2]), 'a':np.array([4,0,2,2,2]), 's':np.array([5,2,2,2,2])}
 separators = ['v', 'vs', '-v', '&', '|']
-compare_limit = 15
+diff_limit = 6
+compare_limit = 40
 
 def find_arg(args, param_list, return_list, param_type, remove=True):
     """Finds arguments that exist in param_list and return the corresponding value from return_list."""
@@ -225,7 +226,7 @@ class FireEmblemHeroes:
         if boon and not bane:
             return False, 'Only boon (+%s) specified.' % boon
         if bane and not boon:
-            return False, 'Only bane (+%s) specified.' % bane
+            return False, 'Only bane (-%s) specified.' % bane
         if boon is not None and bane is not None:
             if (boon == bane):
                 return False, 'Boon is the same as bane.'
@@ -867,19 +868,29 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 continue
             current_args.append(arg)
         if nth_unit > compare_limit:
-            await self.bot.say('Please only compare up to %d units at a time.' % compare_limit)
+            await self.bot.say('Cannot compare more than %d units at a time.' % compare_limit)
+        if nth_unit > diff_limit and quiet_mode:
+            await self.bot.say('Cannot show differences for more than %d units at a time.' % diff_limit)
             return
         max_tables = []
         curr_unit = 1
         should_save = False
         for request in unit_requests:
+            take_base = False
+            if 'lvl1' in request:
+                take_base = True
+                request.remove('lvl1')
             save, ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
             should_save = should_save or save
             if not isinstance(ustats, tuple):
                 await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
                 return
-            unit, _, max_t = ustats
-            max_tables.append((shorten_hero_name(unit['Title']), max_t))
+            unit, base_t, max_t = ustats
+            if take_base:
+                stats_t = base_t
+            else:
+                stats_t = max_t
+            max_tables.append((shorten_hero_name(unit['Title']), stats_t))
             curr_unit += 1
         row_format = '|%-15.15s|%4s|%4s|%4s|%4s|%4s|%4s|\n'
         message = row_format % ('Unit', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'BST')

@@ -243,7 +243,7 @@ def get_data(arg, timeout_dur=5):
             else:
                 # connect to the first one
                 return get_data(options[0], timeout_dur=timeout_dur)
-        if not categories:
+        else:
             # check if soft redirect
             if 'redirect' in html.text.strip().lower():
                 return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
