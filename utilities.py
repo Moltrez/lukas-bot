@@ -709,10 +709,10 @@ class FireEmblemHeroes:
     @bot.command(pass_context=True, aliases=['flaunt', 'Flaunt', 'Fehflaunt', 'FEHFlaunt'])
     async def fehflaunt(self, ctx, *args):
         """Use this command to show off your prized units.
-If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe or InvdrZim13."""
+If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe, Mortagon or InvdrZim13."""
         user = str(ctx.message.author.id)
         username = str(ctx.message.author)
-        if len(args) == 3 and user in ['192820409937297418', '70087410221842432', '69620122100183040', '138570558479532033'] and args[0] == '-a':
+        if len(args) == 3 and user in ['192820409937297418', '70087410221842432', '69620122100183040', '138570558479532033', '70130363044732928'] and args[0] == '-a':
             img_url = args[2].strip('<>')
             self.cache.set_flaunt(args[1], img_url)
             if args[1] in self.flaunt_cache:
@@ -742,7 +742,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard,
             f = response.read()
             self.flaunt_cache[user] = f
         elif f is None:
-            await self.bot.say("I'm afraid you have nothing to flaunt. If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe or InvdrZim13.")
+            await self.bot.say("I'm afraid you have nothing to flaunt. If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe, Mortagon or InvdrZim13.")
             return
         f = io.BytesIO(f)
         f.name = os.path.basename(self.cache.flaunts[user])
