@@ -15,7 +15,8 @@ valid_categories = ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Dis
 
 def shorten_hero_name(name):
     main_name, epithet = name.split(':')
-    return main_name + ':' + ''.join(list(filter(lambda c: c.isupper(), w))[0] for w in epithet.strip().split(' '))
+    return main_name + ':' + ''.join(list(filter(lambda c: c.isupper(), w))[0] for w in epithet.strip().split(' ')
+                                     if any([c.isupper() for c in w]))
 
 
 def get_data(arg, timeout_dur=5):
