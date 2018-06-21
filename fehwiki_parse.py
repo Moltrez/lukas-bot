@@ -110,10 +110,14 @@ def get_data(arg, timeout_dur=5):
         if not icon is None:
             data['Embed Info']['Icon'] = icon
         stats = get_infobox(html)
-        data['0Might'] = stats['Might'], True
-        data['1Range'] = stats['Range'], True
-        data['2SP Cost'] = stats['SP Cost'], False
-        data['3Exclusive?'] = stats['Exclusive?'], True
+        if 'Might' in stats and stats['Might']:
+            data['0Might'] = stats['Might'], True
+        if 'Range' in stats and stats['Range']:
+            data['1Range'] = stats['Range'], True
+        if 'SP Cost' in stats and stats['SP Cost']:
+            data['2SP Cost'] = stats['SP Cost'], False
+        if 'Exclusive?' in stats and stats['Exclusive?']:
+            data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Description' in stats:
             data['5Description'] = stats[None].replace('  ', ' '), False
         ps = html.find_all('p')
@@ -132,11 +136,14 @@ def get_data(arg, timeout_dur=5):
                 if refinery_table:
                     if 'Image' in refinery_table[0]:
                         cost = refinery_table[0]['Cost'].split('|')
-                        cost_materials = cost[1:]
-                        cost = cost[0].split('\n')
-                        cost[1] = cost[1].strip().lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
-                        cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
-                        cost = ', '.join(cost)
+                        if any(cost):
+                            cost_materials = cost[1:]
+                            cost = cost[0].split('\n')
+                            cost[1] = cost[1].strip().lstrip('SP') + ' ' + cost_materials[0].strip() + 's'
+                            cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
+                            cost = ', '.join(cost)
+                        else:
+                            cost = 'Unknown'
                         data['Evolution'] = refinery_table[0]['Name'].split('|')[0], False
                         data['Evolution Cost'] = cost
                     elif 'Type' in refinery_table[0]:
@@ -151,12 +158,16 @@ def get_data(arg, timeout_dur=5):
                             s = r['Stats'].split('|')[0]
                             e = r['Description'].split('|')[0].replace('  ', ' ')
                             cost = r['Cost'].split('|')
-                            cost_materials = cost[1:]
-                            cost = cost[0].split(', ')
-                            cost[1] = cost[1].strip() + ' ' + cost_materials[0].strip() + 's'
-                            cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
-                            cost = ', '.join(cost)
-                            data['Refine'].append({'Type':t, 'Stats':s, 'Effect':e})
+                            if any(cost):
+                                cost_materials = cost[1:]
+                                cost = cost[0].split(', ')
+                                cost[1] = cost[1].strip() + ' ' + cost_materials[0].strip() + 's'
+                                cost[2] = cost[2].strip() + ' ' + cost_materials[1].strip() + 's'
+                                cost = ', '.join(cost)
+                            else:
+                                cost = 'Unknown'
+                            data['Refine'].append({'Type':t if t else 'Unknown', 'Stats':s if s else 'No Stat Changes',
+                                                   'Effect':e if e else 'No Effect'})
                             data['Refinery Cost'] = cost
     elif 'Passives' in categories:
         stats_table = html.find("table", attrs={"class": "sortable"})
