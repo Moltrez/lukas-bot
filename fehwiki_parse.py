@@ -15,7 +15,7 @@ valid_categories = ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Dis
 
 def shorten_hero_name(name):
     main_name, epithet = name.split(':')
-    return main_name + ':' + ''.join(w[0] for w in epithet.strip().split(' '))
+    return main_name + ':' + ''.join(list(filter(lambda c: c.isupper(), w))[0] for w in epithet.strip().split(' '))
 
 
 def get_data(arg, timeout_dur=5):
@@ -35,8 +35,8 @@ def get_data(arg, timeout_dur=5):
             alts = [content.text for content in html.find_all('i') if 'This page is about' in content.text][0]
             data['Message'] = '*' + alts + '*'
         stats = get_infobox(html)
-        stats = stats[None].split('\n\n\n\n')
-        stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats]}
+        stats = stats[None].split('\n\n\n')
+        stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats] if s}
         if 'Effect' in stats:
             stats['Weapon Type'] = stats['Effect']
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
