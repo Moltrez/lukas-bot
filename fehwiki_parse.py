@@ -377,7 +377,7 @@ def get_page_html(arg, timeout_dur=5):
 def get_infobox(html):
     table = html.find("div", attrs={"class": "hero-infobox"}).find("table")
     return {a.find("th").get_text().replace('  ', ' ').strip() if not a.find("th") is None else None: a.find(
-        "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr")}
+        "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr") if a.find("audio") is None}
 
 
 def get_heroes_stats_tables(html):
