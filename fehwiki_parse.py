@@ -42,11 +42,11 @@ def get_data(arg, timeout_dur=5):
             stats['Weapon Type'] = stats['Effect']
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         colour = weapon_colours['Colourless']
-        if 'Red' in stats['Weapon Type']:
+        if any(i in stats['Weapon Type'] for i in ['Red', 'Sword']):
             colour = weapon_colours['Red']
-        if 'Blue' in stats['Weapon Type']:
+        if any(i in stats['Weapon Type'] for i in ['Blue', 'Lance']):
             colour = weapon_colours['Blue']
-        if 'Green' in stats['Weapon Type']:
+        if any(i in stats['Weapon Type'] for i in ['Green', 'Axe']):
             colour = weapon_colours['Green']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
@@ -170,14 +170,20 @@ def get_data(arg, timeout_dur=5):
                                                    'Effect':e if e else 'No Effect'})
                             data['Refinery Cost'] = cost
     elif 'Passives' in categories:
-        stats_table = html.find("table", attrs={"class": "sortable"})
+        stats_table = html.find("table", attrs={"class": "skills-table"})
         stat_rows = stats_table.find_all("tr")[1:]
         data = {'Embed Info': {'Title': arg}, 'Data': []}
+        inherit_r = stat_rows.pop()
+        inherit_r = inherit_r.get_text().strip() + " " +\
+            ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
         curr_row = 1 if len(stat_rows) == 2 else 0
         for row in stat_rows:
             temp_data = {'Embed Info': {'Title': arg, 'Icon': None}}
             stats = [a.get_text().strip() for a in row.find_all("td")]
             stats = [a if a else 'N/A' for a in stats]
+            if stats[0] != 'N/A':
+                slot = stats.pop(0)
+            print(curr_row, stats)
             temp_data['Embed Info']['Colour'] = 0xe8e1c9 if len(stat_rows) == 1\
                                         else passive_colours[curr_row]
             curr_row += 1
@@ -192,12 +198,9 @@ def get_data(arg, timeout_dur=5):
             icon = get_icon(stats[1])
             if not icon is None:
                 temp_data['Embed Info']['Icon'] = icon
-            slot = stats_table.th.text[-2]
             temp_data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
             temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
             temp_data['2Effect'] = stats[3].replace('\n', ' '), False
-
-            inherit_r = ', '.join(map(lambda r:r.text.strip(), html.ul.find_all('li')))
             temp_data['3Inherit Restrictions'] = inherit_r, True
             if learners:
                 if 'Sacred Seals' in categories:
@@ -205,8 +208,8 @@ def get_data(arg, timeout_dur=5):
                 temp_data['4Heroes with ' + arg] = learners, False
             data['Data'].append(temp_data)
     elif 'Specials' in categories or 'Assists' in categories:
-        stats_table = html.find("table", attrs={"class": "sortable"})
-        data_row = stats_table.find_all("tr")[-1]
+        stats_table = html.find("table", attrs={"class": "skills-table"})
+        data_row = stats_table.find_all("tr")[1]
         stats = [a.get_text().strip() for a in data_row.find_all("td")]
         stats = [a if a else 'N/A' for a in stats]
         if 'Specials' in categories:
@@ -223,9 +226,12 @@ def get_data(arg, timeout_dur=5):
             data['0Range'] = stats[1], True
         data['1SP Cost'] = stats[3], True
         data['2Effect'] = stats[2], False
+        data['3Prequirement'] = stats[-1].replace('\n', ', '), False
+        inherit_r = stats_table.find_all("tr")[-1]
+        inherit_r = inherit_r.get_text().strip() + " " +\
+            ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
+        data['4Inherit Restrictions'] = inherit_r, True
         if 'Specials' in categories:
-            data['3Prequirement'] = stats[-1].replace('\n', ', '), False
-            data['4Inherit Restrictions'] = stats[-2], True
             if 'Area of Effect Specials' in categories:
                 range = ''
                 for row in html.find_all('table', attrs={"class":'wikitable'})[1].find_all('tr'):
@@ -239,8 +245,6 @@ def get_data(arg, timeout_dur=5):
                             range += ' '
                     range += '\n'
                 data['3Area of Effect'] = '```' + range + '```', False
-        elif 'Assists' in categories:
-            data['3Inherit Restrictions'] = stats[-1], True
         learners = get_learners(html.find_all("table", attrs={"class":"sortable"})[-1], arg)
         if learners:
             data['5Heroes with ' + arg] = learners, False
