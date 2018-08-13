@@ -114,8 +114,8 @@ def get_data(arg, timeout_dur=5):
             data['0Might'] = stats['Might'], True
         if 'Range' in stats and stats['Range']:
             data['1Range'] = stats['Range'], True
-        if 'SP Cost' in stats and stats['SP Cost']:
-            data['2SP Cost'] = stats['SP Cost'], False
+        if 'SP' in stats and stats['SP']:
+            data['2SP Cost'] = stats['SP'], False
         if 'Exclusive?' in stats and stats['Exclusive?']:
             data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Description' in stats:
