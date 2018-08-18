@@ -219,7 +219,6 @@ def get_data(arg, timeout_dur=5):
 
         data['Embed Info']['Title'] = arg
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
-
         if 'Specials' in categories:
             data['0Cooldown'] = stats[1], True
         elif 'Assists' in categories:
@@ -245,7 +244,7 @@ def get_data(arg, timeout_dur=5):
                             range += ' '
                     range += '\n'
                 data['3Area of Effect'] = '```' + range + '```', False
-        learners = get_learners(html.find_all("table", attrs={"class":"sortable"})[-1], arg)
+        learners = get_learners(html.find_all("table", attrs={"class":"sortable"})[-1], stats[0])
         if learners:
             data['5Heroes with ' + arg] = learners, False
     else:
@@ -416,7 +415,7 @@ def format_stats_table(table):
     keys = ['Rarity', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'Total']
     rows = ''
     for set in table:
-        rows += '\n`'
+        rows += '\n'
         for key in keys:
             if key == 'Rarity':
                 rows += '|' + set[key] + '★|'
@@ -437,8 +436,8 @@ def format_stats_table(table):
                         else:
                             ivs[key] = '-'
             rows += format % neutral + '|'
-        rows += '`'
-    header = '`|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in keys][:-1]) + '|`'
+    header = '```|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in keys][:-1]) + '|'
+    rows += '```'
     ret = header + rows
     if '+' in list(ivs.values()) or '-' in list(ivs.values()):
         ret += "\n\n_Neutral stats.\n+4 boons are indicated by +, -4 banes are indicated by -._"
