@@ -114,8 +114,8 @@ def get_data(arg, timeout_dur=5):
             data['0Might'] = stats['Might'], True
         if 'Range' in stats and stats['Range']:
             data['1Range'] = stats['Range'], True
-        if 'SP Cost' in stats and stats['SP Cost']:
-            data['2SP Cost'] = stats['SP Cost'], False
+        if 'SP' in stats and stats['SP']:
+            data['2SP Cost'] = stats['SP'], False
         if 'Exclusive?' in stats and stats['Exclusive?']:
             data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Description' in stats:
@@ -200,7 +200,7 @@ def get_data(arg, timeout_dur=5):
                 temp_data['Embed Info']['Icon'] = icon
             temp_data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
             temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
-            temp_data['2Effect'] = stats[3].replace('\n', ' '), False
+            temp_data['2Effect'] = stats[-1].replace('\n', ' '), False
             temp_data['3Inherit Restrictions'] = inherit_r, True
             if learners:
                 if 'Sacred Seals' in categories:
