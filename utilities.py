@@ -502,7 +502,7 @@ class FireEmblemHeroes:
         if 'Passives' in categories:
             if original_data['Embed Info']['Title'] == 'HP Plus' and passive_level in [2,3,4]:
                 passive_level -= 2
-            if passive_level <= len(original_data['Data']):
+            if passive_level < len(original_data['Data']):
                 data = original_data['Data'][passive_level]
             else:
                 data = original_data['Data'][-1]

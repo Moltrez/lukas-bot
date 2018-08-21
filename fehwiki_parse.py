@@ -9,7 +9,7 @@ INVALID_HERO = 'no'
 GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
 weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
-passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956]
+passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956, 0xfff208]
 valid_categories = ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
 
 
@@ -50,7 +50,7 @@ def get_data(arg, timeout_dur=5):
             colour = weapon_colours['Green']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
-        icon = get_icon(''.join(filter(lambda x: x.isalpha() or x in [' ', '-'], arg)), "Icon_Portrait_")
+        icon = get_icon(''.join(filter(lambda x: x.isalpha() or x in [' ', '-'], arg)), suffix="_Face_FC")
         if not icon is None:
             data['Embed Info']['Icon'] = icon
         rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
@@ -354,10 +354,10 @@ def list_row_to_dict(row):
     return hero
 
 
-def get_icon(arg, prefix=""):
+def get_icon(arg, prefix="", suffix=""):
     url = feh_source %\
-          "api.php?action=query&titles=File:%s%s.png" %\
-          (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '_Plus')))
+          "api.php?action=query&titles=File:%s%s%s.png" %\
+          (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '_Plus')), suffix)
     info = get_page(url, 'imageinfo&iiprop=url')
     if '-1' in info['query']['pages']:
         return None

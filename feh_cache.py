@@ -117,7 +117,7 @@ class FehCache(object):
 
     def add_alias(self, alias, name, save=True, resolve_conflicts=True):
         alias = alias.lower().replace(' ', '')
-        if alias[-1] in ['1','2','3']:
+        if alias[-1] in ['1','2','3','4']:
             alias = alias[:-1]
         if alias not in ['son', 'my son', 'waifu', 'my waifu'] and '/' not in alias\
             and (alias not in self.aliases or
