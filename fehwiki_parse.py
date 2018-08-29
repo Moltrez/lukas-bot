@@ -217,6 +217,11 @@ def get_data(arg, timeout_dur=5):
         elif 'Assists' in categories:
             data['Embed Info']['Colour'] = 0x1fe2c3
 
+        if 'Staff Assists' in categories:
+            icon = get_icon(arg, "Weapon_")
+            if not icon is None:
+                data['Embed Info']['Icon'] = icon
+
         data['Embed Info']['Title'] = arg
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         if 'Specials' in categories:
