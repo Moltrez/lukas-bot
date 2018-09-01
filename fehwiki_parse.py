@@ -393,7 +393,7 @@ def get_heroes_stats_tables(html):
     tables = [table for table in tables if 'Rarity' in table.text]
     if len(tables) < 2:
         return [None, None]
-    return [extract_table(a) for a in tables]
+    return [extract_table(a) for a in tables[0:2]]
 
 
 def extract_table(table_html, get_image_url=False):
