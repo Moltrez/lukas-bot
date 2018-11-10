@@ -714,7 +714,7 @@ class FireEmblemHeroes:
 If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe or Mortagon."""
         user = str(ctx.message.author.id)
         username = str(ctx.message.author)
-        if len(args) == 3 and user in ['192820409937297418', '70087410221842432', '69620122100183040', '138570558479532033', '70130363044732928'] and args[0] == '-a':
+        if len(args) == 3 and user in ['192820409937297418', '70087410221842432', '378954025145466880', '138570558479532033', '70130363044732928'] and args[0] == '-a':
             img_url = args[2].strip('<>')
             self.cache.set_flaunt(args[1], img_url)
             if args[1] in self.flaunt_cache:
