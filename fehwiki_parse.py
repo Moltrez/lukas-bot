@@ -125,7 +125,6 @@ def get_data(arg, timeout_dur=5):
             data['6Evolves from'] = ps[ps.index([p for p in ps if 'can be evolved from' in p.text][0])].a.text.strip(), False
         learners_table = html.find("table", attrs={"class":"sortable"})
         if learners_table:
-            learners_table = learners_table[-1]
             learners = ', '.join(map(shorten_hero_name, [a.find("td").find_all("a")[1].get_text().replace('\n', ' ') for a in learners_table.find_all("tr")]))
             if learners:
                 data['6Heroes with ' + arg] = learners, False
