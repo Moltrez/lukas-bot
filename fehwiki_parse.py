@@ -126,7 +126,7 @@ def get_data(arg, timeout_dur=5):
         learners_table = html.find("table", attrs={"class":"sortable"})
         if learners_table:
             learners = ', '.join(map(shorten_hero_name, [a.find("td").find_all("a")[1].get_text().replace('\n', ' ') for a in learners_table.find_all("tr")[1:]]))
-            if learners:
+         if learners:
                 data['6Heroes with ' + arg] = learners, False
         refinery_tables = html.find_all("table", attrs={"class":"wikitable default"})
         for refinery_table in refinery_tables:
