@@ -78,17 +78,18 @@ def get_data(arg, timeout_dur=5):
                 # specials
                 skills += '**Specials:** '
             last_learned = None
-            for row in table.find_all("tr")[(-2 if 'Might' in headings else None):]:
-                slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
-                if not slot is None:
-                    skills = skills.rstrip(', ')
-                    if not last_learned is None:
-                        skills += last_learned
-                    skills += '\n**' + slot.get_text() + ':** '
-                skills += row.find("td").get_text().strip()
-                if 'Type': # if we're in passives, get learned levels
-                     last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
-                skills += ', '
+            for row in table.find_all("tr")[(-2 if 'Might' in headings else 1):]:
+                if row.find("td") is not None:
+                    slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
+                    if not slot is None:
+                        skills = skills.rstrip(', ')
+                        if not last_learned is None:
+                            skills += last_learned
+                        skills += '\n**' + slot.get_text() + ':** '
+                    skills += row.find("td").get_text().strip()
+                    if 'Type': # if we're in passives, get learned levels
+                         last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
+                    skills += ', '
             if skills:
                 skills = skills.rstrip(', ') + last_learned + '\n'
         if skills:
@@ -182,7 +183,6 @@ def get_data(arg, timeout_dur=5):
             stats = [a if a else 'N/A' for a in stats]
             if stats[0] != 'N/A':
                 slot = stats.pop(0)
-            print(curr_row, stats)
             temp_data['Embed Info']['Colour'] = 0xe8e1c9 if len(stat_rows) == 1\
                                         else passive_colours[curr_row]
             curr_row += 1
@@ -460,13 +460,14 @@ def get_learners(learners_table, skill_name):
     learners = {i+1:[] for i in range(5)}
     # l_data is one row in a 2D array representing the learners table
     for l_data in [a.find_all("td") for a in learners_table.find_all("tr")]:
-        # append a name to the appropriate level
-        for i in range(len(l_data)):
-            text = l_data[i].get_text()
-            if skill_name in text and text[-1].isdigit():
-                learned_level = int(text[-1])
-                learners[learned_level].append(shorten_hero_name(l_data[0].find_all("a")[1].get_text().replace('\n', ' ')))
-                break
+        if l_data:
+            # append a name to the appropriate level
+            for i in range(len(l_data)):
+                text = l_data[i].get_text()
+                if skill_name in text and text[-1].isdigit():
+                    learned_level = int(text[-1])
+                    learners[learned_level].append(shorten_hero_name(l_data[0].find_all("a")[1].get_text().replace('\n', ' ')))
+                    break
     learners = '\n'.join(['%d★: %s' % (level, ', '.join(learners[level])) for level in learners if len(learners[level]) != 0])
     return learners
 

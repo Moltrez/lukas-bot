@@ -5,7 +5,7 @@ from socket import timeout
 
 def update_category(cache, category):
     cache.update()
-    members = get_page('http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle=Category:%s&cmlimit=400' % category.replace(' ', '_'))['query']['categorymembers']
+    members = get_page('http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle=Category:%s&cmlimit=700' % category.replace(' ', '_'))['query']['categorymembers']
     members = [m['title'] for m in members]
     count = 0
     try:
