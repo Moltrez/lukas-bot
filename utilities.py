@@ -1,4 +1,4 @@
-import discord, random, argparse, os.path, itertools
+import discord, random, argparse, os.path, itertools, traceback
 import numpy as np
 from socket import timeout
 from discord.ext import commands as bot
@@ -172,6 +172,7 @@ class FireEmblemHeroes:
                        % (original_arg.replace('*','\*').replace('_','\_'), self.find_similar(original_arg))
 
             data = None
+            categories = None
             if arg in self.cache.data and not ignore_cache:
                 categories = self.cache.categories[arg]
                 data = self.cache.data[arg]
@@ -199,7 +200,7 @@ class FireEmblemHeroes:
                 return False, False,\
                     "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
         except (KeyError, AttributeError, TypeError) as err:
-            self.cache.log(str(err))
+            feh_cache.cache_log.appendleft('```'+traceback.format_exc()+'```')
             if arg and categories and data:
                 return arg, categories, data
             return False, False, 'It appears the data I have is incomplete. Please try again later.'
