@@ -34,7 +34,7 @@ def get_data(arg, timeout_dur=5):
                                         [a.text.strip() for a in first_table.td.find_all('div') if a is not None and a.text])
         elif any(['This page is about' in content.text for content in html.find_all('i')]):
             alts = [content.text for content in html.find_all('i') if 'This page is about' in content.text][0]
-            data['Message'] = '*' + alts + '*'
+            data['Message'] = '*' + alts.strip() + '*'
         stats = get_infobox(html)
         stats = stats[None].split('\n\n\n')
         stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats] if s}
@@ -174,6 +174,7 @@ def get_data(arg, timeout_dur=5):
         stat_rows = stats_table.find_all("tr")[1:]
         data = {'Embed Info': {'Title': arg}, 'Data': []}
         inherit_r = stat_rows.pop()
+        print(inherit_r)
         inherit_r = inherit_r.get_text().strip() + " " +\
             ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
         curr_row = 1 if len(stat_rows) == 2 else 0
@@ -263,6 +264,9 @@ def get_data(arg, timeout_dur=5):
                 # connect to the first one
                 return get_data(options[0], timeout_dur=timeout_dur)
         else:
+            # check if persons page
+            if 'Persons' in categories:
+                return get_data(html.find('div', attrs={"style":"text-align:center;"}).a.text.strip(), timeout_dur=timeout_dur)
             # check if soft redirect
             if 'redirect' in html.text.strip().lower():
                 return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
