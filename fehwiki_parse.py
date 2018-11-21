@@ -174,9 +174,17 @@ def get_data(arg, timeout_dur=5):
         stat_rows = stats_table.find_all("tr")[1:]
         data = {'Embed Info': {'Title': arg}, 'Data': []}
         inherit_r = stat_rows.pop()
-        print(inherit_r)
-        inherit_r = inherit_r.get_text().strip() + " " +\
-            ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
+        try:
+            inherit_r = inherit_r.get_text().strip() + " " +\
+                ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
+        except KeyError:
+            # maybe a html error
+            try:
+                inherit_r = BSoup(inherit_r.get_text().strip(), "lxml")
+                inherit_r = inherit_r.get_text().strip() + " " +\
+                    ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
+            except KeyError:
+                inherit_r = "*Inherit restrictions could not be parsed at this time. Please refer to the source page.*"
         curr_row = 1 if len(stat_rows) == 2 else 0
         for row in stat_rows:
             temp_data = {'Embed Info': {'Title': arg, 'Icon': None}}
