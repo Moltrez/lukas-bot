@@ -746,7 +746,7 @@ If you want to add a flaunt please send a screenshot of your unit to mysticShado
             f = response.read()
             self.flaunt_cache[user] = f
         elif f is None:
-            await self.bot.say("I'm afraid you have nothing to flaunt. If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe  Mortagon.")
+            await self.bot.say("I'm afraid you have nothing to flaunt. If you want to add a flaunt please send a screenshot of your unit to mysticShadow, monkeybard, Datagne, Zylphe  Mortagon.")
             return
         f = io.BytesIO(f)
         f.name = os.path.basename(self.cache.flaunts[user])
