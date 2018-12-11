@@ -38,7 +38,10 @@ def get_data(arg, timeout_dur=5):
         stats = get_infobox(html)
         stats = stats[None].split('\n\n\n')
         stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats] if s}
-        if 'Effect' in stats:
+        print(stats)
+        if 'Legendary Heroes' in categories:
+            data['2Element'] = "{} ({})".format(stats['Effect'].strip(), stats['Ally Boost']), False
+        elif 'Effect' in stats:
             stats['Weapon Type'] = stats['Effect']
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         colour = weapon_colours['Colourless']
@@ -198,9 +201,11 @@ def get_data(arg, timeout_dur=5):
             skill_name = stats[1]
             learners = None
             if 'Seal Exclusive Skills' not in categories:
-                learners_table = html.find_all("table", attrs={"class": "sortable"})[-1]
-                if learners_table != stats_table:
-                    learners = get_learners(learners_table, skill_name)
+                learners_table = html.find_all("table", attrs={"class": "sortable"})
+                if learners_table and len(learners_table) > 0:
+                    learners_table = learners_table[-1]
+                    if learners_table != stats_table:
+                        learners = get_learners(learners_table, skill_name)
             temp_data['Embed Info']['Title'] = skill_name
             temp_data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
             icon = get_icon(stats[1])
@@ -461,9 +466,7 @@ def format_stats_table(table):
 
 
 def get_bst(stats_table):
-    if len(stats_table) == 0:
-        return None
-    if 'Total' not in stats_table[-1]:
+    if not stats_table or len(stats_table) == 0 or 'Total' not in stats_table[-1]:
         return None
     return stats_table[-1]['Total']
 

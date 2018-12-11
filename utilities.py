@@ -199,7 +199,7 @@ class FireEmblemHeroes:
             if err.code >= 500:
                 return False, False,\
                     "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
-        except (KeyError, AttributeError, TypeError) as err:
+        except (KeyError, AttributeError, TypeError, IndexError) as err:
             feh_cache.cache_log.appendleft('```'+traceback.format_exc()+'```')
             if arg and categories and data:
                 return arg, categories, data
