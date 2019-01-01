@@ -35,14 +35,11 @@ def get_data(arg, timeout_dur=5):
         elif any(['This page is about' in content.text for content in html.find_all('i')]):
             alts = [content.text for content in html.find_all('i') if 'This page is about' in content.text][0]
             data['Message'] = '*' + alts.strip() + '*'
-        stats = get_infobox(html)
-        stats = stats[None].split('\n\n\n')
-        stats = {s[0].strip():s[-1].strip() for s in [list(filter(None, sp.split('\n'))) for sp in stats] if s}
-        print(stats)
+        stats = get_hero_infobox(html)
         if 'Legendary Heroes' in categories:
             data['2Element'] = "{} ({})".format(stats['Effect'].strip(), stats['Ally Boost']), False
         elif 'Effect' in stats:
-            stats['Weapon Type'] = stats['Effect']
+            stats['Weapon Type'] = stats['Weapon Type']
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         colour = weapon_colours['Colourless']
         if any(i in stats['Weapon Type'] for i in ['Red', 'Sword']):
@@ -402,6 +399,13 @@ def get_infobox(html):
     table = html.find("div", attrs={"class": "hero-infobox"}).find("table")
     return {a.find("th").get_text().replace('  ', ' ').strip() if not a.find("th") is None else None: a.find(
         "td").get_text().strip() if not a.find("td") is None else None for a in table.find_all("tr") if a.find("audio") is None}
+
+
+def get_hero_infobox(html):
+    table = html.find("div", attrs={"class": "hero-infobox"}).find_all("tr")[-1].find("div").find_all("div", attrs={"style": "width:100%"})
+    table = [div.find_all("div") for div in table]
+    table = {d[0].get_text().replace('  ',' ').strip(): d[1].get_text().replace('  ',' ').strip() for d in table}
+    return table
 
 
 def get_heroes_stats_tables(html):
