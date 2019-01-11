@@ -200,7 +200,7 @@ class FireEmblemHeroes:
                 return False, False,\
                     "Unfortunately, it seems like I cannot access my sources at the moment. Please try again later."
         except (KeyError, AttributeError, TypeError, IndexError) as err:
-            feh_cache.cache_log.appendleft('```'+traceback.format_exc()+'```')
+            feh_cache.cache_log.appendleft('command arg: '+original_arg+'\n'+'```'+traceback.format_exc()+'```')
             if arg and categories and data:
                 return arg, categories, data
             return False, False, 'It appears the data I have is incomplete. Please try again later.'

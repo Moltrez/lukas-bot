@@ -265,6 +265,7 @@ def get_data(arg, timeout_dur=5):
     else:
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
+        data['1Categories'] = ', '.join(categories), False
         if 'Disambiguation pages' in categories:
             valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan', 'Grima', 'Falchion', 'Kana']
             options = [option.a['title'].strip() for option in html.find_all('li')]
@@ -276,7 +277,11 @@ def get_data(arg, timeout_dur=5):
         else:
             # check if persons page
             if 'Persons' in categories:
-                return get_data(html.find('div', attrs={"style":"text-align:center;"}).a.text.strip(), timeout_dur=timeout_dur)
+                first_hero_link = html.find('div', attrs={"style":"text-align:center;"})
+                if first_hero_link:
+                    return get_data(first_hero_link.a.text.strip(), timeout_dur=timeout_dur)
+                else:
+                    return categories, data
             # check if soft redirect
             if 'redirect' in html.text.strip().lower():
                 return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
