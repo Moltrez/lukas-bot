@@ -18,6 +18,21 @@ def shorten_hero_name(name):
     return main_name + ':' + ''.join(list(filter(lambda c: c.isalpha(), w))[0] for w in epithet.strip().split(' ')
                                      if any([c.isalpha() for c in w]))
 
+def parse_inherit_restriction(inherit_r):
+    try:
+        inherit_r = inherit_r.get_text().strip() + " " + \
+                    ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find(
+                        "a") is not None else '')
+    except KeyError:
+        # maybe a html error
+        try:
+            inherit_r = BSoup(inherit_r.get_text().strip(), "lxml")
+            inherit_r = inherit_r.get_text().strip() + " " + \
+                        ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find(
+                            "a") is not None else '')
+        except KeyError:
+            inherit_r = "*Inherit restrictions could not be parsed at this time. Please refer to the source page.*"
+    return inherit_r
 
 def get_data(arg, timeout_dur=5):
     categories, html = get_page_html(arg, timeout_dur)
@@ -173,18 +188,10 @@ def get_data(arg, timeout_dur=5):
         stats_table = html.find("table", attrs={"class": "skills-table"})
         stat_rows = stats_table.find_all("tr")[1:]
         data = {'Embed Info': {'Title': arg}, 'Data': []}
-        inherit_r = stat_rows.pop()
-        try:
-            inherit_r = inherit_r.get_text().strip() + " " +\
-                ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
-        except KeyError:
-            # maybe a html error
-            try:
-                inherit_r = BSoup(inherit_r.get_text().strip(), "lxml")
-                inherit_r = inherit_r.get_text().strip() + " " +\
-                    ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
-            except KeyError:
-                inherit_r = "*Inherit restrictions could not be parsed at this time. Please refer to the source page.*"
+        inherit_r = None
+        if stat_rows[-1].text.strip().startswith("Cannot use:"):
+            inherit_r = stat_rows.pop()
+            inherit_r = parse_inherit_restriction(inherit_r)
         curr_row = 1 if len(stat_rows) == 2 else 0
         for row in stat_rows:
             temp_data = {'Embed Info': {'Title': arg, 'Icon': None}}
@@ -210,8 +217,11 @@ def get_data(arg, timeout_dur=5):
                 temp_data['Embed Info']['Icon'] = icon
             temp_data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
             temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
-            temp_data['2Effect'] = stats[-1].replace('\n', ' '), False
+            temp_data['2Effect'] = stats[4].replace('\n', ' '), False
+            if inherit_r is None:
+                inherit_r = parse_inherit_restriction(row.find_all("td")[-1])
             temp_data['3Inherit Restrictions'] = inherit_r, True
+            inherit_r = None
             if learners:
                 if 'Sacred Seals' in categories:
                     learners = 'Available as Sacred Seal\n' + learners
