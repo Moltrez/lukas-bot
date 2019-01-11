@@ -218,10 +218,9 @@ def get_data(arg, timeout_dur=5):
             temp_data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
             temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
             temp_data['2Effect'] = stats[4].replace('\n', ' '), False
-            if inherit_r is None:
-                inherit_r = parse_inherit_restriction(row.find_all("td")[-1])
+            if len(stats) > 5:
+                inherit_r = "Cannot use: " + parse_inherit_restriction(row.find_all("td")[-1])
             temp_data['3Inherit Restrictions'] = inherit_r, True
-            inherit_r = None
             if learners:
                 if 'Sacred Seals' in categories:
                     learners = 'Available as Sacred Seal\n' + learners
