@@ -219,7 +219,9 @@ def get_data(arg, timeout_dur=5):
             temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
             temp_data['2Effect'] = stats[4].replace('\n', ' '), False
             if len(stats) > 5:
-                inherit_r = "Cannot use: " + parse_inherit_restriction(row.find_all("td")[-1])
+                inherit_r = parse_inherit_restriction(row.find_all("td")[-1])
+                if not inherit_r.startswith('No restrictions'):
+                    inherit_r = "Cannot use: " + inherit_r
             temp_data['3Inherit Restrictions'] = inherit_r, True
             if learners:
                 if 'Sacred Seals' in categories:
