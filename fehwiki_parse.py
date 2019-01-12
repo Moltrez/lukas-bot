@@ -189,7 +189,7 @@ def get_data(arg, timeout_dur=5):
         stat_rows = stats_table.find_all("tr")[1:]
         data = {'Embed Info': {'Title': arg}, 'Data': []}
         inherit_r = None
-        if stat_rows[-1].text.strip().startswith("Cannot use:"):
+        if stat_rows[-1].text.strip().startswith("Cannot use:") or stat_rows[-1].text.strip().startswith("No restrictions."):
             inherit_r = stat_rows.pop()
             inherit_r = parse_inherit_restriction(inherit_r)
         curr_row = 1 if len(stat_rows) == 2 else 0
