@@ -292,7 +292,7 @@ class FireEmblemHeroes:
                     ordered_stats = (-base_stats[i]).argsort()
                     bonuses = np.zeros(5, dtype=np.int32)
                     bonuses[ordered_stats] = merge_bonuses[merge]
-                    if merge == 1:
+                    if merge != 0:
                         if bane is None and boon is None:
                             bonuses[ordered_stats] += [1,1,1,0,0]
                         else:
