@@ -292,8 +292,16 @@ class FireEmblemHeroes:
                     ordered_stats = (-base_stats[i]).argsort()
                     bonuses = np.zeros(5, dtype=np.int32)
                     bonuses[ordered_stats] = merge_bonuses[merge]
-                    base_stats[i] += bonuses
+                    if merge == 1:
+                        if bane is None and boon is None:
+                            bonuses[ordered_stats] += [1,1,1,0,0]
+                        else:
+                            stat_map = ["HP","ATK","SPD","DEF","RES"]
+                            stat_map = {stat_map[i]:i for i in range(len(stat_map))}
+                            bonuses[stat_map[bane]] += 3
                     max_stats[i] += bonuses
+                    base_stats[i] += bonuses
+
         # summoner bonuses
         if support is not None:
             for i in range(5):
