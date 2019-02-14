@@ -535,7 +535,7 @@ def standardize(d, k):
         if l[i] in ['G', 'Gr']:
             l[i] = 'Green'
         if l[i] in ['C', 'Colourless', 'Colorless', 'Ne', 'N']:
-            l[i] = 'Neutral'
+            l[i] = 'Colorless'
         if l[i] == 'Sw':
             l[i] = 'Sword'
         if l[i] == 'La':
@@ -652,7 +652,7 @@ def standardize(d, k):
         if bool(set(filter(lambda x:not isinstance(x, tuple), l)) - set(valid_filters)):
             return None
         else:
-            colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Neutral'], l))
+            colours = list(filter(lambda x:x in ['Red', 'Blue', 'Green', 'Colorless'], l))
             weapons = list(filter(lambda x:x in ['Sword', 'Lance', 'Axe', 'Bow', 'Staff', 'Dagger', 'Breath', 'Tome'], l))
             move = list(filter(lambda x:x in ['Infantry', 'Cavalry', 'Armored', 'Flying'], l))
             thresh = list(filter(lambda x:isinstance(x, tuple), l))
