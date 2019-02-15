@@ -43,10 +43,10 @@ def get_data(arg, timeout_dur=5):
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
     if 'Heroes' in categories:
         first_table = html.find('table', attrs={'class':'wikitable'})
-        if first_table.text.strip().startswith('Other') and first_table.td is not None:
-            data['Message'] = '**Other related Heroes:** '+\
+        if first_table.text.strip().startswith('You may') and first_table.td is not None:
+            data['Message'] = '**You may be looking for:** '+\
                                     ', '.join(
-                                        [a.text.strip() for a in first_table.td.find_all('div') if a is not None and a.text])
+                                        [a.text.strip() for a in first_table.td.find_all('div', attrs={"class":"tooltiptext"}) if a is not None and a.text])
         elif any(['This page is about' in content.text for content in html.find_all('i')]):
             alts = [content.text for content in html.find_all('i') if 'This page is about' in content.text][0]
             data['Message'] = '*' + alts.strip() + '*'
