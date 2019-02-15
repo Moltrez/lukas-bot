@@ -220,21 +220,23 @@ class FireEmblemHeroes:
         if to_remove:
             args.remove(to_remove)
 
+        # get merge number
+        merges = ['+' + str(i) for i in range(1, 11)]
+        merge, args = find_arg(args, merges, range(1, 11), 'merge levels')
         # get IV information
         boons = ['+' + s.lower() for s in stats]
         banes = ['-' + s.lower() for s in stats]
         boon, args = find_arg(args, boons, stats, 'boons')
         bane, args = find_arg(args, banes, stats, 'banes')
-        if boon and not bane:
-            return False, 'Only boon (+%s) specified.' % boon
+        if boon and not bane and merge is None:
+            return False, 'Only boon (+%s) specified with no merges.' % boon
         if bane and not boon:
             return False, 'Only bane (-%s) specified.' % bane
-        if boon is not None and bane is not None:
-            if (boon == bane):
-                return False, 'Boon is the same as bane.'
-        # get merge number
-        merges = ['+' + str(i) for i in range(1, 11)]
-        merge, args = find_arg(args, merges, range(1, 11), 'merge levels')
+        if boon == bane:
+            boon = None
+            bane = None
+        if merge is not None:
+            bane = None
         # get summoner support level
         supports = ['c', 'b', 'a', 's']
         support, args = find_arg(args, supports, supports, 'summoner support levels')
@@ -295,10 +297,6 @@ class FireEmblemHeroes:
                     if merge != 0:
                         if bane is None and boon is None:
                             bonuses[ordered_stats] += [1,1,1,0,0]
-                        else:
-                            stat_map = ["HP","ATK","SPD","DEF","RES"]
-                            stat_map = {stat_map[i]:i for i in range(len(stat_map))}
-                            bonuses[stat_map[bane]] += 3
                     max_stats[i] += bonuses
                     base_stats[i] += bonuses
 
