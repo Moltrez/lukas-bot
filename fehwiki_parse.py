@@ -189,7 +189,10 @@ def get_data(arg, timeout_dur=5):
         stat_rows = stats_table.find_all("tr")[1:]
         data = {'Embed Info': {'Title': arg}, 'Data': []}
         inherit_r = None
-        if stat_rows[-1].text.strip().startswith("Cannot use:") or stat_rows[-1].text.strip().startswith("No restrictions."):
+        if stat_rows[-1].text.strip().startswith("Cannot use:") or \
+                stat_rows[-1].text.strip().startswith("No restrictions.") or \
+                stat_rows[-1].text.strip().startswith("This skill can only") or \
+                stat_rows[-1].text.strip().startswith("Unknown"):
             inherit_r = stat_rows.pop()
             inherit_r = parse_inherit_restriction(inherit_r)
         curr_row = 1 if len(stat_rows) == 2 else 0
@@ -438,13 +441,14 @@ def extract_table(table_html, get_image_url=False):
     for learner in table_html.find_all("tr"):
         if len(learner.find_all("td")) == 0:
             continue
-        data = [
-            a.get_text().strip() +
-            ('|' + (('|'.join([b['alt'].strip().rstrip('.png') for b in a.find_all('img')])) if a.find_all('img')
-            else (a.a['title'].lstrip('File:').rstrip('.png') if a.a else '')) + '|'
-            if get_image_url else '')
-            for a in learner.find_all("td")
-        ]
+        data = []
+        for a in learner.find_all("td"):
+            d = a.get_text().strip()
+            if get_image_url and a.a:
+                d += '|' + '|'.join([b['href'].strip().lstrip('/').\
+                                    replace('File:','').replace('.png','').replace('_', ' ')
+                                     for b in a.find_all('a')]) + '|'
+            data.append(d)
         table.append({headings[a]: data[a] for a in range(0, len(headings))})
     return table
 

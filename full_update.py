@@ -39,5 +39,7 @@ def update_category(cache, category):
 if __name__ == '__main__':
     cache = FehCache()
     for c in valid_categories:
+        if c == "Disambiguation pages":
+            continue
         update_category(cache, c)
     print(cache.last_update)
