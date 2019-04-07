@@ -177,7 +177,7 @@ class FireEmblemHeroes:
                 categories = self.cache.categories[arg]
                 data = self.cache.data[arg]
             if data is None or arg in self.cache.replacement_list:
-                new_categories, new_data = get_data(arg)
+                new_categories, new_data, other_pages = get_data(arg)
                 if new_data is None:
                     return False, False,\
                            "I'm afraid I couldn't find information on %s." % arg
@@ -186,6 +186,8 @@ class FireEmblemHeroes:
                     data = new_data
                     if arg in self.cache.replacement_list:
                         self.cache.replacement_list.remove(arg)
+                    if data['Embed Info']['Title'] not in self.cache.data and other_pages:
+                        self.cache.replacement_list.extend(set(other_pages))
             return arg, categories, data
         except timeout:
             print('Timed out')

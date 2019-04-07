@@ -17,7 +17,7 @@ def update_category(cache, category):
                         ((member not in cache.data) or member in cache.replacement_list):
                     print("Getting data for " + member)
                     try:
-                        categories, data = get_data(member, None)
+                        categories, data, other_pages = get_data(member, None)
                         if member in cache.replacement_list:
                             cache.replacement_list.remove(member)
                         if any([c in categories for c in valid_categories]):

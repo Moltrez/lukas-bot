@@ -41,6 +41,7 @@ def get_data(arg, timeout_dur=5):
     for br in html.find_all('br'):
         br.replace_with('\n')
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
+    other_referenced_pages = []
     if 'Heroes' in categories:
         first_table = html.find('table', attrs={'class':'wikitable'})
         if first_table.text.strip().startswith('You may') and first_table.td is not None:
@@ -93,7 +94,7 @@ def get_data(arg, timeout_dur=5):
                 # specials
                 skills += '**Specials:** '
             last_learned = None
-            for row in table.find_all("tr")[(-2 if 'Might' in headings else 1):]:
+            for row in table.find_all("tr")[1:]:
                 if row.find("td") is not None:
                     slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
                     if not slot is None:
@@ -102,6 +103,7 @@ def get_data(arg, timeout_dur=5):
                             skills += last_learned
                         skills += '\n**' + slot.get_text() + ':** '
                     skills += row.find("td").get_text().strip()
+                    other_referenced_pages.append(row.find("td").a['href'].lstrip('/').replace('_',' '))
                     if 'Type': # if we're in passives, get learned levels
                          last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
                     skills += ', '
@@ -299,7 +301,7 @@ def get_data(arg, timeout_dur=5):
             # check if soft redirect
             if 'redirect' in html.text.strip().lower():
                 return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
-    return categories, data
+    return categories, data, other_referenced_pages
 
 
 def get_page(url, prop='', timeout_dur=5):
