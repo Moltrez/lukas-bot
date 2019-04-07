@@ -432,10 +432,10 @@ def get_heroes_stats_tables(html):
     tables = [table for table in tables if 'Rarity' in table.text]
     if len(tables) < 2:
         return [None, None]
-    return [extract_table(a) for a in tables[0:2]]
+    return [extract_table(a, cap_keys=True) for a in tables[0:2]]
 
 
-def extract_table(table_html, get_image_url=False):
+def extract_table(table_html, get_image_url=False, cap_keys=False):
     table = []
     headings = [a.get_text().strip() for a in table_html.find_all("th")]
     for learner in table_html.find_all("tr"):
@@ -449,23 +449,23 @@ def extract_table(table_html, get_image_url=False):
                                     replace('File:','').replace('.png','').replace('_', ' ')
                                      for b in a.find_all('a')]) + '|'
             data.append(d)
-        table.append({headings[a]: data[a] for a in range(0, len(headings))})
+        table.append({(headings[a].upper() if cap_keys else headings[a]): data[a] for a in range(0, len(headings))})
     return table
 
 
 def format_stats_table(table):
     if len(table) == 0:
         return None
-    ivs = {'HP':'', 'ATK':'', 'SPD':'', 'DEF':'', 'RES':'', 'Total':''}
-    keys = ['Rarity', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'Total']
+    ivs = {'HP':'', 'ATK':'', 'SPD':'', 'DEF':'', 'RES':'', 'TOTAL':''}
+    keys = ['RARITY', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'TOTAL']
     rows = ''
     for set in table:
         rows += '\n'
         for key in keys:
-            if key == 'Rarity':
+            if key == keys[0]:
                 rows += '|' + set[key] + '★|'
                 continue
-            if key == 'Total':
+            if key == keys[-1]:
                 continue
             stats = set[key].split('/')
             neutral = stats[0]
@@ -481,7 +481,7 @@ def format_stats_table(table):
                         else:
                             ivs[key] = '-'
             rows += format % neutral + '|'
-    header = '```|' + '|'.join([format % (ivs[key] + key) if key != 'Rarity' else ' ★' for key in keys][:-1]) + '|'
+    header = '```|' + '|'.join([format % (ivs[key] + key) if key != keys[0] else ' ★' for key in keys][:-1]) + '|'
     rows += '```'
     ret = header + rows
     if '+' in list(ivs.values()) or '-' in list(ivs.values()):
@@ -490,9 +490,9 @@ def format_stats_table(table):
 
 
 def get_bst(stats_table):
-    if not stats_table or len(stats_table) == 0 or 'Total' not in stats_table[-1]:
+    if not stats_table or len(stats_table) == 0 or 'TOTAL' not in stats_table[-1]:
         return None
-    return stats_table[-1]['Total']
+    return stats_table[-1]['TOTAL']
 
 
 def get_learners(learners_table, skill_name):
