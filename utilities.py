@@ -92,16 +92,16 @@ def find_arg(args, param_list, return_list, param_type, remove=True):
 def table_to_array(table, boon, bane, rarity):
     #convert dictionary format to numpy arrays, accounting for boons banes and rarity
     array = np.zeros((5,5), dtype=np.int32)
-    keys = ['Rarity', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'Total']
+    keys = ['RARITY', 'HP', 'ATK', 'SPD', 'DEF', 'RES', 'TOTAL']
     for i in range(len(table)):
         row = table[i]
-        row_rarity = int(row['Rarity'])
+        row_rarity = int(row['RARITY'])
         if rarity is not None and row_rarity != rarity:
             continue
         else:
             row_rarity -= 1
         for key in keys:
-            if key in ['Rarity','Total']:
+            if key in ['RARITY','TOTAL']:
                 continue
             stat = row[key].split('/')
             if any([not s.isdigit() for s in stat]):
@@ -124,9 +124,9 @@ def array_to_table(array):
     for i in range(len(array)):
         # skip empty rows
         if any(array[i]):
-            p1 = {'Rarity':str(i+1)}
+            p1 = {'RARITY':str(i+1)}
             p2 = {stats[j]:str(array[i][j]) for j in range(5)}
-            p3 = {'Total':str(array[i].sum())}
+            p3 = {'TOTAL':str(array[i].sum())}
             row = dict(p1, **p2)
             row.update(p3)
             ret.append(row)
@@ -802,7 +802,7 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                     message.set_thumbnail(url=embed_info['Icon'])
             message.add_field(
                 name="BST",
-                value=max[-1]['Total'],
+                value=max[-1]['TOTAL'],
                 inline=False
             )
             message.add_field(
@@ -909,7 +909,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
         unit_number = 1
         for unit in max_tables:
             table = array_to_table(unit[1])[0]
-            message += row_format % (unit[0], table['HP'], table['ATK'], table['SPD'], table['DEF'], table['RES'], table['Total'])
+            message += row_format % (unit[0], table['HP'], table['ATK'], table['SPD'], table['DEF'], table['RES'], table['TOTAL'])
             unit_number += 1
         raw_stats = [np.array(list(filter(lambda r:any(r), t))[0]) for t in [table[1] for table in max_tables]]
         messages = [message] if stats_mode else []
