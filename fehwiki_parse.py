@@ -1,4 +1,4 @@
-import urllib.request, urllib.parse, json, io, operator
+import urllib.request, urllib.parse, json, io, operator, unidecode
 from socket import timeout
 from bs4 import BeautifulSoup as BSoup
 from feh_alias import *
@@ -10,7 +10,7 @@ GAUNTLET_URL = "https://support.fire-emblem-heroes.com/voting_gauntlet/current"
 
 weapon_colours = {'Red':0xCC2844, 'Blue':0x2A63E6, 'Green':0x139F13, 'Colourless':0x54676E, 'Null':0x222222}
 passive_colours = [0xcd914c, 0xa8b0b0, 0xd8b956, 0xfff208]
-valid_categories = ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
+valid_categories = ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages', 'Enemy units']
 
 
 def shorten_hero_name(name):
@@ -42,40 +42,39 @@ def get_data(arg, timeout_dur=5):
         br.replace_with('\n')
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
     other_referenced_pages = []
-    if 'Heroes' in categories:
+    if 'Heroes' in categories or 'Enemy units' in categories:
         first_table = html.find('table', attrs={'class':'wikitable'})
         if first_table.text.strip().startswith('You may') and first_table.td is not None:
-            data['Message'] = '**You may be looking for:** '+\
-                                    ', '.join(
-                                        [a.text.strip() for a in first_table.td.find_all('div', attrs={"class":"tooltiptext"}) if a is not None and a.text])
+            alts = [a.text.strip() for a in first_table.td.find_all('div', attrs={"class":"tooltiptext"}) if a is not None and a.text]
+            data['Message'] = '**You may be looking for:** '+ ', '.join(alts)
+            other_referenced_pages.extend(set(alts))
         elif any(['This page is about' in content.text for content in html.find_all('i')]):
             alts = [content.text for content in html.find_all('i') if 'This page is about' in content.text][0]
             data['Message'] = '*' + alts.strip() + '*'
         stats = get_hero_infobox(html)
         if 'Legendary Heroes' in categories:
-            data['2Element'] = "{} ({})".format(stats['Effect'].strip(), stats['Ally Boost']), False
-        elif 'Effect' in stats:
-            stats['Weapon Type'] = stats['Weapon Type']
+            data['2Element'] = "{} ({})".format(stats['effect'].strip(), stats['ally boost']), False
         base_stats_table, max_stats_table = get_heroes_stats_tables(html)
         colour = weapon_colours['Colourless']
-        if any(i in stats['Weapon Type'] for i in ['Red', 'Sword']):
+        if any(i in stats['weapon type'] for i in ['Red', 'Sword']):
             colour = weapon_colours['Red']
-        if any(i in stats['Weapon Type'] for i in ['Blue', 'Lance']):
+        if any(i in stats['weapon type'] for i in ['Blue', 'Lance']):
             colour = weapon_colours['Blue']
-        if any(i in stats['Weapon Type'] for i in ['Green', 'Axe']):
+        if any(i in stats['weapon type'] for i in ['Green', 'Axe']):
             colour = weapon_colours['Green']
         data['Embed Info']['Colour'] = colour
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         icon = get_icon(''.join(filter(lambda x: x.isalpha() or x in [' ', '-'], arg)), suffix="_Face_FC")
         if not icon is None:
             data['Embed Info']['Icon'] = icon
-        rarity = '-'.join(a+'★' for a in stats['Rarities'] if a.isdigit())
-        data['0Rarities'] = (rarity if rarity else 'N/A'), True
+        if 'rarities' in stats:
+            rarity = '-'.join(a+'★' for a in stats['rarities'] if a.isdigit())
+            data['0Rarities'] = (rarity if rarity else 'N/A'), True
         bst = get_bst(max_stats_table)
         if bst is not None:
             data['1BST'] = bst, True
-        data['2Weapon Type'] = stats['Weapon Type'], True
-        data['3Move Type'] = stats['Move Type'], True
+        data['2Weapon Type'] = stats['weapon type'], True
+        data['3Move Type'] = stats['move type'], True
         if base_stats_table:
             data['4Base Stats'] = base_stats_table, False
         if max_stats_table:
@@ -94,18 +93,19 @@ def get_data(arg, timeout_dur=5):
                 # specials
                 skills += '**Specials:** '
             last_learned = None
+            in_passives = False
             for row in table.find_all("tr")[1:]:
                 if row.find("td") is not None:
                     slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
                     if not slot is None:
+                        in_passives = True
                         skills = skills.rstrip(', ')
                         if not last_learned is None:
                             skills += last_learned
                         skills += '\n**' + slot.get_text() + ':** '
-                    skills += row.find("td").get_text().strip()
-                    other_referenced_pages.append(row.find("td").a['href'].lstrip('/').replace('_',' '))
-                    if 'Type': # if we're in passives, get learned levels
-                         last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip()
+                    skills += row.find_all("td")[1 if in_passives else 0].get_text().strip()
+                    other_referenced_pages.append(row.find_all("td")[1 if in_passives else 0].a['href'].lstrip('/').replace('_',' '))
+                    last_learned = ' (%s★)' % row.find_all("td")[-2 if not slot is None else -1].get_text().strip() # get learned levels
                     skills += ', '
             if skills:
                 skills = skills.rstrip(', ') + last_learned + '\n'
@@ -258,8 +258,8 @@ def get_data(arg, timeout_dur=5):
         data['2Effect'] = stats[2], False
         data['3Prequirement'] = stats[-1].replace('\n', ', '), False
         inherit_r = stats_table.find_all("tr")[-1]
-        inherit_r = inherit_r.get_text().strip() + " " +\
-            ((', '.join([a["title"] for a in inherit_r.find_all("a")])).strip() if inherit_r.find("a") is not None else '')
+        inherit_r = parse_inherit_restriction(inherit_r)
+
         data['4Inherit Restrictions'] = inherit_r, True
         if 'Specials' in categories:
             if 'Area of Effect Specials' in categories:
@@ -396,7 +396,7 @@ def list_row_to_dict(row):
 def get_icon(arg, prefix="", suffix=""):
     url = feh_source %\
           "api.php?action=query&titles=File:%s%s%s.png" %\
-          (prefix, urllib.parse.quote(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '_Plus')), suffix)
+          (prefix, urllib.parse.quote(unidecode.unidecode(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '_Plus'))), suffix)
     info = get_page(url, 'imageinfo&iiprop=url')
     if '-1' in info['query']['pages']:
         return None
@@ -425,7 +425,7 @@ def get_infobox(html):
 def get_hero_infobox(html):
     table = html.find("div", attrs={"class": "hero-infobox"}).find_all("tr")[-1].find("div").find_all("div", attrs={"style": "width:100%"})
     table = [div.find_all("div") for div in table]
-    table = {d[0].get_text().replace('  ',' ').strip(): d[1].get_text().replace('  ',' ').strip() for d in table}
+    table = {d[0].get_text().replace('  ',' ').strip().lower(): d[1].get_text().replace('  ',' ').strip() for d in table}
     return table
 
 

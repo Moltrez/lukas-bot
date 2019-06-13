@@ -1,4 +1,4 @@
-import os, jsonpickle, json, numpy, cloudinary, cloudinary.uploader, cloudinary.api, urllib.request, urllib3
+import os, jsonpickle, json, numpy, cloudinary, cloudinary.uploader, cloudinary.api, urllib.request, urllib3, unidecode
 import jsonpickle.ext.numpy as jsonpickle_numpy
 jsonpickle_numpy.register_handlers()
 from feh_alias import *
@@ -201,6 +201,7 @@ class FehCache(object):
         will_save = self.add_alias(name, name, save=False) or will_save
         will_save = self.add_alias(name.replace('(', '').replace(')', ''), name, save=False) or will_save
         will_save = self.add_alias(name.replace("'", '').replace('(', '').replace(')', ''), name, save=False) or will_save
+        will_save = self.add_alias(unidecode.unidecode(name), name, save=False) or will_save
         if ':' in name:
             will_save = self.add_alias(shorten_hero_name(name), name, save=False) or will_save
             will_save = self.add_alias(shorten_hero_name(name).replace(':', ''), name, save=False) or will_save

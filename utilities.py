@@ -415,6 +415,7 @@ class FireEmblemHeroes:
                     else:
                         self.cache.resolve_alias(alias, save=False)
                 self.cache.save()
+                await self.bot.say("Sanitized aliases!")
                 return
             elif arg.startswith('-cleandatabase'):
                 linked_to = {self.cache.aliases[a] for a in self.cache.aliases}
@@ -423,6 +424,7 @@ class FireEmblemHeroes:
                             for c in self.cache.categories[page]]) or page not in linked_to:
                         self.cache.delete_data(page, save=False)
                 self.cache.save()
+                await self.bot.say("Cleared database!")
                 return
             elif arg.startswith('-clearcategory '):
                 arg = arg[len('-clearcategory '):]
@@ -444,14 +446,21 @@ class FireEmblemHeroes:
                     await self.bot.say(message)
                 return
             elif arg.startswith('-clearreplace'):
-                save = False
-                for r in self.cache.replacement_list:
-                    if self.cache.delete_data(r):
-                        save = True
                 self.cache.replacement_list.clear()
-                if save:
-                    self.cache.save()
+                self.cache.save()
                 await self.bot.say("Cleared replacement list!")
+                return
+            elif arg.startswith('-delreplace'):
+                for r in self.cache.replacement_list:
+                    self.cache.delete_data(r)
+                self.cache.replacement_list.clear()
+                self.cache.save()
+                await self.bot.say("Cleared replacement list!")
+                return
+            elif arg.startswith('-clearherolist'):
+                self.cache.list = []
+                self.cache.save()
+                await self.bot.say("Cleared hero list!")
                 return
 
         python_format = ctx.message.author.id in self.cache.python_preference
@@ -537,9 +546,9 @@ class FireEmblemHeroes:
             if data['Embed Info']['Icon']:
                 message.set_thumbnail(url=data['Embed Info']['Icon'])
             elif 'Specials' in categories:
-                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/2/25/Icon_Skill_Special.png')
+                message.set_thumbnail(url='https://i.imgur.com/mK00tIb.png')
             elif 'Assists' in categories:
-                message.set_thumbnail(url='https://d1u5p3l4wpay3k.cloudfront.net/feheroes_gamepedia_en/9/9a/Icon_Skill_Assist.png')
+                message.set_thumbnail(url='https://i.imgur.com/oHWMAUp.png')
         for key in sorted(data.keys()):
             if key[0].isdigit():
                     message.add_field(
