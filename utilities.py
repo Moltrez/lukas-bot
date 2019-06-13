@@ -420,7 +420,7 @@ class FireEmblemHeroes:
             elif arg.startswith('-cleandatabase'):
                 linked_to = {self.cache.aliases[a] for a in self.cache.aliases}
                 for page in list(self.cache.data):
-                    if not any([c in ['Heroes', 'Passives', 'Weapons', 'Specials', 'Assists', 'Disambiguation pages']
+                    if not any([c in valid_categories
                             for c in self.cache.categories[page]]) or page not in linked_to:
                         self.cache.delete_data(page, save=False)
                 self.cache.save()
