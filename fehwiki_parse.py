@@ -382,7 +382,7 @@ def list_row_to_dict(row):
     data = row.find_all('td')
     colour, weapon = row['data-weapon-type'].split()
     hero = {
-        'Name':shorten_hero_name(data[1].text),
+        'Name':data[1].text,
         'Colour':colour,
         'Weapon':weapon,
         'Movement':row['data-move-type'],

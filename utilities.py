@@ -1038,7 +1038,7 @@ Example: !list -f red sword infantry -s attack hp
                                         )
             sort_keys.pop()
             list_string = ', '.join([
-                h['Name'] + (
+                shorten_hero_name(h['Name']) + (
                     (' ('+','.join([
                         str(
                             list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
@@ -1049,7 +1049,7 @@ Example: !list -f red sword infantry -s attack hp
                 ])
             while len(list_string) > 2000:
                 list_string = ', '.join([
-                    h['Name'] + (
+                    shorten_hero_name(h['Name']) + (
                         (' ('+','.join([
                             str(
                                 list(itertools.accumulate([h[field] for field in k] if isinstance(k, tuple) else [h[k]]))[-1]
@@ -1059,9 +1059,9 @@ Example: !list -f red sword infantry -s attack hp
                         ) for h in heroes
                     ])
                 heroes = heroes[:-1]
-            results_string = 'Results found: %d\nResults shown: %d' % (num_results, len(heroes))
+            results_string = 'Results found: %d\nResults shown: %d\nIf you wish to compare these units in greater detail:' % (num_results, len(heroes))
             if num_results > 1 and num_results <= compare_limit:
-                results_string += '\nIf you wish to compare these units in greater detail:\n`?compare %s -a`' % ' & '.join(h['Name'] for h in heroes)
+                results_string += '\n`?compare %s -a`' % ' & '.join(shorten_hero_name(h['Name']) if shorten_hero_name(h['Name']).lower() not in self.cache.categories else h['Name'] for h in heroes)
             await self.bot.say(results_string)
             await self.bot.say(list_string)
         except timeout:
