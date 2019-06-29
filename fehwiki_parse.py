@@ -302,12 +302,13 @@ def get_data(arg, timeout_dur=5):
             return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
         elif arg.startswith('Category:'):
             page = get_page(
-                'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue'.format(arg))
+                'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue'.format(
+                    urllib.parse.quote(arg)))
             members = page['query']['categorymembers']
             while 'continue' in page:
                 page = get_page(
                     'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue={}'.format(
-                        arg, page['continue']['cmcontinue']))
+                        urllib.parse.quote(arg), page['continue']['cmcontinue']))
                 members.extend(page['query']['categorymembers'])
             data['1Total Pages'] = len(members), False
             # num_pages = 0

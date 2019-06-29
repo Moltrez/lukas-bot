@@ -7,12 +7,12 @@ def update_category(cache, category):
     cache.update()
     page = get_page(
         'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue'.format(
-            arg))
+            urllib.parse.quote('Category:'+category)))
     members = page['query']['categorymembers']
     while 'continue' in page:
         page = get_page(
             'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue={}'.format(
-                arg, page['continue']['cmcontinue']))
+                urllib.parse.quote('Category:'+category), page['continue']['cmcontinue']))
         members.extend(page['query']['categorymembers'])
     count = 0
     try:
