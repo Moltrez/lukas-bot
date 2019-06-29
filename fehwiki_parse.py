@@ -297,7 +297,7 @@ def get_data(arg, timeout_dur=5):
                 if first_hero_link:
                     return get_data(first_hero_link.a.text.strip(), timeout_dur=timeout_dur)
                 else:
-                    return categories, data
+                    return categories, data, other_referenced_pages
             # check if soft redirect
             if 'redirect' in html.text.strip().lower():
                 return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
