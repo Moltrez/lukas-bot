@@ -197,24 +197,31 @@ class FehCache(object):
         if not any([c in valid_categories for c in categories]):
             return False
         name = data['Embed Info']['Title']
-        will_save = self.add_alias(alias, name, save=False, resolve_conflicts=False)
-        will_save = self.add_alias(name, name, save=False) or will_save
-        will_save = self.add_alias(name.replace('(', '').replace(')', ''), name, save=False) or will_save
-        will_save = self.add_alias(name.replace("'", '').replace('(', '').replace(')', ''), name, save=False) or will_save
-        will_save = self.add_alias(unidecode.unidecode(name), name, save=False) or will_save
-        if ':' in name:
-            will_save = self.add_alias(shorten_hero_name(name), name, save=False) or will_save
-            will_save = self.add_alias(shorten_hero_name(name).replace(':', ''), name, save=False) or will_save
-            will_save = self.add_alias(shorten_hero_name(name).replace("'", ''), name, save=False) or will_save
-            will_save = self.add_alias(shorten_hero_name(name).replace("'", '').replace(':', ''), name, save=False) or will_save
+        tempname = name
 
-        will_save = self.add_alias(name.replace('Attack', 'atk').replace('Speed', 'spd')\
-                                                    .replace('Defense', 'def').replace('Resistance', 'res')\
-                                                    .replace('Plus', '+'),
-                                                    name, save=False) or will_save
-        will_save = self.add_alias(name.replace('Attack', 'atk').replace('Speed', 'spd')\
-                                                    .replace('Defense', 'def').replace('Resistance', 'res'),
-                                                    name, save=False) or will_save
+        while True:
+            will_save = self.add_alias(alias, name, save=False, resolve_conflicts=False)
+            will_save = self.add_alias(tempname, name, save=False) or will_save
+            will_save = self.add_alias(tempname.replace('(', '').replace(')', ''), name, save=False) or will_save
+            will_save = self.add_alias(tempname.replace("'", '').replace('(', '').replace(')', ''), name, save=False) or will_save
+            if ':' in name:
+                will_save = self.add_alias(shorten_hero_name(tempname), name, save=False) or will_save
+                will_save = self.add_alias(shorten_hero_name(tempname).replace(':', ''), name, save=False) or will_save
+                will_save = self.add_alias(shorten_hero_name(tempname).replace("'", ''), name, save=False) or will_save
+                will_save = self.add_alias(shorten_hero_name(tempname).replace("'", '').replace(':', ''), name, save=False) or will_save
+
+            will_save = self.add_alias(tempname.replace('Attack', 'atk').replace('Speed', 'spd')\
+                                                        .replace('Defense', 'def').replace('Resistance', 'res')\
+                                                        .replace('Plus', '+'),
+                                                        name, save=False) or will_save
+            will_save = self.add_alias(tempname.replace('Attack', 'atk').replace('Speed', 'spd')\
+                                                        .replace('Defense', 'def').replace('Resistance', 'res'),
+                                                        name, save=False) or will_save
+            if any([ord(c) > 127 for c in tempname]):
+                tempname = unidecode.unidecode(name)
+            else:
+                break
+
         if name not in self.data or self.data[name] != data:
             will_save = True
             self.data[name] = data
