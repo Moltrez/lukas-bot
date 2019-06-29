@@ -5,15 +5,22 @@ from socket import timeout
 
 def update_category(cache, category):
     cache.update()
-    members = get_page('http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle=Category:%s&cmlimit=700' % category.replace(' ', '_'))['query']['categorymembers']
-    members = [m['title'] for m in members]
+    page = get_page(
+        'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue'.format(
+            arg))
+    members = page['query']['categorymembers']
+    while 'continue' in page:
+        page = get_page(
+            'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue={}'.format(
+                arg, page['continue']['cmcontinue']))
+        members.extend(page['query']['categorymembers'])
     count = 0
     try:
         if members:
             for member in members:
-                if not member.startswith('Category:') and\
-                    not member.startswith('Template:') and\
-                    not member.startswith('User talk:') and\
+                if not member.startswith('Category:') and \
+                        not member.startswith('Template:') and \
+                        not member.startswith('User talk:') and \
                         ((member not in cache.data) or member in cache.replacement_list):
                     print("Getting data for " + member)
                     try:
@@ -21,16 +28,18 @@ def update_category(cache, category):
                         if member in cache.replacement_list:
                             cache.replacement_list.remove(member)
                         if any([c in categories for c in valid_categories]):
-                            cache.add_data(member.lower(), data, categories, save=False)
-                            count += 1
+                            if cache.add_data(member.lower(), data, categories, save=False):
+                                count += 1
                         while cache_log:
                             print(cache_log.pop())
                     except IndexError as err:
                         print(err)
                     except TypeError as err:
                         print(err)
+
     except timeout:
         print("Timed out")
+
     finally:
         print("Added " + str(count) + " " + category + " to cache")
         if count:

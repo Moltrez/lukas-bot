@@ -281,7 +281,10 @@ def get_data(arg, timeout_dur=5):
     else:
         data['Embed Info']['URL'] = feh_source % (urllib.parse.quote(arg))
         data['Embed Info']['Colour'] = weapon_colours['Null']
-        data['1Categories'] = ', '.join(categories), False
+
+        if categories:
+            data['1Categories'] = ', '.join(categories), False
+
         if 'Disambiguation pages' in categories:
             valid_ambiguous_people = ['Robin', 'Corrin', 'Tiki', 'Morgan', 'Grima', 'Falchion', 'Kana']
             options = [option.a['title'].strip() for option in html.find_all('li')]
@@ -290,17 +293,44 @@ def get_data(arg, timeout_dur=5):
             else:
                 # connect to the first one
                 return get_data(options[0], timeout_dur=timeout_dur)
-        else:
-            # check if persons page
-            if 'Persons' in categories:
+        elif 'Persons' in categories:
                 first_hero_link = html.find('div', attrs={"style":"text-align:center;"})
                 if first_hero_link:
                     return get_data(first_hero_link.a.text.strip(), timeout_dur=timeout_dur)
-                else:
-                    return categories, data, other_referenced_pages
-            # check if soft redirect
-            if 'redirect' in html.text.strip().lower():
-                return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
+        # check if soft redirect
+        elif 'redirect' in html.text.strip().lower():
+            return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
+        elif arg.startswith('Category:'):
+            page = get_page(
+                'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue'.format(arg))
+            members = page['query']['categorymembers']
+            while 'continue' in page:
+                page = get_page(
+                    'http://feheroes.gamepedia.com/api.php?action=query&list=categorymembers&cmtitle={}&cmlimit=500&cmtype=page&cmcontinue={}'.format(
+                        arg, page['continue']['cmcontinue']))
+                members.extend(page['query']['categorymembers'])
+            data['1Total Pages'] = len(members), False
+            # num_pages = 0
+            # items_per_page = 25
+            # while num_pages * items_per_page < len(members) and num_pages < 3:
+            #     start = num_pages * items_per_page
+            #     end = start + items_per_page
+            #     data['2Pages {}-{}'.format(start+1, min(end, len(members)))] = '\n'.join([m['title'] for m in members[start:end]]), True
+            #     num_pages += 1
+            data['2First 20 Pages'] = '\n'.join([m['title'] for m in members[:20]]), True
+        else:
+            for b in html.find_all('b'):
+                b.replace_with('**{}**'.format(b.text))
+            for i in html.find_all('i'):
+                i.replace_with('*{}*'.format(i.text))
+
+            if 'A new challenger approaches!' in html.text:
+                # destroy stub text
+                html.tbody.decompose()
+                html.tbody.decompose()
+
+            data['2Summary'] = html.p.text.strip()[:1000], False
+
     return categories, data, other_referenced_pages
 
 
@@ -423,7 +453,7 @@ def get_infobox(html):
 
 
 def get_hero_infobox(html):
-    table = html.find("table", attrs={"class": "hero-infobox"}).find_all("tr")[-1].find("div").find_all("div", attrs={"style": "width:100%"})
+    table = html.find(attrs={"class": "hero-infobox"}).find_all("tr")[-1].find("div").find_all("div", attrs={"style": "width:100%"})
     table = [div.find_all("div") for div in table]
     table = {d[0].get_text().replace('  ',' ').strip().lower(): d[1].get_text().replace('  ',' ').strip() for d in table}
     return table
