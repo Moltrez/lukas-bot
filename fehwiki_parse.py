@@ -423,7 +423,7 @@ def get_infobox(html):
 
 
 def get_hero_infobox(html):
-    table = html.find("div", attrs={"class": "hero-infobox"}).find_all("tr")[-1].find("div").find_all("div", attrs={"style": "width:100%"})
+    table = html.find("table", attrs={"class": "hero-infobox"}).find_all("tr")[-1].find("div").find_all("div", attrs={"style": "width:100%"})
     table = [div.find_all("div") for div in table]
     table = {d[0].get_text().replace('  ',' ').strip().lower(): d[1].get_text().replace('  ',' ').strip() for d in table}
     return table

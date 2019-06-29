@@ -187,7 +187,7 @@ class FireEmblemHeroes:
                     if arg in self.cache.replacement_list:
                         self.cache.replacement_list.remove(arg)
                     if data['Embed Info']['Title'] not in self.cache.data and other_pages:
-                        self.cache.replacement_list.extend(set(other_pages))
+                        self.cache.replacement_list.update(set(other_pages))
             return arg, categories, data
         except timeout:
             print('Timed out')
