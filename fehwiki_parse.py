@@ -137,7 +137,7 @@ def get_data(arg, timeout_dur=5):
         if 'Exclusive?' in stats and stats['Exclusive?']:
             data['3Exclusive?'] = stats['Exclusive?'], True
         if 'Description' in stats:
-            data['5Description'] = stats[None].replace('  ', ' '), False
+            data['5Description'] = stats['Description'].replace('  ', ' ').strip(), False
         ps = html.find_all('p')
         if any(['can be evolved from' in p.text for p in ps]):
             data['6Evolves from'] = ps[ps.index([p for p in ps if 'can be evolved from' in p.text][0])].a.text.strip(), False
@@ -294,9 +294,9 @@ def get_data(arg, timeout_dur=5):
                 # connect to the first one
                 return get_data(options[0], timeout_dur=timeout_dur)
         elif 'Persons' in categories:
-                first_hero_link = html.find('div', attrs={"style":"text-align:center;"})
+                first_hero_link = [a for a in html.find_all('a') if "title" in a.attrs]
                 if first_hero_link:
-                    return get_data(first_hero_link.a.text.strip(), timeout_dur=timeout_dur)
+                    return get_data(first_hero_link[0]["title"].strip(), timeout_dur=timeout_dur)
         # check if soft redirect
         elif 'redirect' in html.text.strip().lower():
             return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
@@ -430,6 +430,8 @@ def get_icon(arg, prefix="", suffix=""):
           (prefix, urllib.parse.quote(unidecode.unidecode(arg.replace('+', '_Plus' + '_' if not prefix == "Weapon_" else '_Plus'))), suffix)
     info = get_page(url, 'imageinfo&iiprop=url')
     if '-1' in info['query']['pages']:
+        if "'" in arg:
+            return get_icon(arg.replace("'",""), prefix, suffix)
         return None
     else:
         icon = info['query']['pages'][next(iter(info['query']['pages']))]['imageinfo'][0]['url']
