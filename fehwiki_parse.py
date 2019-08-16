@@ -202,7 +202,7 @@ def get_data(arg, timeout_dur=5):
             temp_data = {'Embed Info': {'Title': arg, 'Icon': None}}
             stats = [a.get_text().strip() for a in row.find_all("td")]
             stats = [a if a else 'N/A' for a in stats]
-            if stats[0] != 'N/A':
+            if stats[0] != 'N/A' and len(stats) > 5:
                 slot = stats.pop(0)
             temp_data['Embed Info']['Colour'] = 0xe8e1c9 if len(stat_rows) == 1\
                                         else passive_colours[curr_row]
@@ -221,7 +221,7 @@ def get_data(arg, timeout_dur=5):
             if not icon is None:
                 temp_data['Embed Info']['Icon'] = icon
             temp_data['0Slot'] = (slot + ('/S' if 'Sacred Seals' in categories and slot != 'S' else '')), True
-            temp_data['1SP Cost'] = stats[2][4 if stats[0].startswith('30px') else 0:], True
+            temp_data['1SP Cost'] = stats[2][4 if stats[2].startswith('30px') else 0:], True
             temp_data['2Effect'] = stats[4].replace('\n', ' '), False
             if len(stats) > 5:
                 inherit_r = parse_inherit_restriction(row.find_all("td")[-1])
