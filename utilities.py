@@ -273,7 +273,7 @@ class FireEmblemHeroes:
         if not unit:
             return False, data
         should_save = self.cache.add_data(args, data, categories, save=False)
-        if 'Heroes' not in categories:
+        if all([c not in categories for c in ['Heroes', 'Enemy units']]):
             if 'Disambiguation pages' in categories:
                 return should_save, ('%s could refer to:```' + data['1Could refer to:'][0] + '```Please specify the %s that you want.') % (unit, unit)
             return should_save, '%s does not seem to be a hero.' % (unit)
