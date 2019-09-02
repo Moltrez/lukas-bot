@@ -456,9 +456,10 @@ def get_infobox(html):
 
 
 def get_hero_infobox(html):
-    table = html.find(attrs={"class": "hero-infobox"}).find_all("tr")[-1].find("div").find_all("div", attrs={"style": "width:100%"})
-    table = [div.find_all("div") for div in table]
-    table = {d[0].get_text().replace('  ',' ').strip().lower(): d[1].get_text().replace('  ',' ').strip() for d in table}
+    table = html.find(attrs={"class": "hero-infobox"}).find_all("tr")#[-1].find("div").find_all("div", attrs={"style": "width:100%"})
+    table = {(r.th.get_text().strip().lower() if r.th else None) : (r.td.get_text().replace('  ',' ').strip() if r.td else None) for r in table}
+    # table = [div.find_all("div") for div in table]
+    # table = {d.th.get_text().replace('  ',' ').strip().lower(): d.td.get_text().replace('  ',' ').strip() for d in table}
     return table
 
 
