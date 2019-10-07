@@ -507,7 +507,8 @@ f"""_SP: {raw['s2SPLv2']}_
         might = 400 + list(itertools.accumulate([int(a[1]) for a in abilities]))[-1]
         data['Rarity'] = raw['Rarity'] + '★', False
         data['Element'] = raw['ElementalType'], True
-        data['Base Max Might'] = f'{might + hp + str} ({round(might + (hp + str) * 1.5)})', True
+        print(might, hp, str)
+        data['Base Max Might'] = f'{might + hp + str} ({round(might + 0.1 + (hp + str) * 1.5)})', True
         data['Level 100 HP'] = hp, True
         data['Level 100 Str'] = str, True
         data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies\n{int(raw['SellDewPoint']):5,} Eldwater", True

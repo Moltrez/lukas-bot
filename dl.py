@@ -80,7 +80,7 @@ class DragaliaLost:
 
         quick_fields = {
             'Adventurers': ['Element', 'Weapon Type', 'Total Max HP', 'Total Max Str', 'Co-Ability', 'Abilities'],
-            'Dragons': ['Element', 'Favorite Gift', 'Level 100 HP', 'Lvl 100 Str', 'Abilities']
+            'Dragons': ['Element', 'Favorite Gift', 'Level 100 HP', 'Level 100 Str', 'Abilities']
         }
 
         for key in (quick_fields[category] if category in quick_fields else data):
