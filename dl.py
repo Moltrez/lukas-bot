@@ -75,16 +75,22 @@ class DragaliaLost:
             url=data['Embed Info']['URL'],
             color=data['Embed Info']['Colour']
         )
-        if data['Embed Info']['Icon']:
+        if 'Icon' in data['Embed Info']:
             message.set_thumbnail(url=data['Embed Info']['Icon'])
 
-        for key in ['Element', 'Weapon Type', 'Total Max HP', 'Total Max Str', 'Co-Ability', 'Abilities']:
-            message.add_field(
-                name=key,
-                value=data[key][0] if key != 'Abilities' else
-                    ', '.join([f'**{d}**' if 'Res +' in d else d for d in data[key][0].split(', ')]),
-                inline=data[key][1]
-            )
+        quick_fields = {
+            'Adventurers': ['Element', 'Weapon Type', 'Total Max HP', 'Total Max Str', 'Co-Ability', 'Abilities'],
+            'Dragons': ['Element', 'Favorite Gift', 'Level 100 HP', 'Lvl 100 Str', 'Abilities']
+        }
+
+        for key in (quick_fields[category] if category in quick_fields else data):
+            if key not in ['Embed Info']:
+                message.add_field(
+                    name=key,
+                    value=data[key][0] if key != 'Abilities' else
+                        ', '.join([f'**{d}**' if 'Res +' in d else d for d in data[key][0].split(', ')]),
+                    inline=data[key][1]
+                )
         for key in data:
             if 'Skill' in key:
                 message.add_field(

@@ -8,7 +8,7 @@ from collections import OrderedDict
 dl_base = 'https://dragalialost.gamepedia.com/'
 dl_api_base = dl_base + 'api.php'
 
-valid_categories = ['Adventurers']
+valid_categories = ['Adventurers', 'Dragons']
 element_embed_colour = {
     '1': 0xa92829,  # fire - red
     '2': 0x2d69b5,  # water - blue
@@ -252,6 +252,16 @@ tables = {
         'AbilityIconName',
         'Category',
         'PartyPowerWeight'
+    ],
+    'Gifts': [
+        'Id',
+        'Name',
+        'Description',
+        'SortId',
+        'Availability',
+        'Reliability',
+        'FavoriteReliability',
+        'FavoriteType'
     ]
 }
 
@@ -303,6 +313,10 @@ child_tables = {
         'Name',
         'Details',
         'PartyPowerWeight'
+    ],
+    'Gifts': [
+        'Name',
+        'Availability'
     ]
 }
 
@@ -349,13 +363,28 @@ adventurer_query_table = {
         'a.ExAbilityData2=ex2.Id',
         'a.ExAbilityData3=ex3.Id',
         'a.ExAbilityData4=ex4.Id',
-        'a.ExAbilityData5=ex5.Id',
+        'a.ExAbilityData5=ex5.Id'
     ]
 }
 
 dragon_query_table = {
-    'tables': None,
-    'join_on': None
+    'tables': [
+        ('Dragons', 'd'),
+        ('Skills', 's'),
+        ('Abilities', 'ab11'),
+        ('Abilities', 'ab12'),
+        ('Abilities', 'ab21'),
+        ('Abilities', 'ab22'),
+        ('Gifts', 'g')
+    ],
+    'join_on': [
+        'd.SkillName=s.Name',
+        'd.Abilities11=ab11.Id',
+        'd.Abilities12=ab12.Id',
+        'd.Abilities21=ab21.Id',
+        'd.Abilities22=ab22.Id',
+        'd.FavoriteType=g.FavoriteType'
+    ]
 }
 
 wyrmprint_query_table = {
@@ -364,26 +393,6 @@ wyrmprint_query_table = {
 }
 
 weapon_query_table = {
-    'tables': None,
-    'join_on': None
-}
-
-skill_query_table = {
-    'tables': None,
-    'join_on': None
-}
-
-skill_learners_query_table = {
-    'tables': None,
-    'join_on': None
-}
-
-ability_query_table = {
-    'tables': None,
-    'join_on': None
-}
-
-ability_learners_query_table = {
     'tables': None,
     'join_on': None
 }
@@ -409,20 +418,27 @@ def get_category(arg):
 
 
 def get_query_results(url):
-    return get_page(url)['cargoquery']
+    results = get_page(url)['cargoquery'][0]['title']
+    return {k: BSoup(BSoup(results[k], 'lxml').text, 'lxml').text for k in results}
 
 
-def build_query_string(definition):
+def build_query_string(base_prefix, definition):
     return dl_api_base + '?action=cargoquery&tables={}&join_on={}&fields={}'.format(
         ','.join(['='.join(t) for t in definition['tables']]),
         ','.join(definition['join_on']),
         ','.join(
-            ['a._pageName=Page',
+            [f'{base_prefix}._pageName=Page',
              ','.join(['{0}.{1}'.format(definition['tables'][0][1], f) for f in tables[definition['tables'][0][0]]])] +
             ([','.join(['{0}.{1}={0}{1}'.format(t[1], f) for f in child_tables[t[0]]]) for t in definition['tables'][1:]]
                 if len(definition['tables']) > 0 else [])
              )
     )
+
+def get_max_abilities(data, num_abilities, max_upgrades):
+    abilities = [[(data[f'ab{i}{j}Name'], data[f'ab{i}{j}PartyPowerWeight'], data[f'ab{i}{j}Details'])
+                                                                                        for j in range(1,max_upgrades+1)
+             if data[f'ab{i}{j}Name']] for i in range(1,num_abilities+1)]
+    return [a[-1] for a in abilities if a]
 
 
 def search(category, arg):
@@ -430,13 +446,13 @@ def search(category, arg):
     data['Embed Info'] = {'Title': arg}
 
     def adventurer():
-        query = build_query_string(adventurer_query_table) + \
-                "&where={}".format(urllib.parse.quote("FullName='{}'".format(arg)))
-        raw = get_query_results(query)[0]['title']
+        query = build_query_string('a', adventurer_query_table) + \
+                "&where={}".format(urllib.parse.quote("a.FullName='{}'".format(arg)))
+        raw = get_query_results(query)
 
         data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
         data['Embed Info']['Colour'] = element_embed_colour[raw['ElementalTypeId']]
-        data['Embed Info']['Description'] = BSoup(BSoup(raw['Description'], 'lxml').text,'lxml').text
+        data['Embed Info']['Description'] = raw['Description']
         icon = get_icon(category, '{}_0{}_r0{}'.format(raw['Id'], raw['VariationId'], raw['Rarity']))
         if icon:
             print(icon)
@@ -448,10 +464,7 @@ def search(category, arg):
         str = list(itertools.accumulate([int(raw[k]) for k in
                                                      (['MaxAtk', 'McFullBonusAtk5'] +
                                                       [f'PlusAtk{k}' for k in range(5)])]))[-1]
-        abilities = [
-            [(raw[f'ab{i}{j}Name'], raw[f'ab{i}{j}PartyPowerWeight']) for j in range(1,5)
-             if raw[f'ab{i}{j}Name']][-1]
-            for i in range(1,4)]
+        abilities = get_max_abilities(raw, 3, 4)
         might = hp + str + 120 + \
                 (200 if raw['s1HideLevel3'] == '1' else 300) + (200 if raw['s2HideLevel3'] == '1' else 300) + \
                 list(itertools.accumulate([int(a[1]) for a in abilities]))[-1] + int(raw['ex5PartyPowerWeight'])
@@ -465,31 +478,57 @@ def search(category, arg):
         data['Total Max Str'] = str, True
         data[f"Skill 1 ({raw['Skill1Name']})"] = re.sub(r'\[\[[^\[\]]*]\]',
                                 lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
-                         BSoup(BSoup(f"""_SP: {raw['s1SPLv2']}_
-{raw['s1Description2'] if raw['s1HideLevel3'] == '1' else raw['s1Description3']}""", 'lxml').text, 'lxml').\
-                             text.replace("'''", '')), False
+f"""_SP: {raw['s1SPLv2']}_
+{raw['s1Description2'] if raw['s1HideLevel3'] == '1' else raw['s1Description3']}""".replace("'''", '')), False
         data[f"Skill 2 ({raw['Skill2Name']})"] = re.sub(r'\[\[[^\[\]]*]\]',
                                 lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
-                         BSoup(BSoup(f"""_SP: {raw['s2SPLv2']}_
-{raw['s2Description2'] if raw['s2HideLevel3'] == '1' else raw['s2Description3']}""", 'lxml').text, 'lxml').\
-                             text.replace("'''", '')), False
+f"""_SP: {raw['s2SPLv2']}_
+{raw['s2Description2'] if raw['s2HideLevel3'] == '1' else raw['s2Description3']}""".replace("'''", '')), False
         data['Co-Ability'] = raw['ex5Name'], True
         data['Abilities'] = ', '.join([a[0] for a in abilities]), True
         return data
 
-    def skill():
-        pass
-
-    def ability():
-        pass
-
     def dragon():
-        pass
+        query = build_query_string('d', dragon_query_table) + \
+                "&where={}".format(urllib.parse.quote("d.FullName='{}'".format(arg)))
+        raw = get_query_results(query)
+
+        data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
+        data['Embed Info']['Colour'] = element_embed_colour[raw['ElementalTypeId']]
+        data['Embed Info']['Description'] = BSoup(BSoup(raw['ProfileText'], 'lxml').text, 'lxml').text
+        icon = get_icon(category, '{}_01'.format(raw['BaseId']))
+        if icon:
+            print(icon)
+            data['Embed Info']['Icon'] = icon
+
+        hp = int(raw['MaxHp'])
+        str = int(raw['MaxAtk'])
+        abilities = get_max_abilities(raw, 2, 2)
+        might = 400 + list(itertools.accumulate([int(a[1]) for a in abilities]))[-1]
+        data['Rarity'] = raw['Rarity'] + '★', False
+        data['Element'] = raw['ElementalType'], True
+        data['Base Max Might'] = f'{might + hp + str} ({int(might + (hp + str) * 1.5)})', True
+        data['Level 100 HP'] = hp, True
+        data['Level 100 Str'] = str, True
+        data['Sell Value'] = f"{int(raw['SellCoin']):,} Rupies\n{int(raw['SellDewPoint']):,} Eldwater", True
+        data['Favorite Gift'] = f"{raw['gName']}\n(available {raw['gAvailability']})", True
+        data[f"Skill ({raw['SkillName']})"] = re.sub(r'\[\[[^\[\]]*]\]',
+                                                        lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
+f"""_SP: {raw['sSPLv2']}_
+{raw['sDescription2'] if raw['sHideLevel3'] == '1' else raw['sDescription3']}""".replace("'''", '')), False
+        data['Abilities'] = ', '.join([a[0] for a in abilities]), True
+        return data
 
     def wyrmprint():
         pass
 
     def weapon():
+        pass
+
+    def skill():
+        pass
+
+    def ability():
         pass
 
     switch = {
