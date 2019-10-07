@@ -51,5 +51,53 @@ class DragaliaLost:
             await self.bot.say(embed=message)
 
 
+    @bot.command(pass_context=True, aliases=['dlq', 'DLQ', 'DLQuick'])
+    async def dlquick(self, ctx, *, arg):
+        """Search Dragalia Lost Gamepedia wiki. Displays detailed information for:
+    Adventurers
+    """
+        if str(ctx.message.author) != 'monkeybard#3663':
+            await self.bot.say("Command in construction.")
+            return
+
+        # resolve name
+        arg = dlwiki_parse.resolve_name(arg)
+        # identify category
+        category = dlwiki_parse.get_category(arg)
+        print(category)
+        # use the right query
+        data = dlwiki_parse.search(category, arg)
+        print(data)
+        # display that shit
+
+        message = discord.Embed(
+            title=data['Embed Info']['Title'],
+            url=data['Embed Info']['URL'],
+            color=data['Embed Info']['Colour']
+        )
+        if data['Embed Info']['Icon']:
+            message.set_thumbnail(url=data['Embed Info']['Icon'])
+
+        for key in ['Element', 'Weapon Type', 'Total Max HP', 'Total Max Str', 'Co-Ability', 'Abilities']:
+            message.add_field(
+                name=key,
+                value=data[key][0] if key != 'Abilities' else
+                    ', '.join([f'**{d}**' if 'Res +' in d else d for d in data[key][0].split(', ')]),
+                inline=data[key][1]
+            )
+        for key in data:
+            if 'Skill' in key:
+                message.add_field(
+                    name=key,
+                    value=data[key][0],
+                    inline=data[key][1]
+                )
+
+        if 'Message' in data:
+            await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
+        else:
+            await self.bot.say(embed=message)
+
+
 def setup(bot):
     bot.add_cog(DragaliaLost(bot))
