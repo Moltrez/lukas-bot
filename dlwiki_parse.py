@@ -510,7 +510,7 @@ f"""_SP: {raw['s2SPLv2']}_
         data['Base Max Might'] = f'{might + hp + str} ({int(might + (hp + str) * 1.5)})', True
         data['Level 100 HP'] = hp, True
         data['Level 100 Str'] = str, True
-        data['Sell Value'] = f"{int(raw['SellCoin']):,} Rupies\n{int(raw['SellDewPoint']):,} Eldwater", True
+        data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies\n{int(raw['SellDewPoint']):5,} Eldwater", True
         data['Favorite Gift'] = f"{raw['gName']}\n(available {raw['gAvailability']})", True
         data[f"Skill ({raw['SkillName']})"] = re.sub(r'\[\[[^\[\]]*]\]',
                                                         lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
