@@ -4,6 +4,8 @@ from discord.ext import commands
 import utilities, fehwiki_parse
 from feh_cache import cache_log
 
+import dl
+
 bot = commands.Bot(command_prefix=['?', '? ', 'lukas ', 'Lukas ', 'lukas, ', 'Lukas, ', 'f?'], description='I am here to serve. I will try to respond to messages that start with `?` or `lukas `.')
 
 @bot.event
@@ -62,5 +64,6 @@ if token is None:
     token = open('./token').read().replace('\n', '')
 
 utilities.setup(bot)
+dl.setup(bot)
 
 bot.run(token)
