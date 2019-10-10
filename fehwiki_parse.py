@@ -37,7 +37,7 @@ def parse_inherit_restriction(inherit_r):
 def get_data(arg, timeout_dur=5):
     categories, html = get_page_html(arg, timeout_dur)
     if html is None:
-        return None, None
+        return None, None, None
     for br in html.find_all('br'):
         br.replace_with('\n')
     data = {'Embed Info': {'Title': arg, 'Icon': None}}
@@ -296,7 +296,9 @@ def get_data(arg, timeout_dur=5):
         elif 'Persons' in categories:
                 first_hero_link = [a for a in html.find_all('a') if "title" in a.attrs]
                 if first_hero_link:
-                    return get_data(first_hero_link[0]["title"].strip(), timeout_dur=timeout_dur)
+                    new_categories, new_data, other_pages = get_data(first_hero_link[0]["title"].strip(), timeout_dur=timeout_dur)
+                    if new_categories is None:
+                        return ['Persons'], new_data, other_pages
         # check if soft redirect
         elif 'redirect' in html.text.strip().lower():
             return get_data(html.a.text.strip(), timeout_dur=timeout_dur)

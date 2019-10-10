@@ -179,8 +179,12 @@ class FireEmblemHeroes:
             if data is None or arg in self.cache.replacement_list:
                 new_categories, new_data, other_pages = get_data(arg)
                 if new_data is None:
-                    return False, False,\
-                           "I'm afraid I couldn't find information on %s." % arg
+                    if 'Persons' not in new_categories:
+                        return False, False,\
+                               "I'm afraid I couldn't find information on %s." % arg
+                    else:
+                        return False, False,\
+                                f"It does not appear that this person has a hero yet. If there should be, please try the following command:\n`?feh {arg}:`"
                 else:
                     categories = new_categories
                     data = new_data
