@@ -8,13 +8,20 @@ from collections import OrderedDict
 dl_base = 'https://dragalialost.gamepedia.com/'
 dl_api_base = dl_base + 'api.php'
 
-valid_categories = ['Adventurers', 'Dragons']
+valid_categories = ['Adventurers', 'Dragons', 'Wyrmprints']
 element_embed_colour = {
     '1': 0xa92829,  # fire - red
     '2': 0x2d69b5,  # water - blue
     '3': 0x29a863,  # wind - green
     '4': 0xb09e2c,  # light - gold
     '5': 0x842aad   # shadow - purple
+}
+rarity_embed_colour = {
+    '1': 0x000000,
+    '2': 0xa8ba7a,
+    '3': 0xe2947f,
+    '4': 0xc4dfec,
+    '5': 0xffe274
 }
 
 #=========================DEFINE ALL THE TABLE COLUMNS
@@ -272,6 +279,7 @@ child_tables = {
     ],
     'Abilities': [
         'Name',
+        'GenericName',
         'Details',
         'PartyPowerWeight'
     ],
@@ -388,8 +396,29 @@ dragon_query_table = {
 }
 
 wyrmprint_query_table = {
-    'tables': None,
-    'join_on': None
+    'tables': [
+        ('Wyrmprints', 'w'),
+        ('Abilities', 'ab11'),
+        ('Abilities', 'ab12'),
+        ('Abilities', 'ab13'),
+        ('Abilities', 'ab21'),
+        ('Abilities', 'ab22'),
+        ('Abilities', 'ab23'),
+        ('Abilities', 'ab31'),
+        ('Abilities', 'ab32'),
+        ('Abilities', 'ab33')
+    ],
+    'join_on': [
+        'w.Abilities11=ab11.Id',
+        'w.Abilities12=ab12.Id',
+        'w.Abilities13=ab13.Id',
+        'w.Abilities21=ab21.Id',
+        'w.Abilities22=ab22.Id',
+        'w.Abilities23=ab23.Id',
+        'w.Abilities31=ab31.Id',
+        'w.Abilities32=ab32.Id',
+        'w.Abilities33=ab33.Id'
+    ]
 }
 
 weapon_query_table = {
@@ -434,11 +463,23 @@ def build_query_string(base_prefix, definition):
              )
     )
 
+
 def get_max_abilities(data, num_abilities, max_upgrades):
     abilities = [[(data[f'ab{i}{j}Name'], data[f'ab{i}{j}PartyPowerWeight'], data[f'ab{i}{j}Details'])
-                                                                                        for j in range(1,max_upgrades+1)
-             if data[f'ab{i}{j}Name']] for i in range(1,num_abilities+1)]
+                                                                                        for j in range(1, max_upgrades+1)
+             if data[f'ab{i}{j}Name']] for i in range(1, num_abilities+1)]
     return [a[-1] for a in abilities if a]
+
+
+def get_ability_string(data, num_abilities, max_upgrades):
+    return '\n'.join(["{}: {}".format(
+                data[f'ab{i}1GenericName'],
+                ' -> '.join(
+                    [' '.join(
+                        data[f'ab{i}{j}Name'].split()[len(data[f'ab{i}1GenericName'].split()):]
+                    )
+                for j in range(1, max_upgrades+1) if data[f'ab{i}{j}Name']])
+            ) for i in range(1, num_abilities+1) if data[f'ab{i}1Name']])
 
 
 def search(category, arg):
@@ -517,11 +558,42 @@ f"""_SP: {raw['s2SPLv2']}_
                                                         lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
 f"""_SP: {raw['sSPLv2']}_
 {raw['sDescription2'] if raw['sHideLevel3'] == '1' else raw['sDescription3']}""".replace("'''", '')), False
-        data['Abilities'] = ', '.join([a[0] for a in abilities]), True
+        data['Abilities'] = get_ability_string(raw, 2, 2) if raw['ab11Name'].endswith('%') and raw['ab21Name'].endswith('%') else \
+            re.sub(r'\[\[[^\[\]]*]\]',
+                   lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
+            '\n\n'.join(
+                ["**{}**\n{}".format(raw[f'ab{i}1GenericName'], '\n'.join(
+                    [f"**Lv{j}**: {raw[f'ab{i}{j}Details']}"
+                     for j in range(1,3) if raw[f'ab{i}{j}Name']]))
+                for i in range(1,3) if raw[f'ab{i}1Name']]
+            ).replace("'''", '')),\
+        True
         return data
 
     def wyrmprint():
-        pass
+        query = build_query_string('w', wyrmprint_query_table) + \
+                "&where={}".format(urllib.parse.quote("w.Name='{}'".format(arg)))
+        raw = get_query_results(query)
+        data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
+        data['Embed Info']['Colour'] = rarity_embed_colour[raw['Rarity']]
+        data['Embed Info']['Description'] = BSoup(BSoup(raw['FlavorText1'], 'lxml').text, 'lxml').text
+        icon = get_icon(category, '{}_02'.format(raw['BaseId']))
+        if icon:
+            print(icon)
+            data['Embed Info']['Icon'] = icon
+
+        hp = int(raw['MaxHp'])
+        str = int(raw['MaxAtk'])
+        abilities = get_max_abilities(raw, 3, 3)
+        might = hp + str + list(itertools.accumulate([int(a[1]) for a in abilities]))[-1]
+
+        data['Rarity'] = raw['Rarity'] + '★', True
+        data['Base Max Might'] = might, True
+        data['Level 100 HP'] = hp, True
+        data['Level 100 Str'] = str, True
+        data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies, {int(raw['SellDewPoint']):5,} Eldwater", True
+        data['Abilities'] = get_ability_string(raw, 3, 3), False
+        return data
 
     def weapon():
         pass
