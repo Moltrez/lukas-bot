@@ -494,9 +494,12 @@ def get_ability_strings(data, num_abilities, max_upgrades, simple=False, last_on
                 data[f'ab{i}1GenericName'],
                 ' _→_ '.join(
                     [' '.join(
-                        data[f'ab{i}{j}Name'].split()[len(data[f'ab{i}1GenericName'].split()):]
-                    )
-                for j in range(1, max_upgrades+1) if data[f'ab{i}{j}Name']])
+                        data[f'ab{i}{j}Name'].split()[len(data[f'ab{i}1GenericName'].split()):]) if
+                            data[f'ab{i}{j}Name'] != data[f'ab{i}1GenericName'] else
+                                re.sub(r'\[\[[^\[\]]*]\]',
+                                    lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
+                                    data[f'ab{i}{j}Details'])
+                        for j in range(1, max_upgrades+1) if data[f'ab{i}{j}Name']])
             ) for i in range(1, num_abilities+1) if data[f'ab{i}1Name']])]) \
         if simple else \
         ([re.sub(r'\[\[[^\[\]]*]\]',
@@ -508,7 +511,7 @@ def get_ability_strings(data, num_abilities, max_upgrades, simple=False, last_on
             lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
              '\n'.join(
                 ["{}\n> {}".format(data[f'ab{i}{j}Name'], data[f'ab{i}{j}Details'].replace('\n', '\n> '))
-                    for i in range(1, max_upgrades + 1) if data[f'ab{i}{j}Name']])).replace("'''", '')
+                    for i in range(1, num_abilities + 1) if data[f'ab{i}{j}Name']])).replace("'''", '')
               for j in range(1, max_upgrades + 1)])
 
 def search(category, arg, quick=False):
