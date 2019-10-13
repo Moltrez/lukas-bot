@@ -4,6 +4,7 @@ import re
 from bs4 import BeautifulSoup as BSoup
 from fehwiki_parse import get_page
 from collections import OrderedDict
+from difflib import SequenceMatcher
 
 dl_base = 'https://dragalialost.gamepedia.com/'
 dl_api_base = dl_base + 'api.php'
@@ -428,13 +429,13 @@ weapon_query_table = {
 
 
 def resolve_name(arg):
-    redirect = dl_api_base + "?action=opensearch&search={}&redirects=resolve".format(urllib.parse.quote(arg))
-    info = get_page(redirect)
-    if not info[1] or not info[1][0]:
-        return None
-    else:
-        return sorted(sorted(info[1]), key=lambda i: len(i))[0]
-
+    search = dl_api_base + "?action=query&list=search&srsearch={}&redirects=resolve".format(urllib.parse.quote(arg))
+    results = get_page(search)['query']
+    if results['searchinfo']['totalhits'] == 0:
+        return resolve_name(results['searchinfo']['suggestion']) if 'suggestion' in results['searchinfo'] else None
+    # sort search results and get the one closest to search term
+    return sorted([r['title'] for r in results['search']],
+                  key=lambda x:SequenceMatcher(None, arg, x).ratio(), reverse=True)[0]
 
 def get_category(arg):
     url = dl_api_base + "?action=parse&page={}".format(urllib.parse.quote(arg))
@@ -572,7 +573,7 @@ f"""_SP: {raw['sSPLv2']}_
 
     def wyrmprint():
         query = build_query_string('w', wyrmprint_query_table) + \
-                "&where={}".format(urllib.parse.quote("w.Name='{}'".format(arg)))
+                "&where={}".format(urllib.parse.quote("w.Name='{}'".format(arg.replace("'", "''"))))
         raw = get_query_results(query)
         data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
         data['Embed Info']['Colour'] = rarity_embed_colour[raw['Rarity']]

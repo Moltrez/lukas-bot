@@ -19,6 +19,7 @@ class DragaliaLost:
 
         # resolve name
         arg = dlwiki_parse.resolve_name(arg)
+        print(arg)
         # identify category
         category = dlwiki_parse.get_category(arg)
         print(category)
