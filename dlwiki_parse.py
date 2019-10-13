@@ -473,7 +473,7 @@ def get_max_abilities(data, num_abilities, max_upgrades):
 
 
 def get_ability_string(data, num_abilities, max_upgrades):
-    return '\n'.join(["**{}**: {}".format(
+    return '\n'.join(["**{}**\n{}".format(
                 data[f'ab{i}1GenericName'],
                 ' _→_ '.join(
                     [' '.join(
@@ -489,7 +489,7 @@ def search(category, arg):
 
     def adventurer():
         query = build_query_string('a', adventurer_query_table) + \
-                "&where={}".format(urllib.parse.quote("a.FullName='{}'".format(arg)))
+                "&where={}".format(urllib.parse.quote("a.FullName='{}'".format(arg.replace("'", "''"))))
         raw = get_query_results(query)
 
         data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
@@ -532,7 +532,7 @@ f"""_SP: {raw['s2SPLv2']}_
 
     def dragon():
         query = build_query_string('d', dragon_query_table) + \
-                "&where={}".format(urllib.parse.quote("d.FullName='{}'".format(arg)))
+                "&where={}".format(urllib.parse.quote("d.FullName='{}'".format(arg.replace("'", "''"))))
         raw = get_query_results(query)
 
         data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
