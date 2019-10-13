@@ -649,8 +649,8 @@ def search(category, arg, quick=False):
         data['Level 100 HP'] = hp, True
         data['Level 100 Str'] = str, True
         data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies", True
-        data['Crafting Materials'] = (f"Requires Smithy level {raw['FortCraftLevel']}\n"
-                                      if raw['FortCraftLevel'] and raw['FortCraftLevel'] != '0' else '') + '\n> '.join([
+        data['Crafting Materials'] = (f"Requires Smithy level {raw['FortCraftLevel']}\n> "
+                                      if raw['FortCraftLevel'] and raw['FortCraftLevel'] != '0' else '> ') + '\n> '.join([
             f"{raw[f'CraftMaterial{i}']} x{raw[f'CraftMaterialQuantity{i}']}"
             for i in range(1,6) if raw[f'CraftMaterial{i}']
         ]) + f"\n> Rupies x{int(raw['AssembleCoin']):5,}", False
