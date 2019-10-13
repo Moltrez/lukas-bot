@@ -473,9 +473,9 @@ def get_max_abilities(data, num_abilities, max_upgrades):
 
 
 def get_ability_string(data, num_abilities, max_upgrades):
-    return '\n'.join(["{}: {}".format(
+    return '\n'.join(["**{}**: {}".format(
                 data[f'ab{i}1GenericName'],
-                ' -> '.join(
+                ' _→_ '.join(
                     [' '.join(
                         data[f'ab{i}{j}Name'].split()[len(data[f'ab{i}1GenericName'].split()):]
                     )
