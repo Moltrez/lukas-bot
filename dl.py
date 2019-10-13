@@ -86,11 +86,12 @@ class DragaliaLost:
         quick_fields = {
             'Adventurers': ['Element', 'Weapon Type', 'Total Max HP', 'Total Max Str', 'Co-Ability', 'Abilities'],
             'Dragons': ['Element', 'Favorite Gift', 'Level 100 HP', 'Level 100 Str', 'Abilities (at 0 unbinds)', 'Abilities (at 4 unbinds)'],
-            'Wyrmprints': ['Level 100 HP', 'Level 100 Str', 'Abilities']
+            'Wyrmprints': ['Level 100 HP', 'Level 100 Str', 'Abilities'],
+            'Weapons': ['Element', 'Weapon Type', 'Level 100 HP', 'Level 100 Str', 'Abilities']
         }
 
         for key in (quick_fields[category] if category in quick_fields else data):
-            if key not in ['Embed Info']:
+            if key not in ['Embed Info'] and key in data:
                 message.add_field(
                     name=key,
                     value=data[key][0],

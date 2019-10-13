@@ -9,13 +9,14 @@ from difflib import SequenceMatcher
 dl_base = 'https://dragalialost.gamepedia.com/'
 dl_api_base = dl_base + 'api.php'
 
-valid_categories = ['Adventurers', 'Dragons', 'Wyrmprints']
+valid_categories = ['Adventurers', 'Dragons', 'Wyrmprints', 'Weapons']
 element_embed_colour = {
-    '1': 0xa92829,  # fire - red
-    '2': 0x2d69b5,  # water - blue
-    '3': 0x29a863,  # wind - green
-    '4': 0xb09e2c,  # light - gold
-    '5': 0x842aad   # shadow - purple
+    '1': 0xa92829,   # fire - red
+    '2': 0x2d69b5,   # water - blue
+    '3': 0x29a863,   # wind - green
+    '4': 0xb09e2c,   # light - gold
+    '5': 0x842aad,   # shadow - purple
+    '99': 0xded7d6   # no element - grey
 }
 rarity_embed_colour = {
     '1': 0x000000,
@@ -423,8 +424,17 @@ wyrmprint_query_table = {
 }
 
 weapon_query_table = {
-    'tables': None,
-    'join_on': None
+    'tables': [
+        ('Weapons', 'w'),
+        ('Skills', 's'),
+        ('Abilities', 'ab11'),
+        ('Abilities', 'ab21')
+    ],
+    'join_on': [
+        'w.SkillName=s.Name',
+        'w.Abilities11=ab11.Id',
+        'w.Abilities21=ab21.Id'
+    ]
 }
 
 
@@ -553,7 +563,7 @@ def search(category, arg, quick=False):
 
         data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
         data['Embed Info']['Colour'] = element_embed_colour[raw['ElementalTypeId']]
-        data['Embed Info']['Description'] = BSoup(BSoup(raw['ProfileText'], 'lxml').text, 'lxml').text
+        data['Embed Info']['Description'] = raw['ProfileText']
         icon = get_icon(category, '{}_01'.format(raw['BaseId']))
         if icon:
             print(icon)
@@ -585,7 +595,7 @@ def search(category, arg, quick=False):
         raw = get_query_results(query)
         data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
         data['Embed Info']['Colour'] = rarity_embed_colour[raw['Rarity']]
-        data['Embed Info']['Description'] = BSoup(BSoup(raw['FlavorText1'], 'lxml').text, 'lxml').text
+        data['Embed Info']['Description'] = raw['FlavorText1']
         icon = get_icon(category, '{}_02'.format(raw['BaseId']))
         if icon:
             print(icon)
@@ -600,7 +610,8 @@ def search(category, arg, quick=False):
         data['Base Max Might'] = might, True
         data['Level 100 HP'] = hp, True
         data['Level 100 Str'] = str, True
-        data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies, {int(raw['SellDewPoint']):5,} Eldwater", True
+        data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies" + (", {int(raw['SellDewPoint']):5,} Eldwater"
+                                                                    if raw['SellDewPoint'] != '0' else ''), True
         abilities = get_ability_strings(raw, 3, 3, quick)
         if len(abilities) == 1:
             data['Abilities'] = abilities[0], False
@@ -611,7 +622,43 @@ def search(category, arg, quick=False):
         return data
 
     def weapon():
-        pass
+        query = build_query_string('w', weapon_query_table) + \
+                "&where={}".format(urllib.parse.quote("w.WeaponName='{}'".format(arg.replace("'", "''"))))
+        raw = get_query_results(query)
+        data['Embed Info']['URL'] = dl_base + urllib.parse.quote(raw['Page'])
+        data['Embed Info']['Colour'] = element_embed_colour[raw['ElementalTypeId']]
+        data['Embed Info']['Description'] = raw['FlavorText']
+        icon = get_icon(category, '{}_01_{}'.format(raw['BaseId'], raw['FormId']))
+        if icon:
+            print(icon)
+            data['Embed Info']['Icon'] = icon
+
+        hp = int(raw['MaxHp'])
+        str = int(raw['MaxAtk'])
+        max_abilities = get_max_abilities(raw, 2, 1)
+        might = (100 if raw['SkillName'] else 0) + \
+            (list(itertools.accumulate([int(a[1]) for a in max_abilities]))[-1] if max_abilities else 0)
+        data['Rarity'] = raw['Rarity'] + '★', False
+        data['Element'] = raw['ElementalType'], True
+        data['Weapon Type'] = raw['Type'], True
+        data['Availability'] = raw['Availability'], True
+        data['Base Max Might'] = f'{might + hp + str} ({round(might + 0.1 + (hp + str) * 1.5)})', True
+        data['Level 100 HP'] = hp, True
+        data['Level 100 Str'] = str, True
+        data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies", True
+        data['Crafting Materials'] = (f"Requires Smithy level {raw['FortCraftLevel']}\n"
+                                      if raw['FortCraftLevel'] and raw['FortCraftLevel'] != '0' else '') + '\n'.join([
+            f"{raw[f'CraftMaterial{i}']} x{raw[f'CraftMaterialQuantity{i}']}"
+            for i in range(1,6) if raw[f'CraftMaterial{i}']
+        ]) + f"\nRupies x{int(raw['AssembleCoin']):5,}", False
+        if raw['SkillName']:
+            data[f"Skill ({raw['SkillName']})"] = get_skill_string(
+                raw['sSPLv2'],
+                raw['sDescription2'] if raw['sHideLevel3'] == '1' else raw['sDescription3']), False
+        abilities = get_ability_strings(raw, 2, 1, quick)
+        if max_abilities:
+            data['Abilities'] = abilities[0], False
+        return data
 
     def skill():
         pass
