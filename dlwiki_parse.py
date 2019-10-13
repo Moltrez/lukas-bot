@@ -449,7 +449,8 @@ def get_category(arg):
 
 def get_query_results(url):
     results = get_page(url)['cargoquery'][0]['title']
-    return {k: BSoup(BSoup(results[k], 'lxml').text, 'lxml').text for k in results}
+    return {k: re.sub('\n+', '\n', BSoup(re.sub('<br[^>]*>', '\n', BSoup(results[k], 'lxml').text), 'lxml').text)
+            for k in results}
 
 
 def build_query_string(base_prefix, definition):
