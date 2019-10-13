@@ -33,6 +33,9 @@ class DragaliaLost:
             url=data['Embed Info']['URL'],
             color=data['Embed Info']['Colour']
         )
+
+        message2 = None
+
         if data['Embed Info']['Icon']:
             message.set_thumbnail(url=data['Embed Info']['Icon'])
         if data['Embed Info']['Description']:
@@ -50,7 +53,8 @@ class DragaliaLost:
             await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
         else:
             await self.bot.say(embed=message)
-
+            if message2:
+                await self.bot.say(embed=message2)
 
     @bot.command(pass_context=True, aliases=['dlq', 'DLQ', 'DLQuick'])
     async def dlquick(self, ctx, *, arg):
@@ -67,7 +71,7 @@ class DragaliaLost:
         category = dlwiki_parse.get_category(arg)
         print(category)
         # use the right query
-        data = dlwiki_parse.search(category, arg)
+        data = dlwiki_parse.search(category, arg, quick=True)
         print(data)
         # display that shit
 
@@ -81,7 +85,7 @@ class DragaliaLost:
 
         quick_fields = {
             'Adventurers': ['Element', 'Weapon Type', 'Total Max HP', 'Total Max Str', 'Co-Ability', 'Abilities'],
-            'Dragons': ['Element', 'Favorite Gift', 'Level 100 HP', 'Level 100 Str', 'Abilities'],
+            'Dragons': ['Element', 'Favorite Gift', 'Level 100 HP', 'Level 100 Str', 'Abilities (at 0 unbinds)', 'Abilities (at 4 unbinds)'],
             'Wyrmprints': ['Level 100 HP', 'Level 100 Str', 'Abilities']
         }
 
@@ -89,8 +93,7 @@ class DragaliaLost:
             if key not in ['Embed Info']:
                 message.add_field(
                     name=key,
-                    value=data[key][0] if key != 'Abilities' else
-                        ', '.join([f'**{d}**' if 'Res +' in d else d for d in data[key][0].split(', ')]),
+                    value=data[key][0],
                     inline=data[key][1]
                 )
         for key in data:

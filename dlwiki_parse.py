@@ -465,6 +465,12 @@ def build_query_string(base_prefix, definition):
     )
 
 
+def get_skill_string(sp, description):
+    return re.sub(r'\[\[[^\[\]]*]\]',
+           lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
+           '_**SP**: {}_\n> {}'.format(sp, description.replace('\n', '\n> ')).replace("'''", ''))
+
+
 def get_max_abilities(data, num_abilities, max_upgrades):
     abilities = [[(data[f'ab{i}{j}Name'], data[f'ab{i}{j}PartyPowerWeight'], data[f'ab{i}{j}Details'])
                                                                                         for j in range(1, max_upgrades+1)
@@ -472,18 +478,29 @@ def get_max_abilities(data, num_abilities, max_upgrades):
     return [a[-1] for a in abilities if a]
 
 
-def get_ability_string(data, num_abilities, max_upgrades):
-    return '\n'.join(["**{}**\n{}".format(
+def get_ability_strings(data, num_abilities, max_upgrades, simple=False, last_only=False):
+    return (['\n'.join(["**{}**\n> {}".format(
                 data[f'ab{i}1GenericName'],
                 ' _→_ '.join(
                     [' '.join(
                         data[f'ab{i}{j}Name'].split()[len(data[f'ab{i}1GenericName'].split()):]
                     )
                 for j in range(1, max_upgrades+1) if data[f'ab{i}{j}Name']])
-            ) for i in range(1, num_abilities+1) if data[f'ab{i}1Name']])
+            ) for i in range(1, num_abilities+1) if data[f'ab{i}1Name']])]) \
+        if simple else \
+        ([re.sub(r'\[\[[^\[\]]*]\]',
+            lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
+            "**{}**\n> {}".format(ab[0], ab[2].replace('\n', '\n> '))).replace("'''", '')
+            for ab in get_max_abilities(data, num_abilities, max_upgrades)]) \
+        if last_only else \
+        ([re.sub(r'\[\[[^\[\]]*]\]',
+            lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
+             '\n'.join(
+                ["{}\n> {}".format(data[f'ab{i}{j}Name'], data[f'ab{i}{j}Details'].replace('\n', '\n> '))
+                    for i in range(1, max_upgrades + 1) if data[f'ab{i}{j}Name']])).replace("'''", '')
+              for j in range(1, max_upgrades + 1)])
 
-
-def search(category, arg):
+def search(category, arg, quick=False):
     data = OrderedDict()
     data['Embed Info'] = {'Title': arg}
 
@@ -506,10 +523,10 @@ def search(category, arg):
         str = list(itertools.accumulate([int(raw[k]) for k in
                                                      (['MaxAtk', 'McFullBonusAtk5'] +
                                                       [f'PlusAtk{k}' for k in range(5)])]))[-1]
-        abilities = get_max_abilities(raw, 3, 4)
+        max_abilities = get_max_abilities(raw, 3, 4)
         might = hp + str + 120 + \
                 (200 if raw['s1HideLevel3'] == '1' else 300) + (200 if raw['s2HideLevel3'] == '1' else 300) + \
-                list(itertools.accumulate([int(a[1]) for a in abilities]))[-1] + int(raw['ex5PartyPowerWeight'])
+                list(itertools.accumulate([int(a[1]) for a in max_abilities]))[-1] + int(raw['ex5PartyPowerWeight'])
 
         data['Rarity'] = raw['Rarity'] + '★', False
         data['Element'] = raw['ElementalType'], True
@@ -518,16 +535,14 @@ def search(category, arg):
         data['Base Max Might'] = might, True
         data['Total Max HP'] = hp, True
         data['Total Max Str'] = str, True
-        data[f"Skill 1 ({raw['Skill1Name']})"] = re.sub(r'\[\[[^\[\]]*]\]',
-                                lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
-f"""_SP: {raw['s1SPLv2']}_
-{raw['s1Description2'] if raw['s1HideLevel3'] == '1' else raw['s1Description3']}""".replace("'''", '')), False
-        data[f"Skill 2 ({raw['Skill2Name']})"] = re.sub(r'\[\[[^\[\]]*]\]',
-                                lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
-f"""_SP: {raw['s2SPLv2']}_
-{raw['s2Description2'] if raw['s2HideLevel3'] == '1' else raw['s2Description3']}""".replace("'''", '')), False
+        for i in range(1, 3):
+            data[f"Skill {i} ({raw[f'Skill{i}Name']})"] = get_skill_string(
+                raw[f's{i}SPLv2'],
+                (raw[f's{i}Description2'] if raw[f's{i}HideLevel3'] == '1' else raw[f's{i}Description3'])), False
         data['Co-Ability'] = raw['ex5Name'], True
-        data['Abilities'] = ', '.join([a[0] for a in abilities]), True
+        abilities = get_ability_strings(raw, 3, 4, simple=quick, last_only=True)
+        data['Abilities'] = abilities[0] if len(abilities) == 1 else '\n'.join(abilities), False
+
         return data
 
     def dragon():
@@ -545,8 +560,8 @@ f"""_SP: {raw['s2SPLv2']}_
 
         hp = int(raw['MaxHp'])
         str = int(raw['MaxAtk'])
-        abilities = get_max_abilities(raw, 2, 2)
-        might = 400 + list(itertools.accumulate([int(a[1]) for a in abilities]))[-1]
+        max_abilities = get_max_abilities(raw, 2, 2)
+        might = 400 + list(itertools.accumulate([int(a[1]) for a in max_abilities]))[-1]
         data['Rarity'] = raw['Rarity'] + '★', False
         data['Element'] = raw['ElementalType'], True
         print(might, hp, str)
@@ -555,20 +570,12 @@ f"""_SP: {raw['s2SPLv2']}_
         data['Level 100 Str'] = str, True
         data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies\n{int(raw['SellDewPoint']):5,} Eldwater", True
         data['Favorite Gift'] = f"{raw['gName']}\n(available {raw['gAvailability']})", True
-        data[f"Skill ({raw['SkillName']})"] = re.sub(r'\[\[[^\[\]]*]\]',
-                                                        lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
-f"""_SP: {raw['sSPLv2']}_
-{raw['sDescription2'] if raw['sHideLevel3'] == '1' else raw['sDescription3']}""".replace("'''", '')), False
-        data['Abilities'] = get_ability_string(raw, 2, 2) if raw['ab11Name'].endswith('%') and raw['ab21Name'].endswith('%') else \
-            re.sub(r'\[\[[^\[\]]*]\]',
-                   lambda matchobj: (matchobj.group(0)[2:-2]).split("|")[-1],
-            '\n\n'.join(
-                ["**{}**\n{}".format(raw[f'ab{i}1GenericName'], '\n'.join(
-                    [f"**Lv{j}**: {raw[f'ab{i}{j}Details']}"
-                     for j in range(1,3) if raw[f'ab{i}{j}Name']]))
-                for i in range(1,3) if raw[f'ab{i}1Name']]
-            ).replace("'''", '')),\
-        True
+        data[f"Skill ({raw['SkillName']})"] = get_skill_string(
+            raw['sSPLv2'],
+            raw['sDescription2'] if raw['sHideLevel3'] == '1' else raw['sDescription3']), False
+        abilities = get_ability_strings(raw, 2, 2)
+        data['Abilities (at 0 unbinds)'] = abilities[0], False
+        data['Abilities (at 4 unbinds)'] = abilities[1], False
         return data
 
     def wyrmprint():
@@ -585,15 +592,21 @@ f"""_SP: {raw['sSPLv2']}_
 
         hp = int(raw['MaxHp'])
         str = int(raw['MaxAtk'])
-        abilities = get_max_abilities(raw, 3, 3)
-        might = hp + str + list(itertools.accumulate([int(a[1]) for a in abilities]))[-1]
+        max_abilities = get_max_abilities(raw, 3, 3)
+        might = hp + str + list(itertools.accumulate([int(a[1]) for a in max_abilities]))[-1]
 
         data['Rarity'] = raw['Rarity'] + '★', True
         data['Base Max Might'] = might, True
         data['Level 100 HP'] = hp, True
         data['Level 100 Str'] = str, True
         data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies, {int(raw['SellDewPoint']):5,} Eldwater", True
-        data['Abilities'] = get_ability_string(raw, 3, 3), False
+        abilities = get_ability_strings(raw, 3, 3, quick)
+        if len(abilities) == 1:
+            data['Abilities'] = abilities[0], False
+        else:
+            data['Abilities (at 0 unbinds)'] = abilities[0], False
+            data['Abilities (at 2 unbinds)'] = abilities[1], False
+            data['Abilities (at 4 unbinds)'] = abilities[2], False
         return data
 
     def weapon():
