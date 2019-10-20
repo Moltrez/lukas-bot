@@ -613,7 +613,7 @@ def search(category, arg, quick=False):
         data['Base Max Might'] = might, True
         data['Level 100 HP'] = hp, True
         data['Level 100 Str'] = str, True
-        data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies" + (", {int(raw['SellDewPoint']):5,} Eldwater"
+        data['Sell Value'] = f"{int(raw['SellCoin']):5,} Rupies" + (f", {int(raw['SellDewPoint']):5,} Eldwater"
                                                                     if raw['SellDewPoint'] != '0' else ''), True
         abilities = get_ability_strings(raw, 3, 3, quick)
         if len(abilities) == 1:
