@@ -294,7 +294,7 @@ def get_data(arg, timeout_dur=5):
                 # connect to the first one
                 return get_data(options[0], timeout_dur=timeout_dur)
         elif 'Persons' in categories:
-                first_hero_link = [a for a in html.find_all('a') if "title" in a.attrs]
+                first_hero_link = [a for a in html.find_all('a') if "title" in a.attrs and arg in a.text]
                 if first_hero_link:
                     new_categories, new_data, other_pages = get_data(first_hero_link[0]["title"].strip(), timeout_dur=timeout_dur)
                     if new_categories is None:
