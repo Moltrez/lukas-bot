@@ -298,7 +298,9 @@ def get_data(arg, timeout_dur=5):
                 if first_hero_link:
                     new_categories, new_data, other_pages = get_data(first_hero_link[0]["title"].strip(), timeout_dur=timeout_dur)
                     if new_categories is None:
-                        return ['Persons'], new_data, other_pages
+                        return ['Persons'], data, other_referenced_pages
+                    else:
+                        return new_categories, new_data, other_pages
         # check if soft redirect
         elif 'redirect' in html.text.strip().lower():
             return get_data(html.a.text.strip(), timeout_dur=timeout_dur)
