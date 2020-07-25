@@ -96,7 +96,7 @@ def get_data(arg, timeout_dur=5):
             in_passives = False
             for row in table.find_all("tr")[1:]:
                 if row.find("td") is not None:
-                    slot = row.find("td", attrs={"rowspan":True}) # only passives have a rowspan data column
+                    slot = row.find("th", attrs={"rowspan":True}) # only passives have a rowspan data column
                     if not slot is None:
                         in_passives = True
                         skills = skills.rstrip(', ')
