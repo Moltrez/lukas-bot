@@ -190,6 +190,7 @@ def get_data(arg, timeout_dur=5):
         stats_table = html.find("table", attrs={"class": "skills-table"})
         stat_rows = stats_table.find_all("tr")[1:]
         data = {'Embed Info': {'Title': arg}, 'Data': []}
+        slot = stat_rows[0].find("th").get_text().strip()
         inherit_r = None
         if stat_rows[-1].text.strip().startswith("Cannot use:") or \
                 stat_rows[-1].text.strip().startswith("No restrictions.") or \
@@ -202,8 +203,6 @@ def get_data(arg, timeout_dur=5):
             temp_data = {'Embed Info': {'Title': arg, 'Icon': None}}
             stats = [a.get_text().strip() for a in row.find_all("td")]
             stats = [a if a else 'N/A' for a in stats]
-            if stats[0] != 'N/A' and len(stats) > 5:
-                slot = stats.pop(0)
             temp_data['Embed Info']['Colour'] = 0xe8e1c9 if len(stat_rows) == 1\
                                         else passive_colours[curr_row]
             curr_row += 1
