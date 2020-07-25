@@ -14,14 +14,14 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
-    if bot.user.name != 'Lukas':
+    if bot.user.name != 'Not Lukas':
         try:
             with open('./avatar.png', 'rb') as avatar:
-                await bot.edit_profile(username='Lukas', avatar=avatar.read())
+                await bot.user.edit(username='Not Lukas', avatar=avatar.read())
         except Exception as ex:
             print(ex)
-            await bot.edit_profile(username='Lukas')
-    await bot.change_presence(game=discord.Game(name="FEHWiki"))
+            await bot.user.edit(username='Not Lukas')
+    await bot.change_presence(activity=discord.Game(name="FEHWiki"))
 
 luke_pattern = re.compile('.*gotta.*love.*luke', re.I)
 lukas_pattern = re.compile('.*love.*lukas', re.I)
@@ -36,13 +36,13 @@ async def on_message(message):
         next_message = cache_log.pop()
         if (len(log_message) + len(next_message) + 1 >= 2000) or len(cache_log) == 0:
             for ch in bot.private_channels:
-                if ch.recipients[0].name == 'monkeybard' and str(ch.recipients[0].discriminator) == '3663':
+                if ch.recipients[0].name == 'SUP' and str(ch.recipients[0].discriminator) == '0169':
                     await bot.send_message(ch, log_message + ('' if len(cache_log) else next_message))
             log_message = ''
         log_message += next_message + '\n'
     if message.author == bot.user:
         return
-    if str(message.author) == 'monkeybard#3663' and message.content == '?cache':
+    if str(message.author) == 'SUP#0169' and message.content == '?cache':
         await bot.send_file(message.author, './data_cache.json')
         return
     if luke_pattern.match(message.content):
