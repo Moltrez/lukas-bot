@@ -377,95 +377,94 @@ class FireEmblemHeroes(bot.Cog):
         """I will provide some information on any Fire Emblem Heroes topic."""
         # admin controls
         ignore_cache = False
-        if str(ctx.message.author) == 'monkeybard#3663':
-            if arg.startswith('-i '):
-                arg = arg[3:]
-                ignore_cache = True
-            elif arg.startswith('-d '):
-                arg = arg[3:]
-                args = arg.split('&')
-                should_save = False
-                for arg in args:
-                    should_save = self.cache.delete_alias(arg, save=False) or should_save
-                if should_save:
-                    self.cache.save()
-                await ctx.send("Deleted!")
-                return
-            elif arg.startswith('-a '):
-                arg = arg[3:]
-                args = arg.split(' ', 1)
-                aliases = args[0].split('&')
-                should_save = False
-                for alias in aliases:
-                    should_save = self.cache.add_alias(alias, args[1], save=False, resolve_conflicts=False) \
-                                  or should_save
-                if should_save:
-                    self.cache.save()
-                await ctx.send("Added!")
-                return
-            elif arg.startswith('-aliases'):
-                f_string = 'aliases = {\n'
-                f_string += ',\n'.join(
-                    ['    "%s": "%s"' %(alias, self.cache.aliases[alias]) for alias in self.cache.aliases])
-                f_string += '\n}\n'
-                f = io.BytesIO(bytes(f_string, 'utf-8'))
-                f.name = 'feh_alias.py'
-                await self.bot.upload(f)
-                return
-            elif arg.startswith('-sanitizealiases'):
-                for alias in list(self.cache.aliases):
-                    if alias[-1] in ['1','2','3']:
-                        self.cache.delete_alias(alias, save=False)
-                    else:
-                        self.cache.resolve_alias(alias, save=False)
+        if arg.startswith('-i '):
+            arg = arg[3:]
+            ignore_cache = True
+        elif arg.startswith('-d '):
+            arg = arg[3:]
+            args = arg.split('&')
+            should_save = False
+            for arg in args:
+                should_save = self.cache.delete_alias(arg, save=False) or should_save
+            if should_save:
                 self.cache.save()
-                await ctx.send("Sanitized aliases!")
-                return
-            elif arg.startswith('-cleandatabase'):
-                linked_to = {self.cache.aliases[a] for a in self.cache.aliases}
-                for page in list(self.cache.data):
-                    if not any([c in valid_categories
-                            for c in self.cache.categories[page]]) or page not in linked_to:
-                        self.cache.delete_data(page, save=False)
+            await ctx.send("Deleted!")
+            return
+        elif arg.startswith('-a '):
+            arg = arg[3:]
+            args = arg.split(' ', 1)
+            aliases = args[0].split('&')
+            should_save = False
+            for alias in aliases:
+                should_save = self.cache.add_alias(alias, args[1], save=False, resolve_conflicts=False) \
+                                or should_save
+            if should_save:
                 self.cache.save()
-                await ctx.send("Cleared database!")
-                return
-            elif arg.startswith('-clearcategory '):
-                arg = arg[len('-clearcategory '):]
-                self.cache.clear_category(arg)
-                await ctx.send("Cleared!")
-                return
-            elif arg.startswith('-reload'):
-                self.cache.load()
-                await ctx.send("Reloaded!\n" + self.cache.last_update)
-                return
-            elif arg.startswith('-currreplace'):
-                message = ''
-                for r in self.cache.replacement_list:
-                    if len(message) + len(r) >= 2000:
-                        await ctx.send(message)
-                        message = ''
-                    message += r + ', '
-                if message:
+            await ctx.send("Added!")
+            return
+        elif arg.startswith('-aliases'):
+            f_string = 'aliases = {\n'
+            f_string += ',\n'.join(
+                ['    "%s": "%s"' %(alias, self.cache.aliases[alias]) for alias in self.cache.aliases])
+            f_string += '\n}\n'
+            f = io.BytesIO(bytes(f_string, 'utf-8'))
+            f.name = 'feh_alias.py'
+            await self.bot.upload(f)
+            return
+        elif arg.startswith('-sanitizealiases'):
+            for alias in list(self.cache.aliases):
+                if alias[-1] in ['1','2','3']:
+                    self.cache.delete_alias(alias, save=False)
+                else:
+                    self.cache.resolve_alias(alias, save=False)
+            self.cache.save()
+            await ctx.send("Sanitized aliases!")
+            return
+        elif arg.startswith('-cleandatabase'):
+            linked_to = {self.cache.aliases[a] for a in self.cache.aliases}
+            for page in list(self.cache.data):
+                if not any([c in valid_categories
+                        for c in self.cache.categories[page]]) or page not in linked_to:
+                    self.cache.delete_data(page, save=False)
+            self.cache.save()
+            await ctx.send("Cleared database!")
+            return
+        elif arg.startswith('-clearcategory '):
+            arg = arg[len('-clearcategory '):]
+            self.cache.clear_category(arg)
+            await ctx.send("Cleared!")
+            return
+        elif arg.startswith('-reload'):
+            self.cache.load()
+            await ctx.send("Reloaded!\n" + self.cache.last_update)
+            return
+        elif arg.startswith('-currreplace'):
+            message = ''
+            for r in self.cache.replacement_list:
+                if len(message) + len(r) >= 2000:
                     await ctx.send(message)
-                return
-            elif arg.startswith('-clearreplace'):
-                self.cache.replacement_list.clear()
-                self.cache.save()
-                await ctx.send("Cleared replacement list!")
-                return
-            elif arg.startswith('-delreplace'):
-                for r in self.cache.replacement_list:
-                    self.cache.delete_data(r)
-                self.cache.replacement_list.clear()
-                self.cache.save()
-                await ctx.send("Cleared replacement list!")
-                return
-            elif arg.startswith('-clearherolist'):
-                self.cache.list = []
-                self.cache.save()
-                await ctx.send("Cleared hero list!")
-                return
+                    message = ''
+                message += r + ', '
+            if message:
+                await ctx.send(message)
+            return
+        elif arg.startswith('-clearreplace'):
+            self.cache.replacement_list.clear()
+            self.cache.save()
+            await ctx.send("Cleared replacement list!")
+            return
+        elif arg.startswith('-delreplace'):
+            for r in self.cache.replacement_list:
+                self.cache.delete_data(r)
+            self.cache.replacement_list.clear()
+            self.cache.save()
+            await ctx.send("Cleared replacement list!")
+            return
+        elif arg.startswith('-clearherolist'):
+            self.cache.list = []
+            self.cache.save()
+            await ctx.send("Cleared hero list!")
+            return
 
         python_format = ctx.message.author.id in self.cache.python_preference
         if '-lukas' in arg:
