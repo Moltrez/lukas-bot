@@ -41,7 +41,11 @@ class FehCache(object):
 
     def load(self):
         urllib3.disable_warnings()
-        cloudinary.config()
+        cloudinary.config(
+            cloud_name = 'deir9fopv',  
+            api_key = '562863184947765',  
+            api_secret = '5K9kklgbTb27nzCdUS-ASrnaYos' 
+        )
         try:
             #assert(False) # force local load
             web_copy = cloudinary.api.resource(filename[2:], resource_type='raw')['url']

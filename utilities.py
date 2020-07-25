@@ -8,7 +8,7 @@ from difflib import SequenceMatcher
 import feh_cache
 
 
-class MagikarpJump:
+class MagikarpJump(bot.Cog):
     """The game we don't play anymore."""
 
     def __init__(self, bot):
@@ -17,7 +17,7 @@ class MagikarpJump:
     @bot.command(aliases=['Lmr'])
     async def lmr(self):
         """I will tell you which rod will net you the best Magikarp."""
-        await self.bot.say(random.choice(['L', 'M', 'R']))
+        await ctx.send(random.choice(['L', 'M', 'R']))
 
 
 class ASCIIMessage:
@@ -132,7 +132,7 @@ def array_to_table(array):
             ret.append(row)
     return ret
 
-class FireEmblemHeroes:
+class FireEmblemHeroes(bot.Cog):
     """The game that we do still play a lot."""
 
     def __init__(self, bot):
@@ -327,7 +327,7 @@ class FireEmblemHeroes:
             scores = get_gauntlet_scores()
         except urllib.error.HTTPError as err:
             if err.code >= 500:
-                await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                await ctx.send("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                 return
         longest = max(scores, key=lambda s: len(s[0]['Score']) + len(s[0]['Status']) + 3)
         longest = len(longest[0]['Score']) + len(longest[0]['Status']) + 3
@@ -337,7 +337,7 @@ class FireEmblemHeroes:
 {:>{width}}    {}
 """.format(s[0]['Name'], s[1]['Name'], (s[0]['Score'] + ' (' + s[0]['Status'] + ')'), ('(' + s[1]['Status'] + ') ' +  s[1]['Score']), width = longest)
         message += '```'
-        await self.bot.say(message)
+        await ctx.send(message)
 
     @bot.command(pass_context=True)
     async def setson(self, ctx, *, son):
@@ -347,9 +347,9 @@ class FireEmblemHeroes:
             true_son = son
         self.cache.set_fam('son', str(ctx.message.author.id), true_son)
         if true_son is None:
-            await self.bot.say('You no longer have a son.')
+            await ctx.send('You no longer have a son.')
         else:
-            await self.bot.say('Successfully set your son to %s (%s). You can now search for that unit with `?feh son`!' % (son, true_son))
+            await ctx.send('Successfully set your son to %s (%s). You can now search for that unit with `?feh son`!' % (son, true_son))
 
     @bot.command(pass_context=True)
     async def setwaifu(self, ctx, *, waifu):
@@ -359,18 +359,18 @@ class FireEmblemHeroes:
             true_waifu = waifu
         self.cache.set_fam('waifu', str(ctx.message.author.id), true_waifu)
         if true_waifu is None:
-            await self.bot.say('You no longer have a waifu.')
+            await ctx.send('You no longer have a waifu.')
         else:
-            await self.bot.say('Successfully set your waifu to %s (%s). You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
+            await ctx.send('Successfully set your waifu to %s (%s). You can now search for that unit with `?feh waifu`!' % (waifu, true_waifu))
 
     @bot.command(pass_context=True, aliases=['toggle', 'Toggle'])
     async def toggledefaultformat(self, ctx):
         """Change your default presentation format between my embeds and Python's codeblocks."""
         result = self.cache.toggle_preference(ctx.message.author.id)
         if result:
-            await self.bot.say("I have noted that you prefer Python's codeblocks.")
+            await ctx.send("I have noted that you prefer Python's codeblocks.")
         else:
-            await self.bot.say("I have noted that you prefer my embeds.")
+            await ctx.send("I have noted that you prefer my embeds.")
 
     @bot.command(pass_context=True, aliases=['Feh', 'FEH'])
     async def feh(self, ctx, *, arg):
@@ -389,7 +389,7 @@ class FireEmblemHeroes:
                     should_save = self.cache.delete_alias(arg, save=False) or should_save
                 if should_save:
                     self.cache.save()
-                await self.bot.say("Deleted!")
+                await ctx.send("Deleted!")
                 return
             elif arg.startswith('-a '):
                 arg = arg[3:]
@@ -401,7 +401,7 @@ class FireEmblemHeroes:
                                   or should_save
                 if should_save:
                     self.cache.save()
-                await self.bot.say("Added!")
+                await ctx.send("Added!")
                 return
             elif arg.startswith('-aliases'):
                 f_string = 'aliases = {\n'
@@ -419,7 +419,7 @@ class FireEmblemHeroes:
                     else:
                         self.cache.resolve_alias(alias, save=False)
                 self.cache.save()
-                await self.bot.say("Sanitized aliases!")
+                await ctx.send("Sanitized aliases!")
                 return
             elif arg.startswith('-cleandatabase'):
                 linked_to = {self.cache.aliases[a] for a in self.cache.aliases}
@@ -428,43 +428,43 @@ class FireEmblemHeroes:
                             for c in self.cache.categories[page]]) or page not in linked_to:
                         self.cache.delete_data(page, save=False)
                 self.cache.save()
-                await self.bot.say("Cleared database!")
+                await ctx.send("Cleared database!")
                 return
             elif arg.startswith('-clearcategory '):
                 arg = arg[len('-clearcategory '):]
                 self.cache.clear_category(arg)
-                await self.bot.say("Cleared!")
+                await ctx.send("Cleared!")
                 return
             elif arg.startswith('-reload'):
                 self.cache.load()
-                await self.bot.say("Reloaded!\n" + self.cache.last_update)
+                await ctx.send("Reloaded!\n" + self.cache.last_update)
                 return
             elif arg.startswith('-currreplace'):
                 message = ''
                 for r in self.cache.replacement_list:
                     if len(message) + len(r) >= 2000:
-                        await self.bot.say(message)
+                        await ctx.send(message)
                         message = ''
                     message += r + ', '
                 if message:
-                    await self.bot.say(message)
+                    await ctx.send(message)
                 return
             elif arg.startswith('-clearreplace'):
                 self.cache.replacement_list.clear()
                 self.cache.save()
-                await self.bot.say("Cleared replacement list!")
+                await ctx.send("Cleared replacement list!")
                 return
             elif arg.startswith('-delreplace'):
                 for r in self.cache.replacement_list:
                     self.cache.delete_data(r)
                 self.cache.replacement_list.clear()
                 self.cache.save()
-                await self.bot.say("Cleared replacement list!")
+                await ctx.send("Cleared replacement list!")
                 return
             elif arg.startswith('-clearherolist'):
                 self.cache.list = []
                 self.cache.save()
-                await self.bot.say("Cleared hero list!")
+                await ctx.send("Cleared hero list!")
                 return
 
         python_format = ctx.message.author.id in self.cache.python_preference
@@ -488,13 +488,13 @@ class FireEmblemHeroes:
             if original_data.startswith("I'm"):
                 if any([(' ' + separator + ' ') in original_arg for separator in separators]) or\
                         original_arg.lower().startswith('compare'):
-                    await self.bot.say(
+                    await ctx.send(
                     "I'm afraid I couldn't find data of %s. Did you mean to do `?compare %s`?" %
                     (original_arg.replace('*','\*').replace('_','\_'),
                      original_arg if not original_arg.lower().startswith('compare') else original_arg[7:].strip()))
                 elif any([modifier in original_arg for modifier in
                           ['-f', '-s', '-r']]) or original_arg.lower().startswith('list'):
-                    await self.bot.say(
+                    await ctx.send(
                         "I'm afraid I couldn't find data of %s. Did you mean to do `?list %s`?" %
                         (original_arg.replace('*','\*').replace('_','\_'),
                          original_arg if not original_arg.lower().startswith('list') else original_arg[4:].strip()))
@@ -505,23 +505,23 @@ class FireEmblemHeroes:
                         if slashloc > 0 and \
                             all(c in map(str,range(10))
                                 for c in [original_arg[slashloc-1], original_arg[slashloc+1]]):
-                            await self.bot.say(
+                            await ctx.send(
                                 "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
                                 (original_arg.replace('*','\*').replace('_','\_'),
                                  original_arg if not original_arg.lower().startswith('stats') else original_arg[
                                                                                                    5:].strip()))
                         else:
-                            await self.bot.say(original_data)
+                            await ctx.send(original_data)
                     else:
-                        await self.bot.say(
+                        await ctx.send(
                         "I'm afraid I couldn't find data of %s. Did you mean to do `?stats %s`?" %
                         (original_arg.replace('*','\*').replace('_','\_'),
                          original_arg if not original_arg.lower().startswith('stats') else original_arg[5:].strip()))
                 else:
-                    await self.bot.say(original_data)
+                    await ctx.send(original_data)
                     return
             else:
-                await self.bot.say(original_data)
+                await ctx.send(original_data)
             return
 
         if 'Passives' in categories:
@@ -574,14 +574,14 @@ class FireEmblemHeroes:
                         )
         if 'Message' in data:
             if python_format:
-                await self.bot.say(data['Message'].replace('. ', '.\n') + '\n' + message.message)
+                await ctx.send(data['Message'].replace('. ', '.\n') + '\n' + message.message)
             else:
-                await self.bot.say(data['Message'].replace('. ', '.\n'), embed=message)
+                await ctx.send(data['Message'].replace('. ', '.\n'), embed=message)
         else:
             if python_format:
-                await self.bot.say(message.message)
+                await ctx.send(message.message)
             else:
-                await self.bot.say(embed=message)
+                await ctx.send(embed=message)
         self.cache.add_data(original_arg, original_data, categories)
 
     @bot.command(pass_context=True, aliases=['refine', 'Refine', 'Fehrefine', 'FEHRefine'])
@@ -602,16 +602,16 @@ class FireEmblemHeroes:
         while (True):
             weapon, categories, data = self.find_data(args, args)
             if not weapon:
-                await self.bot.say(data)
+                await ctx.send(data)
                 return
             if 'Weapons' not in categories:
-                await self.bot.say('%s does not seem to be a weapon.' % (weapon))
+                await ctx.send('%s does not seem to be a weapon.' % (weapon))
                 return
             if 'Refine' not in data and 'Evolution' not in data:
                 if data['3Exclusive?'][0] == ('No') and not weapon.endswith('+'):
                     args = weapon + '+'
                 else:
-                    await self.bot.say('It appears that %s cannot be refined.' % (weapon))
+                    await ctx.send('It appears that %s cannot be refined.' % (weapon))
                     self.cache.save()
                     return
             else:
@@ -681,7 +681,7 @@ class FireEmblemHeroes:
             args2 = data['Evolution'][0]
             weapon2, categories2, data2 = self.find_data(args2, args2)
             if not weapon2:
-                await self.bot.say(data2)
+                await ctx.send(data2)
                 return
             # evolved weapon message
             if python_format:
@@ -707,22 +707,22 @@ class FireEmblemHeroes:
                 if len(to_send) + len(message2.message) < 2000:
                     to_send += message2.message
                 else:
-                    await self.bot.say(to_send)
+                    await ctx.send(to_send)
                     to_send = message2.message
             if message3 is not None:
                 if len(to_send) + len(message3.message) < 2000:
                     to_send += message3.message
                 else:
-                    await self.bot.say(to_send)
+                    await ctx.send(to_send)
                     to_send = message3.message
             if to_send:
-                await self.bot.say(to_send)
+                await ctx.send(to_send)
         else:
-            await self.bot.say(embed=message1)
+            await ctx.send(embed=message1)
             if message2 is not None:
-                await self.bot.say(embed=message2)
+                await ctx.send(embed=message2)
             if message3 is not None:
-                await self.bot.say(embed=message3)
+                await ctx.send(embed=message3)
         if 'Evolution' in data:
             save = self.cache.add_data(weapon, data, categories, save=False)
             self.cache.add_data(weapon2, data2, categories2, force_save=save)
@@ -742,7 +742,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard,
             self.cache.set_flaunt(args[1], img_url)
             if args[1] in self.flaunt_cache:
                 del self.flaunt_cache[args[1]]
-            await self.bot.say("Flaunt changed!")
+            await ctx.send("Flaunt changed!")
             return
         f = None
         if user in self.cache.flaunts:
@@ -767,7 +767,7 @@ If you want to add a flaunt please send a screenshot of your unit to monkeybard,
             f = response.read()
             self.flaunt_cache[user] = f
         elif f is None:
-            await self.bot.say("I'm afraid you have nothing to flaunt. If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe, Circles or Mortagon.")
+            await ctx.send("I'm afraid you have nothing to flaunt. If you want to add a flaunt please send a screenshot of your unit to monkeybard, Datagne, Zylphe, Circles or Mortagon.")
             return
         f = io.BytesIO(f)
         f.name = os.path.basename(self.cache.flaunts[user])
@@ -829,11 +829,11 @@ will show the stats of a 5* Lukas merged to +10 with +Def -Spd IVs with a Summon
                 inline=False
             )
             if python_format:
-                await self.bot.say(message.message)
+                await ctx.send(message.message)
             else:
-                await self.bot.say(embed=message)
+                await ctx.send(embed=message)
         else:
-            await self.bot.say(unit_stats)
+            await ctx.send(unit_stats)
         if should_save:
             self.cache.save()
 
@@ -853,12 +853,12 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
         #     separator, args = find_arg(args, separators, separators, 'separator', remove=False)
         # except ValueError as err:
         #     # multiple separators
-        #     await self.bot.say("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
+        #     await ctx.send("Please use one "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|` to separate the units you wish to compare.")
         #     return
         sep_finding = [i in args for i in separators]
         # no separators
         if not any(sep_finding):
-            await self.bot.say("Please separate the units you wish to compare using "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|`.")
+            await ctx.send("Please separate the units you wish to compare using "+', '.join(list(map(lambda s:'`'+s+'`', separators[:-1]))) +" or `|`.")
             return
         quiet_mode = False
         stats_mode = True
@@ -893,9 +893,9 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
                 continue
             current_args.append(arg)
         if nth_unit > compare_limit:
-            await self.bot.say('Cannot compare more than %d units at a time.' % compare_limit)
+            await ctx.send('Cannot compare more than %d units at a time.' % compare_limit)
         if nth_unit > diff_limit and quiet_mode:
-            await self.bot.say('Cannot show differences for more than %d units at a time.' % diff_limit)
+            await ctx.send('Cannot show differences for more than %d units at a time.' % diff_limit)
             return
         max_tables = []
         curr_unit = 1
@@ -908,7 +908,7 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
             save, ustats = self.get_unit_stats(request, default_rarity=5, ctx=ctx)
             should_save = should_save or save
             if not isinstance(ustats, tuple):
-                await self.bot.say('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
+                await ctx.send('I had difficulty finding what you wanted for unit %d. ' % curr_unit + ustats)
                 return
             unit, base_t, max_t = ustats
             if take_base:
@@ -947,11 +947,11 @@ Unlike ?fehstats, if a rarity is not specified I will use 5★ as the default.""
         for message in messages:
             formatted_message = '```' + message + '```'
             if len(curr_message) + len(formatted_message) > 2000:
-                await self.bot.say(curr_message)
+                await ctx.send(curr_message)
                 curr_message = ''
             curr_message += formatted_message
         if curr_message:
-            await self.bot.say(curr_message)
+            await ctx.send(curr_message)
         if should_save:
             self.cache.save()
 
@@ -982,7 +982,7 @@ Example: !list -f red sword infantry -s attack hp
                     (args[0] not in ['-r', '-f', '-s']) or\
                     ('-r' in args and args[-1] != '-r' and args[args.index('-r')+1] not in ['-f', '-s']) or\
                     any('-' in arg and arg not in ['-r', '-f', '-s'] for arg in args):
-                    await self.bot.say('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
+                    await ctx.send('Unfortunately I had trouble figuring out what you wanted. Are you sure you typed the command correctly?\n```Usage: fehlist|list [-f filters] [-s fields_to_sort_by] [-r]```')
                     return
 
             # set up argument parser
@@ -995,13 +995,13 @@ Example: !list -f red sword infantry -s attack hp
             if args['f']:
                 filters = standardize(args, 'f')
                 if filters is None:
-                    await self.bot.say('Invalid filters or multiple filters for the same field were selected.')
+                    await ctx.send('Invalid filters or multiple filters for the same field were selected.')
                     return
             sort_keys = []
             if args['s']:
                 sort_keys = standardize(args, 's')
                 if sort_keys is None:
-                    await self.bot.say('Invalid fields to sort by were selected.')
+                    await ctx.send('Invalid fields to sort by were selected.')
                     return
             try:
                 heroes = get_heroes_list()
@@ -1011,7 +1011,7 @@ Example: !list -f red sword infantry -s attack hp
                     if self.cache.list:
                         heroes = self.cache.list
                     else:
-                        await self.bot.say("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
+                        await ctx.send("Unfortunately, it seems like I cannot access my sources at the moment. Please try again later.")
                         return
             except timeout:
                 print('Timed out')
@@ -1029,7 +1029,7 @@ Example: !list -f red sword infantry -s attack hp
                     for t in filters[f]:
                         heroes = list(filter(lambda h:t[0](list(itertools.accumulate([h[field] for field in t[1]]))[-1], t[2]), heroes))
             if not heroes:
-                await self.bot.say('No results found for selected filters.')
+                await ctx.send('No results found for selected filters.')
                 return
             num_results = len(heroes)
             sort_keys.append('Name')
@@ -1066,10 +1066,10 @@ Example: !list -f red sword infantry -s attack hp
             results_string = 'Results found: %d\nResults shown: %d\nIf you wish to compare these units in greater detail:' % (num_results, len(heroes))
             if num_results > 1 and num_results <= compare_limit:
                 results_string += '\n`?compare %s -a`' % ' & '.join(shorten_hero_name(h['Name']) if shorten_hero_name(h['Name']).lower() not in self.cache.categories else h['Name'] for h in heroes)
-            await self.bot.say(results_string)
-            await self.bot.say(list_string)
+            await ctx.send(results_string)
+            await ctx.send(list_string)
         except timeout:
-            await self.bot.say('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
+            await ctx.send('Unfortunately, it seems like I cannot access my sources in a timely fashion at the moment. Please try again later.')
 
 def setup(bot):
     bot.add_cog(MagikarpJump(bot))
