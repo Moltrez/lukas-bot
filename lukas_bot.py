@@ -37,26 +37,26 @@ async def on_message(message):
         if (len(log_message) + len(next_message) + 1 >= 2000) or len(cache_log) == 0:
             for ch in bot.private_channels:
                 if ch.recipients[0].name == 'SUP' and str(ch.recipients[0].discriminator) == '0169':
-                    await bot.send_message(ch, log_message + ('' if len(cache_log) else next_message))
+                    await message.ch.send(log_message + ('' if len(cache_log) else next_message))
             log_message = ''
         log_message += next_message + '\n'
     if message.author == bot.user:
         return
     if str(message.author) == 'SUP#0169' and message.content == '?cache':
-        await bot.send_file(message.author, './data_cache.json')
+        await message.author.send(file=discord.File('./data_cache.json'))
         return
     if luke_pattern.match(message.content):
-        await bot.send_file(message.channel, './emotions/upset.png')
+        await message.channel.send(file=discord.File('./emotions/upset.png', 'upset.png'))
     if lukas_pattern.match(message.content):
-        await bot.send_file(message.channel, './emotions/happy.png')
-        await bot.send_message(message.channel,
+        await message.channel.send(file=discord.File('./emotions/happy.png', 'happy.png'))
+        await message.channel.send(
                                random.choice(
                                    ['Thank you! I quite enjoy your company as well.',
                                     'That just made my day. I hope yours goes well too.',
                                     'It\'s very nice to be appreciated. Let\'s do our best!']))
     if python_pattern.match(message.content):
-        await bot.send_file(message.channel, './emotions/happy.png')
-        await bot.send_message(message.channel, "I am also quite pleased at the good work he did in my absence.")
+        await message.channel.send(file=discord.File('./emotions/happy.png', 'happy.png'))
+        await message.channel.send('I am also quite pleased at the good work he did in my absence.')
     await bot.process_commands(message)
 
 token = os.environ.get('TOKEN', default=None)
